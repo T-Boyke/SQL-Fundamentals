@@ -1,0 +1,31 @@
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDEs & Editor configs
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# SQL Server Database files
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.trn
+*.sqlsuo
+*.sqldiary
+
+# Linter files (e.g., SQLFluff cache)
+.sqlfluff
+.sqlfluffcache
+
+# JetBrains Rider/DataGrip configs
+.idea/*
+!.idea/dataSources.xml
+
+
