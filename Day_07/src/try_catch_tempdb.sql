@@ -1,14 +1,64 @@
 -- ============================================================================
--- Day_07: TRY...CATCH & Transaktionen in tempdb (Lokale temporäre Tabellen)
+-- Day_07: TRY...CATCH & Transaktionen in tempdb
 -- Dozent: Tom S. | Autor: Tobias Boyke
 -- ============================================================================
 
 USE tempdb;
 GO
 
--- 1. EINFÜHRUNG: Arbeiten mit lokalen temporären Tabellen (#Table) in tempdb
--- Temporäre Tabellen werden in tempdb erzeugt.
--- Wir fügen einen CHECK Constraint hinzu, um Validierungsfehler zu provozieren.
+-- ============================================================================
+-- TEIL 1: Einfaches Transaktionsbeispiel (Dein Beispiel)
+-- ============================================================================
+
+-- Bereinigung alter Demotabellen
+IF OBJECT_ID('dbo.transtest', 'U') IS NOT NULL DROP TABLE dbo.transtest;
+GO
+
+-- Erstellung der physikalischen Demotabelle in tempdb
+CREATE TABLE dbo.transtest (
+    wert TINYINT
+);
+GO
+
+-- Start der Transaktion
+BEGIN TRANSACTION;
+BEGIN TRY
+    INSERT INTO dbo.transtest (wert) VALUES (1);
+    INSERT INTO dbo.transtest (wert) VALUES (2);
+    
+    -- HINWEIS: Um einen Konvertierungsfehler zu erzwingen, der in den CATCH-Block
+    -- springt und ein Rollback auslöst, entferne das '--' vor der folgenden Zeile:
+    -- INSERT INTO dbo.transtest (wert) VALUES ('a'); 
+    
+    INSERT INTO dbo.transtest (wert) VALUES (3);
+    PRINT 'Erfolgreich';
+    
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    PRINT 'FEHLER';
+    IF @@TRANCOUNT > 0
+    BEGIN
+        ROLLBACK TRANSACTION;
+    END
+END CATCH;
+GO
+
+-- Verifikation des Tabelleninhalts
+SELECT * FROM dbo.transtest;
+GO
+
+-- Bereinigung
+TRUNCATE TABLE dbo.transtest;
+DROP TABLE dbo.transtest;
+GO
+
+
+-- ============================================================================
+-- TEIL 2: Fortgeschrittenes Beispiel (Temporäre Tabelle & XACT_STATE)
+-- ============================================================================
+
+-- Bereinigung
 IF OBJECT_ID('tempdb..#TempKunden') IS NOT NULL DROP TABLE #TempKunden;
 GO
 
@@ -18,10 +68,6 @@ CREATE TABLE #TempKunden (
     [Alter] INT CHECK ([Alter] >= 18) -- Volljährige Kunden (Konsistenz-Constraint)
 );
 GO
-
--- 2. MUSTER: Robustes Transaktionshandling mit TRY...CATCH und XACT_STATE()
--- Wir versuchen zwei Kunden einzufügen. Einer verletzt den Constraint.
--- Das Safe-Rollback-Muster stellt sicher, dass keine unvollständigen Daten verbleiben.
 
 BEGIN TRY
     BEGIN TRANSACTION;
@@ -53,10 +99,6 @@ BEGIN CATCH
     PRINT '==========================================================';
 
     -- Überprüfung des Transaktionsstatus mittels XACT_STATE()
-    -- XACT_STATE() = 1  -> Aktiv & committbar
-    -- XACT_STATE() = -1 -> Aktiv & NICHT committbar (doomed)
-    -- XACT_STATE() = 0  -> Keine aktive Transaktion
-    
     PRINT 'Status der Transaktion im CATCH-Block (XACT_STATE): ' + CAST(XACT_STATE() AS VARCHAR(5));
 
     IF (XACT_STATE() = 1 OR XACT_STATE() = -1)
@@ -71,11 +113,10 @@ BEGIN CATCH
 END CATCH;
 GO
 
--- 3. VERIFIKATION: Wurde die Atomarität (Atomicity) gewahrt?
--- Ergebnis: Die Tabelle ist leer, da die gesamte Transaktion zurückgerollt wurde.
+-- Verifikation
 SELECT * FROM #TempKunden;
 GO
 
--- 4. Bereinigung der temporären Tabelle
+-- Bereinigung
 IF OBJECT_ID('tempdb..#TempKunden') IS NOT NULL DROP TABLE #TempKunden;
 GO
