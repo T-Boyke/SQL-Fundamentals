@@ -91,8 +91,17 @@ Jede Transaktion im SQL Server muss die ACID-Eigenschaften erfüllen:
 Wenn mehrere Benutzer gleichzeitig auf dieselben Daten zugreifen, können ohne ausreichende Isolation folgende Probleme auftreten:
 1.  **Dirty Read (Schmutziges Lesen):** Transaktion A ändert eine Zeile. Transaktion B liest diese Zeile, bevor Transaktion A ein `COMMIT` oder `ROLLBACK` ausführt. Macht Transaktion A ein `ROLLBACK`, hat Transaktion B ungültige ("schmutzige") Daten gelesen.
 2.  **Non-Repeatable Read (Nicht-wiederholbares Lesen):** Transaktion A liest eine Zeile. Transaktion B ändert oder löscht diese Zeile und committet. Transaktion A liest dieselbe Zeile erneut und erhält andere Werte (oder die Zeile ist weg).
-3.  **Phantom Read (Phantom-Lesen):** Transaktion A liest eine Menge von Zeilen, die eine bestimmte Bedingung erfüllen. Transaktion B fügt eine neue Zeile ein, die diese Bedingung ebenfalls erfüllt, und committet. Transaktion A führt dieselbe Abfrage erneut aus und sieht plötzlich eine "Phantomzeile".
+3.  **Phantom Read (Phantom-Lesen):** Transaktion A liest eine menge von Zeilen, die eine bestimmte Bedingung erfüllen. Transaktion B fügt eine neue Zeile ein, die diese Bedingung ebenfalls erfüllt, und committet. Transaktion A führt dieselbe Abfrage erneut aus und sieht plötzlich eine "Phantomzeile".
 4.  **Lost Update (Verlorenes Update):** Zwei Transaktionen lesen dieselbe Zeile, berechnen einen neuen Wert und schreiben ihn zurück. Das Update der ersten Transaktion wird durch das Update der zweiten überschrieben.
+
+##### 📊 Matrix: Risiken vs. Verhalten & Lösung
+
+| Risiko (Anomalie) | Verhalten / Beschreibung | Erlaubt in (Betroffene Level) | Gelöst ab (Verhinderndes Level) |
+| :--- | :--- | :--- | :--- |
+| **Dirty Read** | Unbestätigte Datenänderungen einer laufenden Transaktion werden von einer anderen gelesen. | `READ UNCOMMITTED` | `READ COMMITTED` (Standard) |
+| **Lost Update** | Zwei Prozesse überschreiben gegenseitig ihre Updates, basierend auf dem gleichen gelesenen Zustand. | `READ UNCOMMITTED`, `READ COMMITTED` | `SNAPSHOT` (Konflikt-Fehler) oder `SERIALIZABLE` (bzw. `UPDLOCK`) |
+| **Non-Repeatable Read** | Dieselbe Zeile liefert beim erneuten Lesen innerhalb einer Transaktion andere Werte. | `READ UNCOMMITTED`, `READ COMMITTED` | `REPEATABLE READ` |
+| **Phantom Read** | Eine Suchabfrage liefert beim zweiten Mal zusätzliche (neu eingefügte) Zeilen. | `READ UNCOMMITTED`, `READ COMMITTED`, `REPEATABLE READ` | `SERIALIZABLE` (oder `SNAPSHOT`) |
 
 ---
 
@@ -106,8 +115,6 @@ Die Isolationsstufe bestimmt, wie stark Transaktionen voneinander isoliert sind.
 | **REPEATABLE READ** |  |  | ❌ (erlaubt) | Hält Lesesperren auf den gelesenen Zeilen bis zum Ende der gesamten Transaktion. |
 | **SERIALIZABLE** |  |  |  | Setzt Bereichssperren (Range Locks) auf Schlüsselbereiche, um das Einfügen neuer Zeilen zu blockieren. |
 | **SNAPSHOT** |  |  |  | Verwendet Zeilenversionsverwaltung (Row Versioning) in `tempdb`. Leser blockieren keine Schreiber, Schreiber blockieren keine Leser. |
-
----
 
 ---
 
