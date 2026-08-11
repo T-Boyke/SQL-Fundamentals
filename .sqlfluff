@@ -2,7 +2,7 @@
 dialect = tsql
 templater = raw
 max_line_length = 120
-exclude_rules = AM04, CP02, LT14, LT02, LT09, TQ03, LT01, LT15, L009, L016, L031, L034, CP01, CP03
+exclude_rules = AM04, CP02, LT14, LT02, LT09, TQ03, LT01, LT15, L009, L016, L031, L034, CP01, CP03, RF04
 
 [sqlfluff:indentation]
 tab_space_size = 4

@@ -109,6 +109,8 @@ Die Isolationsstufe bestimmt, wie stark Transaktionen voneinander isoliert sind.
 
 ---
 
+---
+
 #### 4. Locking (Sperren) im SQL Server
 SQL Server steuert den konkurrierenden Zugriff über Sperren (Locks):
 *   **Shared Locks (S - Gemeinsame Sperren):** Werden für Leseoperationen (`SELECT`) verwendet. Mehrere Transaktionen können gleichzeitig ein S-Lock auf derselben Ressource halten.
@@ -118,12 +120,47 @@ SQL Server steuert den konkurrierenden Zugriff über Sperren (Locks):
 
 ---
 
+### 🛠️ Teil 3: TRY...CATCH & Die Rolle der tempdb in Transaktionen
+
+In professionellen Datenbankanwendungen wird Transaktionssicherheit meist mit strukturierter Ausnahmebehandlung (`TRY...CATCH`) kombiniert und nutzt spezielle Speicher- und Protokollmechanismen in `tempdb`.
+
+#### 1. Robustes Exception-Handling mit `XACT_STATE()`
+Klassisches Fehler-Handling prüft oft nur `@@TRANCOUNT`. Bei schwerwiegenden Fehlern kann eine Transaktion jedoch in einen **uncommittbaren Zustand (doomed transaction)** übergehen. Jede Aktion außer einem Rollback führt dann zu Fehlern.
+
+Die Funktion `XACT_STATE()` liefert verlässliche Auskunft über den Zustand:
+*   **`1` (Active/Committable):** Die Transaktion ist aktiv und gesund. Sie kann committet oder zurückgerollt werden.
+*   **`-1` (Active/Uncommittable):** Die Transaktion ist aktiv, aber beschädigt (doomed). Ein Commit ist unmöglich. Die einzige erlaubte Operation ist `ROLLBACK TRANSACTION`.
+*   **`0` (No Transaction):** Es ist keine aktive Transaktion vorhanden. Ein Aufruf von `ROLLBACK` würde fehlschlagen.
+
+> [!IMPORTANT]
+> **Safe-Rollback Pattern im CATCH-Block:**
+> ```sql
+> BEGIN CATCH
+>     IF (XACT_STATE()) = -1 OR (XACT_STATE()) = 1
+>     BEGIN
+>         ROLLBACK TRANSACTION;
+>     END
+>     -- Fehler protokollieren
+> END CATCH
+> ```
+
+#### 2. Die Rolle von `tempdb` bei Transaktionen
+Die Systemdatenbank `tempdb` ist das Arbeitstier des SQL Servers und spielt eine tragende Rolle bei Transaktionen:
+*   **Temporäre Tabellen (`#` und `##`):** Wenn du temporäre Tabellen erstellst und innerhalb von Transaktionen manipulierst, werden alle Änderungen im Transaction Log von `tempdb` mitgeschrieben. Auch hier gelten ACID-Garantien (inkl. Rollbacks), die Daten werden jedoch physisch in `tempdb` gehalten und bei Sitzungsende automatisch verworfen.
+*   **Der Version Store (Zeilenversionierung):**
+    *   Bei optimistischen Isolationsstufen wie `SNAPSHOT` kopiert SQL Server die Datenzeile *vor* dem Update in den **Version Store** der `tempdb`.
+    *   Leser greifen auf diese Versionen in `tempdb` zu, ohne Lesesperren auf der Haupttabelle zu setzen. Dadurch blockieren Schreiber keine Leser mehr.
+    *   *Nachteil:* Erhöhte I/O-Last und starker Platzbedarf auf der `tempdb` Festplatte.
+
+---
+
 ## 💻 Praktische Übungen
 
 Die SQL-Skripte im Ordner `src/` enthalten praktische Beispiele zur Demonstration:
 1.  **[index_demo.sql](./src/index_demo.sql):** Vergleich von Heaps mit indizierten Tabellen, Erstellung von Clustered & Non-Clustered Indizes, Demonstration von Index Seeks, Scans und Key Lookups.
 2.  **[transaction_demo.sql](./src/transaction_demo.sql):** Aufbau von ACID-Transaktionen mit `BEGIN TRAN`, `COMMIT` und `ROLLBACK`.
-3.  **[isolation_levels.sql](./src/isolation_levels.sql):** Demonstration von Dirty Reads, Non-Repeatable Reads und wie man diese durch Ändern des `TRANSACTION ISOLATION LEVEL` verhindert.
+3.  **[try_catch_tempdb.sql](./src/try_catch_tempdb.sql):** Robustes Transaktions-Error-Handling in der `tempdb` unter Verwendung von temporären Tabellen und `XACT_STATE()`.
+4.  **[isolation_levels.sql](./src/isolation_levels.sql):** Demonstration von Dirty Reads, Non-Repeatable Reads und wie man diese durch Ändern des `TRANSACTION ISOLATION LEVEL` verhindert.
 
 ---
 
