@@ -86,12 +86,12 @@ $xmlContent = @"
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="SQL-Fundamentals (SQLBEISEELIG)" uuid="4c2ea557-7945-4277-bf31-15b5cd91ee4c">
+    <data-source source="LOCAL" name="SQL-Fundamentals (SQLEXPRESS)" uuid="4c2ea557-7945-4277-bf31-15b5cd91ee4c">
       <driver-ref>sqlserver.ms</driver-ref>
       <synchronize>true</synchronize>
       <configured-by-url>true</configured-by-url>
       <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
-      <jdbc-url>jdbc:sqlserver://localhost;instanceName=SQLBEISEELIG;encrypt=true;trustServerCertificate=true;integratedSecurity=true;</jdbc-url>
+      <jdbc-url>jdbc:sqlserver://;serverName=\\.\pipe\MSSQL$SQLEXPRESS\sql\query;integratedSecurity=true;encrypt=true;trustServerCertificate=true;</jdbc-url>
       <working-dir>`$ProjectFileDir$</working-dir>
     </data-source>
   </component>
