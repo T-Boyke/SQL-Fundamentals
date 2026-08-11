@@ -87,6 +87,20 @@ erDiagram
     *   **Bestellung** als Rechteck mit Ellipsen für `<u>BestellID</u>` und `Datum`.
     *   Verbunden über eine Raute **"gibt auf"** mit Kardinalität **1** (an der Linie zu Kunde) zu **N** (an der Linie zu Bestellung).
 
+```mermaid
+erDiagram
+    KUNDE {
+        int KundenID PK
+        string Name
+    }
+    BESTELLUNG {
+        int BestellID PK
+        date Datum
+        int KundenID FK
+    }
+    KUNDE ||--o{ BESTELLUNG : "gibt auf"
+```
+
 ---
 
 ## 💡 Wichtige Notizen
