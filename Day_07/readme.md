@@ -103,6 +103,97 @@ Wenn mehrere Benutzer gleichzeitig auf dieselben Daten zugreifen, können ohne a
 | **Non-Repeatable Read** | Dieselbe Zeile liefert beim erneuten Lesen innerhalb einer Transaktion andere Werte. | `READ UNCOMMITTED`, `READ COMMITTED` | `REPEATABLE READ` |
 | **Phantom Read** | Eine Suchabfrage liefert beim zweiten Mal zusätzliche (neu eingefügte) Zeilen. | `READ UNCOMMITTED`, `READ COMMITTED`, `REPEATABLE READ` | `SERIALIZABLE` (oder `SNAPSHOT`) |
 
+##### 💻 Code-Beispiele für Anomalien & Lösungen
+
+1. **Dirty Read (Schmutziges Lesen)**
+   * **Risiko** (Tritt auf bei `READ UNCOMMITTED`):
+     ```sql
+     -- Session 1 (Schreiber)
+     BEGIN TRANSACTION;
+     UPDATE dbo.BankKonten SET Saldo = 9999.00 WHERE Inhaber = 'Tobias Boyke'; -- Uncommitted!
+
+     -- Session 2 (Leser)
+     SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Liest 9999.00 € (Dirty Read!)
+     ```
+   * **Lösung** (Verhindert ab `READ COMMITTED`):
+     ```sql
+     -- Session 2 (Leser - Standardstufe)
+     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Blockiert und wartet auf Commit von Session 1!
+     ```
+
+2. **Lost Update (Verlorenes Update)**
+   * **Risiko** (Tritt auf bei `READ COMMITTED`):
+     ```sql
+     -- Session 1 & 2 lesen parallel den aktuellen Wert:
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Beide lesen 800.00 €
+
+     -- Session 1 bucht +200 € und führt Update aus:
+     UPDATE dbo.BankKonten SET Saldo = 1000.00 WHERE Inhaber = 'Tobias Boyke';
+
+     -- Session 2 bucht +50 € (basierend auf den gelesenen 800 €) und führt danach Update aus:
+     UPDATE dbo.BankKonten SET Saldo = 850.00 WHERE Inhaber = 'Tobias Boyke'; -- Überschreibt das Update von Session 1 komplett!
+     ```
+   * **Lösung A** (Mit Sperrhinweis `UPDLOCK`):
+     ```sql
+     -- Session 1 reserviert die Zeile beim Lesen für spätere Updates:
+     SELECT Saldo FROM dbo.BankKonten WITH (UPDLOCK) WHERE Inhaber = 'Tobias Boyke'; -- Session 2 blockiert beim Lesen!
+     ```
+   * **Lösung B** (Mit `SNAPSHOT` Isolation):
+     ```sql
+     -- Snapshot Isolation muss in DB aktiviert sein (ALLOW_SNAPSHOT_ISOLATION ON)
+     SET TRANSACTION ISOLATION LEVEL SNAPSHOT;
+     BEGIN TRAN;
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Liest Datenstand
+     -- Wenn Session 2 die Zeile zwischendurch ändert und Session 1 nun schreiben will:
+     UPDATE dbo.BankKonten SET Saldo = 1000.00 WHERE Inhaber = 'Tobias Boyke'; -- Wirft Fehler 3960 (Update-Konflikt)!
+     ```
+
+3. **Non-Repeatable Read (Nicht-wiederholbares Lesen)**
+   * **Risiko** (Tritt auf bei `READ COMMITTED`):
+     ```sql
+     -- Session 1 (Leser - Transaktion läuft)
+     BEGIN TRAN;
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Liest 800.00 €
+
+     -- Session 2 (Schreiber - Parallel)
+     UPDATE dbo.BankKonten SET Saldo = 50.00 WHERE Inhaber = 'Tobias Boyke'; COMMIT;
+
+     -- Session 1 liest erneut in derselben Transaktion:
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Liest plötzlich 50.00 €!
+     COMMIT;
+     ```
+   * **Lösung** (Verhindert ab `REPEATABLE READ`):
+     ```sql
+     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+     BEGIN TRAN;
+     SELECT Saldo FROM dbo.BankKonten WHERE Inhaber = 'Tobias Boyke'; -- Hält Lesesperren bis zum COMMIT!
+     -- Session 2 blockiert beim Versuch des Updates, bis Session 1 fertig ist.
+     ```
+
+4. **Phantom Read (Phantom-Lesen)**
+   * **Risiko** (Tritt auf bei `REPEATABLE READ`):
+     ```sql
+     -- Session 1 (Leser - Transaktion läuft)
+     BEGIN TRAN;
+     SELECT * FROM dbo.BankKonten WHERE Saldo > 500.00; -- Findet z.B. 2 Kunden
+
+     -- Session 2 (Schreiber - Parallel)
+     INSERT INTO dbo.BankKonten (KontoID, Inhaber, Saldo) VALUES (3, 'Kunde C', 600.00); COMMIT;
+
+     -- Session 1 liest erneut in derselben Transaktion:
+     SELECT * FROM dbo.BankKonten WHERE Saldo > 500.00; -- Findet plötzlich 3 Kunden! (Phantomzeile vorhanden)
+     COMMIT;
+     ```
+   * **Lösung** (Verhindert ab `SERIALIZABLE`):
+     ```sql
+     SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+     BEGIN TRAN;
+     SELECT * FROM dbo.BankKonten WHERE Saldo > 500.00; -- Setzt Range Lock auf den Wertebereich!
+     -- Session 2 blockiert beim Insert, bis Session 1 committed.
+     ```
+
 ---
 
 #### 3. Transaktions-Isolationsstufen (Isolation Levels)
