@@ -24,6 +24,17 @@
 
 Ein Index im SQL Server ist eine On-Disk-Struktur, die mit einer Tabelle oder Sicht verknüpft ist und das Abrufen von Zeilen beschleunigt. Ohne Indizes muss der SQL Server die gesamte Tabelle scannen (**Table Scan**), um die gewünschten Daten zu finden.
 
+#### 0. Physische Speicherarchitektur (Seiten & Blöcke)
+Bevor man Indizes versteht, muss man wissen, wie SQL Server Daten physisch auf der Festplatte speichert:
+*   **Die Datenseite (Page):** Die kleinste fundamentale Speichereinheit im SQL Server ist die Seite. Jede Seite ist exakt **8 KB** groß (8192 Bytes). 
+    *   Eine Seite hat einen **Page Header** (96 Bytes für Metadaten wie Page ID, freier Speicherplatz, etc.).
+    *   Die tatsächlichen Datenzeilen folgen nach dem Header.
+    *   Am Ende der Seite befindet sich die **Row Offset Table** (Zeilenoffset-Tabelle), die angibt, an welchem Byte-Offset die Zeilen physisch auf der Seite beginnen.
+    *   Die maximal nutzbare Zeilengröße auf einer Seite beträgt **8.060 Bytes**. Größere Daten (z. B. `VARCHAR(8000)`) werden bei Überschreitung in spezielle *Row-Overflow-Seiten* oder *LOB (Large Object) Seiten* ausgelagert.
+*   **Der Block (Extent):** Um Speicherplatz effizient zu verwalten, werden Seiten in Gruppen von **8 zusammenhängenden Seiten** zusammengefasst, was einen **64 KB** großen Block (Extent) ergibt.
+    *   **Gemischter Block (Mixed Extent):** Wird von bis zu 8 verschiedenen Objekten (Tabellen/Indizes) geteilt. Neue Tabellen starten oft in gemischten Blöcken, um Platz zu sparen.
+    *   **Einheitlicher Block (Uniform Extent):** Gehört exakt einem einzigen Objekt. Sobald eine Tabelle wächst, weist SQL Server ihr nur noch einheitliche Blöcke zu.
+
 #### 1. Der B-Tree (Balanced Tree)
 SQL Server organisiert Indizes als **B-Bäume** (ausgeglichene Bäume). Ein B-Baum besteht aus:
 *   **Root Node (Wurzelknoten):** Der Einstiegspunkt für Suchabfragen.
@@ -222,7 +233,30 @@ SQL Server steuert den konkurrierenden Zugriff über verschiedene Sperrtypen (Lo
 
 ##### 💡 Weitere Sperrkonzepte
 *   **Intent Locks (I - Absichts-Sperren):** Zeigen an, dass eine Transaktion auf einer niedrigeren Ebene (z.B. Zeilenebene) eine Sperre hält. Verhindert, dass eine andere Transaktion eine grobe Sperre (z.B. Tabellensperre) anfordert, die mit den feineren Sperren kollidieren würde (z.B. Intent Exclusive `IX` oder Intent Shared `IS`).
-*   **Deadlock:** Ein Deadlock tritt auf, wenn zwei Transaktionen gegenseitig Sperren halten, die die jeweils andere benötigt, um fortzufahren. SQL Server erkennt Deadlocks automatisch, beendet eine der beiden Transaktionen als "Deadlock Victim" und führt ein automatisches Rollback durch.
+*   **Deadlock (Gegenseitige Blockade):** Ein Deadlock tritt auf, wenn zwei oder mehr Transaktionen gegenseitig Sperren auf Ressourcen halten, die die jeweils andere Transaktion benötigt, um fortzufahren.
+    
+    ```text
+    +-----------------+                  +-----------------+
+    |  Transaktion 1  |                  |  Transaktion 2  |
+    +--------+--------+                  +--------+--------+
+             |                                    |
+       Hält Sperre auf                      Hält Sperre auf
+        Tabelle A                            Tabelle B
+             |                                    |
+             v                                    v
+       Fordert Sperre auf                   Fordert Sperre auf
+        Tabelle B (wartet)                   Tabelle A (wartet)
+    ```
+    
+    *   **Deadlock-Erkennung:** SQL Server besitzt einen Hintergrund-Thread namens **Lock Monitor**, der standardmäßig alle 5 Sekunden (oder bei häufigen Deadlocks öfter) nach Zyklen in der Sperren-Warteschlange sucht.
+    *   **Auswahl des Opfers (Deadlock Victim):** Wenn ein Zyklus gefunden wird, bricht SQL Server eine der Transaktionen ab. Das "Opfer" wird anhand von zwei Kriterien bestimmt:
+        1.  **Deadlock Priority:** Kann pro Session gesetzt werden (`SET DEADLOCK_PRIORITY LOW | NORMAL | HIGH | -10 bis 10`). Die Session mit der niedrigeren Priorität wird geopfert.
+        2.  **Rollback-Kosten:** Haben beide dieselbe Priorität, opfert SQL Server diejenige Transaktion, deren Rollback am wenigsten Ressourcen (CPU, Log-Schreibvorgänge) kostet.
+    *   **Fehlermeldung:** Die geopferte Transaktion erhält die Fehlernummer **1205** (*"Transaction was deadlocked on lock resources..."*).
+    *   **Prävention & Best Practices:**
+        -   **Gleiche Zugriffsreihenfolge:** Tabellen in allen Transaktionen immer in der gleichen Reihenfolge abfragen (z. B. erst Tabelle A, dann Tabelle B).
+        -   **Transaktionen kurz halten:** Keine Benutzerinteraktionen oder langen Berechnungen in Transaktionen.
+        -   **Sperren-Umfang verringern:** Gute Indizes nutzen, um Table Scans (die Tabellensperren auslösen) zu vermeiden.
 
 ---
 
