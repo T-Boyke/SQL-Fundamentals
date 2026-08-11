@@ -294,6 +294,31 @@ Die Systemdatenbank `tempdb` ist das Arbeitstier des SQL Servers und spielt eine
 
 ---
 
+### 🎓 IHK-Prüfungsrelevanz: Transaktionskonzepte
+
+In der IHK-Abschlussprüfung (für Fachinformatiker Anwendungsentwicklung / Systemintegration) sind Fragen zu Datenbanktransaktionen ein bewährter Klassiker. Hier findest du typische Freitextfragen mit Musterantworten für die volle Punktzahl.
+
+#### 📝 Typische IHK-Freitextfragen & Musterantworten
+
+##### 1. Was versteht man unter einer Transaktion in einem Datenbanksystem? (4 Punkte)
+> **IHK-Musterantwort:**  
+> Eine Transaktion ist eine Folge von Datenbankoperationen (z. B. Einfügen, Ändern, Löschen), die als eine einzige, unteilbare logische Arbeitseinheit ausgeführt wird (Alles-oder-nichts-Prinzip). Sie überführt die Datenbank von einem konsistenten Zustand in einen anderen konsistenten Zustand.
+
+##### 2. Erläutern Sie das ACID-Prinzip bei Transaktionen und beschreiben Sie kurz die vier Eigenschaften. (8 Punkte)
+> **IHK-Musterantwort:**  
+> Das ACID-Prinzip beschreibt die vier Kern-Eigenschaften zur Wahrung der Datenintegrität bei Transaktionen:
+> *   **A - Atomicity (Atomarität / Unteilbarkeit):** Eine Transaktion wird entweder ganz oder gar nicht ausgeführt. Schlägt eine Teiloperation fehl, wird die gesamte Transaktion zurückgerollt.
+> *   **C - Consistency (Konsistenz):** Transaktionen hinterlassen die Datenbank immer in einem konsistenten Zustand. Regeln und Integritätsbedingungen (Constraints) werden erzwungen.
+> *   **I - Isolation (Isolation):** Gleichzeitige Transaktionen beeinflussen sich nicht gegenseitig. Zwischenzustände einer Transaktion sind für andere unsichtbar.
+> *   **D - Durability (Dauerhaftigkeit):** Einmal mit `COMMIT` bestätigte Änderungen bleiben dauerhaft in der Datenbank gespeichert, selbst bei einem Systemabsturz.
+
+##### 3. Erklären Sie die Funktion der SQL-Befehle `COMMIT` und `ROLLBACK`. (4 Punkte)
+> **IHK-Musterantwort:**  
+> *   **`COMMIT`:** Bestätigt alle Änderungen der aktuellen Transaktion dauerhaft in der Datenbank. Die Daten werden für andere Sitzungen sichtbar.
+> *   **`ROLLBACK`:** Verwirft alle Änderungen der aktuellen Transaktion seit dem Start (`BEGIN TRAN`) und setzt die Datenbank in den Ausgangszustand zurück.
+
+---
+
 ## 💻 Praktische Übungen
 
 Die SQL-Skripte im Ordner `src/` enthalten praktische Beispiele zur Demonstration:
