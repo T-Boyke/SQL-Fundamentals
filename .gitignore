@@ -5,7 +5,8 @@ Desktop.ini
 
 # IDEs & Editor configs
 .vs/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 *.suo
 *.user
 *.userosscache
@@ -21,11 +22,12 @@ Desktop.ini
 *.sqldiary
 
 # Linter files (e.g., SQLFluff cache)
-.sqlfluff
 .sqlfluffcache
+!.sqlfluff
 
 # JetBrains Rider/DataGrip configs
 .idea/*
 !.idea/dataSources.xml
+!.idea/externalDependencies.xml
 
 

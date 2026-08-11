@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "ms-mssql.mssql",
+    "DavidAnson.vscode-markdownlint",
+    "dorzey.vscode-sqlfluff"
+  ]
+}
