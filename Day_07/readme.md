@@ -210,9 +210,17 @@ Die Isolationsstufe bestimmt, wie stark Transaktionen voneinander isoliert sind.
 ---
 
 #### 4. Locking (Sperren) im SQL Server
-SQL Server steuert den konkurrierenden Zugriff über Sperren (Locks):
-*   **Shared Locks (S - Gemeinsame Sperren):** Werden für Leseoperationen (`SELECT`) verwendet. Mehrere Transaktionen können gleichzeitig ein S-Lock auf derselben Ressource halten.
-*   **Exclusive Locks (X - Exklusive Sperren):** Werden für Schreiboperationen (`INSERT`, `UPDATE`, `DELETE`) verwendet. Verhindert jeglichen anderen Zugriff (weder Lesen noch Schreiben) auf die gesperrte Ressource.
+SQL Server steuert den konkurrierenden Zugriff über verschiedene Sperrtypen (Locks):
+
+##### 📊 Matrix: Sperrtypen & Kompatibilität
+
+| Sperre (Lock Type) | Beschreibung / Zweck | Verträglich mit | Blockiert durch | T-SQL Code-Beispiel |
+| :--- | :--- | :--- | :--- | :--- |
+| **Shared Lock (S)** | **Gemeinsame Sperre.** Wird für reine Leseoperationen (`SELECT`) genutzt. Stellt sicher, dass Daten während des Lesens nicht modifiziert werden. | `S`, `U` | `X` | `SELECT * FROM dbo.BankKonten WITH (HOLDLOCK) WHERE KontoID = 1;` |
+| **Update Lock (U)** | **Aktualisierungssperre.** Asymmetrische Sperre, die beim Lesen mit Update-Absicht gesetzt wird. Verhindert Deadlocks, da zwei Prozesse nicht zeitgleich `U`-Sperren halten können. | `S` | `U`, `X` | `SELECT * FROM dbo.BankKonten WITH (UPDLOCK) WHERE KontoID = 1;` |
+| **Exclusive Lock (X)** | **Exklusive Sperre.** Wird bei Schreiboperationen (`INSERT`, `UPDATE`, `DELETE`) gesetzt. Verhindert jegliche parallele Zugriffe (Lesen & Schreiben). | Keine | `S`, `U`, `X` | `UPDATE dbo.BankKonten SET Saldo = 900.00 WHERE KontoID = 1;` |
+
+##### 💡 Weitere Sperrkonzepte
 *   **Intent Locks (I - Absichts-Sperren):** Zeigen an, dass eine Transaktion auf einer niedrigeren Ebene (z.B. Zeilenebene) eine Sperre hält. Verhindert, dass eine andere Transaktion eine grobe Sperre (z.B. Tabellensperre) anfordert, die mit den feineren Sperren kollidieren würde (z.B. Intent Exclusive `IX` oder Intent Shared `IS`).
 *   **Deadlock:** Ein Deadlock tritt auf, wenn zwei Transaktionen gegenseitig Sperren halten, die die jeweils andere benötigt, um fortzufahren. SQL Server erkennt Deadlocks automatisch, beendet eine der beiden Transaktionen als "Deadlock Victim" und führt ein automatisches Rollback durch.
 
