@@ -146,296 +146,302 @@ Hier sind alle Übungsaufgaben des Tages und ihre T-SQL-Lösungen im Detail aufg
 ### 1. Kategorie: ORDER BY (Aufgaben 3.1 - 3.7)
 
 #### Aufgabe 3.1
-*   **Beschreibung:** Geben Sie die Firmennamen aller Kunden aus. Sortieren Sie die Ausgabe aufsteigend nach dem Firmennamen.
-*   **Ergebnis-Erwartung:**
-    ```text
-    firma
-    100% Sonderzeichen AG
-    Finanzamt Ulm
-    Frankreich-Reisen GmbH
-    Getränke Schneider
-    Im- und Export AG
-    Technische Produkte oHG
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT firma
-    FROM Kunde
-    ORDER BY firma ASC;
-    ```
+```sql
+-- Aufgabe 3.1
+-- Geben Sie die Firmennamen aller Kunden aus. Sortieren Sie die Ausgabe aufsteigend nach dem Firmennamen.
+--
+-- Erwartetes Ergebnis:
+-- firma
+-- 100% Sonderzeichen AG
+-- Finanzamt Ulm
+-- Frankreich-Reisen GmbH
+-- Getränke Schneider
+-- Im- und Export AG
+-- Technische Produkte oHG
+
+SELECT firma
+FROM Kunde
+ORDER BY firma ASC;
+```
 
 #### Aufgabe 3.2
-*   **Beschreibung:** Geben Sie alle Umsätze des Jahres 2019 sortiert nach Datum aus. Bei gleichem Datum sollen die größeren Umsätze zuerst genannt werden.
-*   **Ergebnis-Erwartung:**
-    ```text
-    id  mit_id  datum       umsatz
-    10  10102   2019-01-01  4500,00
-    17  25348   2019-02-01  150000,00
-    18  25348   2019-03-01  1500,00
-    19  25348   2019-04-01  15,00
-    21  2581    2019-05-01  100000,00
-    20  25348   2019-05-01  150,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT id, mit_id, datum, umsatz
-    FROM Umsatz
-    WHERE YEAR(datum) = 2019
-    ORDER BY datum ASC, umsatz DESC;
-    ```
+```sql
+-- Aufgabe 3.2
+-- Geben Sie alle Umsätze des Jahres 2019 sortiert nach Datum aus. 
+-- Bei gleichem Datum sollen die größeren Umsätze zuerst genannt werden.
+--
+-- Erwartetes Ergebnis:
+-- id  mit_id  datum       umsatz
+-- 10  10102   2019-01-01  4500,00
+-- 17  25348   2019-02-01  150000,00
+-- 18  25348   2019-03-01  1500,00
+-- 19  25348   2019-04-01  15,00
+-- 21  2581    2019-05-01  100000,00
+-- 20  25348   2019-05-01  150,00
+
+SELECT id, mit_id, datum, umsatz
+FROM Umsatz
+WHERE YEAR(datum) = 2019
+ORDER BY datum ASC, umsatz DESC;
+```
 
 #### Aufgabe 3.3
-*   **Beschreibung:** Geben Sie alle Daten der Mitarbeiter aus. Sortieren Sie die Ausgabe nach Abteilungs-Nr. aufsteigend. Innerhalb der Abteilung sollen die Mitarbeiter ohne bekannten Wohnort am Ende stehen.
-*   **Ergebnis-Erwartung:**
-    ```text
-    id     nachname  vorname   abt_id  ort        chef_id
-    28559  Mozer     Sibille   1       Ulm        2581
-    18316  Müller    Gabriele  1       Rosenheim  2581
-    29346  Probst    Andreas   2       Augsburg   2581
-    2581   Kaufmann  Brigitte  2       NULL       NULL
-    9031   Meier     Rainer    2       NULL       2581
-    25348  Keller    Hans      3       München    2581
-    ... (15 Zeilen)
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT *
-    FROM Mitarbeiter
-    ORDER BY abt_id ASC, IIF(ort IS NULL, 1, 0) ASC, ort ASC;
-    -- Alternativ mit CASE WHEN:
-    -- ORDER BY abt_id ASC, (CASE WHEN ort IS NULL THEN 1 ELSE 0 END) ASC, ort ASC;
-    ```
+```sql
+-- Aufgabe 3.3
+-- Geben Sie alle Daten der Mitarbeiter aus. Sortieren Sie die Ausgabe nach Abteilungs-Nr. aufsteigend. 
+-- Innerhalb der Abteilung sollen die Mitarbeiter ohne bekannten Wohnort am Ende stehen.
+--
+-- Erwartetes Ergebnis:
+-- id     nachname  vorname   abt_id  ort        chef_id
+-- 28559  Mozer     Sibille   1       Ulm        2581
+-- 18316  Müller    Gabriele  1       Rosenheim  2581
+-- 29346  Probst    Andreas   2       Augsburg   2581
+-- 2581   Kaufmann  Brigitte  2       NULL       NULL
+-- 9031   Meier     Rainer    2       NULL       2581
+-- 25348  Keller    Hans      3       München    2581
+-- ... (15 Zeilen)
+
+SELECT *
+FROM Mitarbeiter
+ORDER BY abt_id ASC, IIF(ort IS NULL, 1, 0) ASC, ort ASC;
+```
 
 #### Aufgabe 3.4
-*   **Beschreibung:** Geben Sie die Id und die Aufgabe von allen Mitarbeitern aus, die Projektleiter sind. Sortieren Sie die Ausgabe nach der Mitarbeiter-Id.
-*   **Ergebnis-Erwartung:**
-    ```text
-    mit_id  aufgabe
-    2581    Projektleiter
-    5765    Projektleiter
-    10102   Projektleiter
-    22222   Projektleiter
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT mit_id, aufgabe
-    FROM Arbeit
-    WHERE aufgabe = 'Projektleiter'
-    ORDER BY mit_id ASC;
-    ```
+```sql
+-- Aufgabe 3.4
+-- Geben Sie die Id und die Aufgabe von allen Mitarbeitern aus, die Projektleiter sind. 
+-- Sortieren Sie die Ausgabe nach der Mitarbeiter-Id.
+--
+-- Erwartetes Ergebnis:
+-- mit_id  aufgabe
+-- 2581    Projektleiter
+-- 5765    Projektleiter
+-- 10102   Projektleiter
+-- 22222   Projektleiter
+
+SELECT mit_id, aufgabe
+FROM Arbeit
+WHERE aufgabe = 'Projektleiter'
+ORDER BY mit_id ASC;
+```
 
 #### Aufgabe 3.5
-*   **Beschreibung:** Gesucht werden Mitarbeiter-id, Projekt-Id und Aufgabe der Mitarbeiter, die entweder im Projekt 2 arbeiten, oder aber Projektleiter in einem beliebigen Projekt sind. Sortieren Sie die Ausgabe nach der Projekt-Id und dann nach der Aufgabe.
-*   **Ergebnis-Erwartung:**
-    ```text
-    mit_id  pro_id  aufgabe
-    10102   1       Projektleiter
-    18316   2       NULL
-    29346   2       NULL
-    25348   2       Sachbearbeiter
-    28559   2       Sachbearbeiter
-    2581    3       Projektleiter
-    5765    4       Projektleiter
-    22222   5       Projektleiter
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT mit_id, pro_id, aufgabe
-    FROM Arbeit
-    WHERE pro_id = 2 OR aufgabe = 'Projektleiter'
-    ORDER BY pro_id ASC, aufgabe ASC;
-    ```
+```sql
+-- Aufgabe 3.5
+-- Gesucht werden Mitarbeiter-id, Projekt-Id und Aufgabe der Mitarbeiter, 
+-- die entweder im Projekt 2 arbeiten, oder aber Projektleiter in einem beliebigen Projekt sind.
+-- Sortieren Sie die Ausgabe nach der Projekt-Id und dann nach der Aufgabe.
+--
+-- Erwartetes Ergebnis:
+-- mit_id  pro_id  aufgabe
+-- 10102   1       Projektleiter
+-- 18316   2       NULL
+-- 29346   2       NULL
+-- 25348   2       Sachbearbeiter
+-- 28559   2       Sachbearbeiter
+-- 2581    3       Projektleiter
+-- 5765    4       Projektleiter
+-- 22222   5       Projektleiter
+
+SELECT mit_id, pro_id, aufgabe
+FROM Arbeit
+WHERE pro_id = 2 OR aufgabe = 'Projektleiter'
+ORDER BY pro_id ASC, aufgabe ASC;
+```
 
 #### Aufgabe 3.6
-*   **Beschreibung:** Selektieren Sie die drei größten Umsätze, die im Jahr 2018 gemacht wurden.
-*   **Ergebnis-Erwartung:**
-    ```text
-    id  mit_id  datum       umsatz
-    15  25348   2018-05-02  15000,00
-    16  25348   2018-10-11  15000,00
-    4   10102   2018-11-01  5000,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT TOP (3) *
-    FROM Umsatz
-    WHERE YEAR(datum) = 2018
-    ORDER BY umsatz DESC;
-    ```
+```sql
+-- Aufgabe 3.6
+-- Selektieren Sie die drei größten Umsätze, die im Jahr 2018 gemacht wurden.
+--
+-- Erwartetes Ergebnis:
+-- id  mit_id  datum       umsatz
+-- 15  25348   2018-05-02  15000,00
+-- 16  25348   2018-10-11  15000,00
+-- 4   10102   2018-11-01  5000,00
+
+SELECT TOP (3) *
+FROM Umsatz
+WHERE YEAR(datum) = 2018
+ORDER BY umsatz DESC;
+```
 
 #### Aufgabe 3.7
-*   **Beschreibung:** Selektieren Sie erneut die drei größten Umsätze aus dem Jahr 2018. Verwenden Sie diesmal zusätzlich die Klausel WITH TIES.
-*   **Ergebnis-Erwartung:**
-    ```text
-    id  mit_id  datum       umsatz
-    15  25348   2018-05-02  15000,00
-    16  25348   2018-10-11  15000,00
-    22  17000   2018-03-03  5000,00
-    ...
-    4   10102   2018-11-01  5000,00
-    8   10102   2018-12-23  5000,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT TOP (3) WITH TIES *
-    FROM Umsatz
-    WHERE YEAR(datum) = 2018
-    ORDER BY umsatz DESC;
-    ```
+```sql
+-- Aufgabe 3.7
+-- Selektieren erneut die drei größten Umsätze aus dem Jahr 2018. 
+-- Verwenden Sie diesmal zusätzlich die Klausel WITH TIES.
+--
+-- Erwartetes Ergebnis:
+-- id  mit_id  datum       umsatz
+-- 15  25348   2018-05-02  15000,00
+-- 16  25348   2018-10-11  15000,00
+-- 22  17000   2018-03-03  5000,00
+-- ...
+-- 4   10102   2018-11-01  5000,00
+-- 8   10102   2018-12-23  5000,00
+
+SELECT TOP (3) WITH TIES *
+FROM Umsatz
+WHERE YEAR(datum) = 2018
+ORDER BY umsatz DESC;
+```
 
 ---
 
 ### 2. Kategorie: Aggregatfunktionen (Aufgaben 4.3 - 4.6)
 
 #### Aufgabe 4.3
-*   **Beschreibung:** Nennen Sie die kleinste Personalnummer der Mitarbeiter.
-*   **Ergebnis-Erwartung:**
-    ```text
-    minimum
-    2581
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT MIN(id) AS minimum
-    FROM Mitarbeiter;
-    ```
+```sql
+-- Aufgabe 4.3
+-- Nennen Sie die kleinste Personalnummer der Mitarbeiter.
+--
+-- Erwartetes Ergebnis:
+-- minimum
+-- 2581
+
+SELECT MIN(id) AS minimum
+FROM Mitarbeiter;
+```
 
 #### Aufgabe 4.4
-*   **Beschreibung:** Berechnen Sie die Summe der finanziellen Mittel aller Projekte.
-*   **Ergebnis-Erwartung:**
-    ```text
-    summe
-    655000,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT SUM(mittel) AS summe
-    FROM Projekt;
-    ```
+```sql
+-- Aufgabe 4.4
+-- Berechnen Sie die Summe der finanziellen Mittel aller Projekte.
+--
+-- Erwartetes Ergebnis:
+-- summe
+-- 655000,00
+
+SELECT SUM(mittel) AS summe
+FROM Projekt;
+```
 
 #### Aufgabe 4.5
-*   **Beschreibung:** Berechnen Sie den arithmetischen Mittelwert der Geldbeträge, die höher als 92336,10 Euro sind (Spalte `mittel` in `Projekt`).
-*   **Ergebnis-Erwartung:**
-    ```text
-    durchschnitt
-    141625,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT AVG(mittel) AS durchschnitt
-    FROM Projekt
-    WHERE mittel > 92336.1;
-    ```
+```sql
+-- Aufgabe 4.5
+-- Berechnen Sie den arithmetischen Mittelwert der Geldbeträge, die höher als 92336,10 Euro sind (Spalte mittel in Projekt).
+--
+-- Erwartetes Ergebnis:
+-- durchschnitt
+-- 141625,00
+
+SELECT AVG(mittel) AS durchschnitt
+FROM Projekt
+WHERE mittel > 92336.1;
+```
 
 #### Aufgabe 4.6
-*   **Beschreibung:** Ermitteln Sie den höchsten, einzelnen Umsatz, der bisher erzielt wurde.
-*   **Ergebnis-Erwartung:**
-    ```text
-    umsatz
-    150000,00
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT MAX(umsatz) AS umsatz
-    FROM Umsatz;
-    ```
+```sql
+-- Aufgabe 4.6
+-- Ermitteln Sie den höchsten, einzelnen Umsatz, der bisher erzielt wurde.
+--
+-- Erwartetes Ergebnis:
+-- umsatz
+-- 150000,00
+
+SELECT MAX(umsatz) AS umsatz
+FROM Umsatz;
+```
 
 ---
 
 ### 3. Kategorie: Aggregatfunktionen mit Gruppierung (Aufgaben 4.7 - 4.11)
 
 #### Aufgabe 4.7
-*   **Beschreibung:** Finden Sie heraus, wie viele verschiedene Aufgaben in jedem Projekt ausgeübt werden. Nullwerte sollen nicht gezählt werden!
-*   **Ergebnis-Erwartung:**
-    ```text
-    pro_id  anzahl
-    1       3
-    2       1
-    3       3
-    4       3
-    5       2
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT pro_id, COUNT(DISTINCT aufgabe) AS anzahl
-    FROM Arbeit
-    GROUP BY pro_id;
-    ```
+```sql
+-- Aufgabe 4.7
+-- Finden Sie heraus, wie viele verschiedene Aufgaben in jedem Projekt ausgeübt werden. 
+-- Nullwerte sollen nicht gezählt werden!
+--
+-- Erwartetes Ergebnis:
+-- pro_id  anzahl
+-- 1       3
+-- 2       1
+-- 3       3
+-- 4       3
+-- 5       2
+
+SELECT pro_id, COUNT(DISTINCT aufgabe) AS anzahl
+FROM Arbeit
+GROUP BY pro_id;
+```
 
 #### Aufgabe 4.8
-*   **Beschreibung:** Finden Sie heraus, wieviele Mitarbeiter in jedem Projekt arbeiten.
-*   **Ergebnis-Erwartung:**
-    ```text
-    pro_id  anzahl
-    1       5
-    2       4
-    3       4
-    4       4
-    5       3
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT pro_id, COUNT(mit_id) AS anzahl
-    FROM Arbeit
-    GROUP BY pro_id;
-    ```
+```sql
+-- Aufgabe 4.8
+-- Finden Sie heraus, wieviele Mitarbeiter in jedem Projekt arbeiten.
+--
+-- Erwartetes Ergebnis:
+-- pro_id  anzahl
+-- 1       5
+-- 2       4
+-- 3       4
+-- 4       4
+-- 5       3
+
+SELECT pro_id, COUNT(mit_id) AS anzahl
+FROM Arbeit
+GROUP BY pro_id;
+```
 
 #### Aufgabe 4.9
-*   **Beschreibung:** Gruppieren Sie die Reihen der Tabelle "Arbeit" nach den vorhandenen Aufgaben und zählen Sie die Anzahl der Mitarbeiter abhängig von der jeweiligen Aufgabe. (Auch `NULL`-Gruppen sollen gezählt werden).
-*   **Ergebnis-Erwartung:**
-    ```text
-    aufgabe         anzahl
-    NULL            5
-    Gruppenleiter   3
-    Projektleiter   4
-    Sachbearbeiter  7
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT aufgabe, COUNT(*) AS anzahl
-    FROM Arbeit
-    GROUP BY aufgabe
-    ORDER BY aufgabe;
-    ```
+```sql
+-- Aufgabe 4.9
+-- Gruppieren Sie die Reihen der Tabelle "Arbeit" nach den vorhandenen Aufgaben 
+-- und zählen Sie die Anzahl der Mitarbeiter abhängig von der jeweiligen Aufgabe.
+--
+-- Erwartetes Ergebnis:
+-- aufgabe         anzahl
+-- NULL            5
+-- Gruppenleiter   3
+-- Projektleiter   4
+-- Sachbearbeiter  7
+
+SELECT aufgabe, COUNT(*) AS anzahl
+FROM Arbeit
+GROUP BY aufgabe
+ORDER BY aufgabe;
+```
 
 #### Aufgabe 4.10
-*   **Beschreibung:** Wie viele "echte" Aufgaben nehmen die Mitarbeiter wahr, deren Id größer als 20000 ist? ("Echt" bedeutet, dass `NULL`-Werte als `0` gezählt werden sollen).
-*   **Ergebnis-Erwartung:**
-    ```text
-    mit_id  anzahl
-    20204   1
-    22222   1
-    24321   0
-    25348   1
-    27365   1
-    28559   1
-    29346   1
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT mit_id, COUNT(aufgabe) AS anzahl
-    FROM Arbeit
-    WHERE mit_id > 20000
-    GROUP BY mit_id
-    ORDER BY mit_id;
-    ```
+```sql
+-- Aufgabe 4.10
+-- Wie viele "echte" Aufgaben nehmen die Mitarbeiter wahr, deren Id größer als 20000 ist?
+--
+-- Erwartetes Ergebnis:
+-- mit_id  anzahl
+-- 20204   1
+-- 22222   1
+-- 24321   0
+-- 25348   1
+-- 27365   1
+-- 28559   1
+-- 29346   1
+
+SELECT mit_id, COUNT(aufgabe) AS anzahl
+FROM Arbeit
+WHERE mit_id > 20000
+GROUP BY mit_id
+ORDER BY mit_id;
+```
 
 #### Aufgabe 4.11
-*   **Beschreibung:** Zählen Sie, wie viele Mitarbeiter in jedem Jahr für mindestens ein Projekt eingestellt wurden (Verknüpfung der Tabellen `Mitarbeiter` und `Arbeit`).
-*   **Ergebnis-Erwartung:**
-    ```text
-    Jahr  Anzahl
-    2017  2
-    2018  8
-    2019  8
-    ```
-*   **Lösung:**
-    ```sql
-    SELECT YEAR(eintritt) AS Jahr, COUNT(id) AS Anzahl
-    FROM Mitarbeiter
-    WHERE id IN (SELECT DISTINCT Arbeit.mit_id FROM Arbeit)
-    GROUP BY YEAR(eintritt);
-    ```
+```sql
+-- Aufgabe 4.11
+-- Zählen Sie, wie viele Mitarbeiter in jedem Jahr für mindestens ein Projekt eingestellt wurden.
+--
+-- Erwartetes Ergebnis:
+-- Jahr  Anzahl
+-- 2017  2
+-- 2018  8
+-- 2019  8
+
+SELECT YEAR(eintritt) AS Jahr, COUNT(id) AS Anzahl
+FROM Mitarbeiter
+WHERE id IN (SELECT DISTINCT Arbeit.mit_id FROM Arbeit)
+GROUP BY YEAR(eintritt);
+```
 
 ---
 
