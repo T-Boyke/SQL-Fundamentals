@@ -65,9 +65,9 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06 completed;
-    class D07 current;
-    class D08,D09,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11 completed;
+    class D12 current;
+    class D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
     class D10 exam;
 
     %% Subgraph Styles
@@ -101,10 +101,10 @@ Die zweite Woche erweitert die SQL-Kenntnisse auf Schreiboperationen, Tabellener
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
 | **Tag 06** | ✅ | DML & DDL Grundlagen | Einfügen (`INSERT`), Aktualisieren (`UPDATE`), Löschen (`DELETE`) und Tabellenmanipulationen (`CREATE`/`ALTER`). | [📖 Day_06](./Day_06/readme.md) |
-| **Tag 07** | 📝 | Indizes & Transaktionen (Heute) | Clustered vs. Non-Clustered Index, Seeks vs. Scans. ACID-Prinzip, Isolation Levels und Locking-Verhalten. | [📖 Day_07](./Day_07/readme.md) |
-| **Tag 08** | ⏳ | Datentypen, Constraints & Integrität | CHECK-Constraints, Defaultwerte, Unique Keys und Kaskadierungsregeln bei Löschungen. | [📖 Day_08](./Day_08/readme.md) |
-| **Tag 09** | ⏳ | Views & Common Table Expressions | Erstellung logischer Sichten (`VIEW`) und Strukturierung komplexer SQLs über CTEs. | [📖 Day_09](./Day_09/readme.md) |
-| **Tag 10** | 🎓 | 1. Klausur (14.08.2026) | Schriftliche Leistungsüberprüfung über alle Themen der Wochen 1 und 2 mit Klausurbesprechung. | [📖 Day_10](./Day_10/readme.md) |
+| **Tag 07** | ✅ | Indizes & Transaktionen | Clustered vs. Non-Clustered Index, Seeks vs. Scans. ACID-Prinzip, Isolation Levels und Locking-Verhalten. | [📖 Day_07](./Day_07/readme.md) |
+| **Tag 08** | ✅ | Probeklausur & Datentypen | Vollständige Ausarbeitung der Probeklausur "Datenbanken und SQL - Teil 1" inkl. Constraints und Datentypen. | [📖 Day_08](./Day_08/readme.md) |
+| **Tag 09** | ✅ | Views & Common Table Expressions | Erstellung logischer Sichten (`VIEW`) und Strukturierung komplexer SQLs über CTEs. | [📖 Day_09](./Day_09/readme.md) |
+| **Tag 10** | ✅ | 1. Klausur | Schriftliche Leistungsüberprüfung über alle Themen der Wochen 1 und 2 mit Klausurbesprechung. | [📖 Day_10](./Day_10/readme.md) |
 
 ---
 
@@ -113,8 +113,8 @@ Woche 3 verlässt das rein deklarative SQL und führt in die prozedurale Program
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
-| **Tag 11** | ⏳ | Fensterfunktionen (Window Functions) | Analytische Funktionen wie `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` und die Klausel `OVER(PARTITION BY)`. | [📖 Day_11](./Day_11/readme.md) |
-| **Tag 12** | ⏳ | Stored Procedures | Gespeicherte Prozeduren zur Kapselung von Anweisungen, Eingabe-/Ausgabeparameter. | [📖 Day_12](./Day_12/readme.md) |
+| **Tag 11** | ✅ | Fensterfunktionen (Window Functions) | Analytische Funktionen wie `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` und die Klausel `OVER(PARTITION BY)`. | [📖 Day_11](./Day_11/readme.md) |
+| **Tag 12** | 📝 | Sortierung & Aggregationen (Heute) | Sortieren mit `ORDER BY`, Handling von `NULL`-Werten, Ergebnisbegrenzung (`TOP`/`WITH TIES`), Aggregatfunktionen und Gruppierungen (`GROUP BY`/`HAVING`). | [📖 Day_12](./Day_12/readme.md) |
 | **Tag 13** | ⏳ | User Defined Functions (UDFs) | Skalarwertfunktionen und Tabellenwertfunktionen (Inline- vs. Multi-Statement-UDFs). | [📖 Day_13](./Day_13/readme.md) |
 | **Tag 14** | ⏳ | Trigger | Automatische DML-Reaktionen (AFTER-Trigger und INSTEAD OF-Trigger). | [📖 Day_14](./Day_14/readme.md) |
 | **Tag 15** | ⏳ | Fehlerbehandlung in T-SQL | Strukturierte Ausnahmebehandlung mit `TRY...CATCH`, Auslösen von Fehlern via `THROW`. | [📖 Day_15](./Day_15/readme.md) |
