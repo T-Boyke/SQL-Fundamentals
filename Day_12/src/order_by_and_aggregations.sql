@@ -228,3 +228,41 @@ FROM Mitarbeiter
 WHERE id IN (SELECT DISTINCT Arbeit.mit_id FROM Arbeit)
 GROUP BY YEAR(eintritt);
 GO
+
+
+-- ============================================================================
+-- HAVING (Aufgaben 4.12 - 4.15)
+-- ============================================================================
+
+-- Aufgabe 4.12
+-- Nennen Sie alle Projekte (pro_id), mit denen weniger als vier Mitarbeiter befasst sind.
+SELECT pro_id, COUNT(mit_id) AS mitarbeiter
+FROM Arbeit
+GROUP BY pro_id
+HAVING COUNT(mit_id) < 4;
+
+-- Aufgabe 4.13
+-- Finden Sie alle Mitarbeiter, die in mehr als einem Projekt arbeiten.
+SELECT mit_id, COUNT(pro_id) AS projekte
+FROM Arbeit
+GROUP BY mit_id
+HAVING COUNT(pro_id) > 1
+ORDER BY mit_id;
+
+-- Aufgabe 4.14
+-- Ermitteln Sie die Tage, an denen mehr als 5000 € Umsatz generiert wurde.
+SELECT datum, SUM(umsatz) AS umsatz
+FROM Umsatz
+GROUP BY datum
+HAVING SUM(umsatz) > 5000
+ORDER BY datum;
+
+-- Aufgabe 4.15
+-- Ermitteln Sie, welche Gehälter jeweils nur von genau einem Mitarbeiter bezogen werden.
+SELECT gehalt, COUNT(mit_id) AS mitarbeiter
+FROM Gehalt
+GROUP BY gehalt
+HAVING COUNT(mit_id) = 1
+ORDER BY gehalt;
+GO
+
