@@ -46,7 +46,7 @@ Während DDL das **Strukturgerüst** (Schemas, Tabellen, Spalten, Datentypen und
 
 In der Praxis liegen Daten oft in unnormalisierten "Flachdateien" oder veralteten Systemtabellen vor, die Redundanzen und Datenanomalien aufweisen. Der Übergang zu einem sauberen 3NF-Tabellenschema erfordert ein systematisches Zusammenspiel von DDL und DML:
 
-#### Der 4-Schritte-Refactoring-Prozess:
+#### Der 4-Schritte-Refactoring-Prozess
 
 1. **DDL – Zieltabellen erstellen (`CREATE TABLE`):**
    Für jede eigenständige Entität des neuen 3NF-Modells (z. B. `Kunde`, `Artikel`, `Bestellung`, `Bestellposition`) wird eine saubere Tabelle mit Primärschlüsseln, Datentypen und Constraints angelegt.
@@ -61,7 +61,7 @@ In der Praxis liegen Daten oft in unnormalisierten "Flachdateien" oder veraltete
 
 ### 📊 Visualisierung: Vorher/Nachher des 3NF-Refactorings
 
-#### Vorher (Unnormalisierte Alttabelle `BestellErfassung` - Redundanz & Anomalien):
+#### Vorher (Unnormalisierte Alttabelle `BestellErfassung` - Redundanz & Anomalien)
 ```mermaid
 erDiagram
     BestellErfassung {
@@ -78,7 +78,7 @@ erDiagram
     }
 ```
 
-#### Nachher (Sauberes 3NF-Tabellenmodell):
+#### Nachher (Sauberes 3NF-Tabellenmodell)
 ```mermaid
 erDiagram
     Kunde_3NF ||--|{ Bestellung_3NF : "1:n (KundenNr FK)"
@@ -111,25 +111,25 @@ erDiagram
 
 ### 3. Syntax-Referenz: DDL & DML für Schemaänderungen
 
-#### Spalte nachträglich hinzufügen:
+#### Spalte nachträglich hinzufügen
 ```sql
 ALTER TABLE dbo.KundenStamm
 ADD Telefon VARCHAR(30) NULL;
 ```
 
-#### Spaltendefinition ändern:
+#### Spaltendefinition ändern
 ```sql
 ALTER TABLE dbo.KundenStamm
 ALTER COLUMN StatusFlag VARCHAR(20) NOT NULL;
 ```
 
-#### Redundante Spalten entfernen (DDL):
+#### Redundante Spalten entfernen (DDL)
 ```sql
 ALTER TABLE dbo.BestellErfassung
 DROP COLUMN KundenName, KundenOrt;
 ```
 
-#### Daten duplikatfrei migrieren (DML):
+#### Daten duplikatfrei migrieren (DML)
 ```sql
 INSERT INTO dbo.Kunde_3NF (KundenNr, KundenName, KundenOrt)
 SELECT DISTINCT KundenNr, KundenName, KundenOrt

@@ -247,6 +247,7 @@ Ein **Index** in einer relationalen Datenbank ist eine zusätzliche Datenstruktu
 | **Update Lock (U)** | Aktualisierungssperre | Wird vor dem Umwandeln in ein Exclusive Lock genutzt, um Deadlocks bei gleichzeitigen Updates zu vermeiden. |
 | **Intent Lock (IS / IX)** | Absichtssperre | Signalisiert auf höherer Hierarchieebene (z. B. Tabelle), dass auf unterer Ebene (z. B. Zeile) Locks existieren. |
 | **Priority Lock** | *Existiert nicht* | Ein Begriff aus der Prozess-Planung (CPU-Scheduling), nicht im Lock-Manager des SQL Servers. |
+
 </details>
 
 ---
@@ -281,14 +282,14 @@ GO
 
 ### 📝 Aufgabe 1: ER-Modell „Wein-Händler“ (20 Punkte)
 
-#### Sachverhalt & Anforderungen:
+#### Sachverhalt & Anforderungen (Aufgabe 1)
 1. Jeder **Wein** kann nur von genau einem **Weingut** bestellt werden.
 2. Ein **Wein** kann aus einer oder mehreren **Rebsorten** bestehen. Ebenso kann eine **Rebsorte** zur Herstellung verschiedener **Weine** verwendet werden.
 3. Der prozentuale **Anteil** einer Rebsorte an einem Wein muss gespeichert werden.
 4. Ein **Weingut** ist genau einer **Region** und eine Region genau einem **Land** zugeordnet.
 5. Jeder **Wein** ist von einem **Typ** (z. B. Weißwein, Rotwein) und von einer bestimmten **Art** (z. B. trocken, lieblich). Typ und Art sollen jeweils als eigene Entitätstypen dargestellt werden.
 
-#### Analyse & Modellierungs-Entscheidungen:
+#### Analyse & Modellierungs-Entscheidungen
 * **Entitätstypen:** `Land`, `Region`, `Weingut`, `Wein`, `Rebsorte`, `Typ`, `Art`.
 * **Beziehungen & Kardinalitäten (Chen-Notation):**
   * `Land` (1) $\longleftrightarrow$ `Region` (N) [1:N]
@@ -332,12 +333,12 @@ erDiagram
 
 ### 📝 Aufgabe 2: ER-Modell „Agentur / Mitarbeiter & Projekte“ (10 Punkte)
 
-#### Sachverhalt & Anforderungen:
+#### Sachverhalt & Anforderungen (Aufgabe 2)
 1. Ein **Mitarbeiter** kann an mehreren **Projekten** arbeiten und an einem Projekt können auch mehrere Mitarbeiter arbeiten. Der Zeitraum (**Startdatum**, **Enddatum**), in dem die Mitarbeiter an dem Projekt arbeiten, soll gespeichert werden.
 2. Zusätzlich wird jedes **Projekt** von genau einem **Mitarbeiter** geleitet. Ein Mitarbeiter kann aber durchaus mehrere Projekte leiten.
 3. Jeder **Mitarbeiter** hat genau einen anderen Mitarbeiter als seinen **Vorgesetzten**. Ein Mitarbeiter kann aber der Vorgesetzte von mehreren anderen Mitarbeitern sein.
 
-#### Analyse der drei Beziehungen:
+#### Analyse der drei Beziehungen
 1. **Verbindung `arbeitet_an` (N:M):** Zwischen `Mitarbeiter` und `Projekt`. Enthält die Attribute `Startdatum` und `Enddatum`.
 2. **Verbindung `leitet` (1:N):** Eine zweite, separate Beziehung zwischen `Mitarbeiter` und `Projekt`.
 3. **Verbindung `ist_vorgesetzter_von` (1:N rekursiv / reflexiv):** Eine Selbstreferenz an der Entität `Mitarbeiter` (1 Vorgesetzter leitet N Mitarbeiter; jeder Mitarbeiter hat (0,1) Vorgesetzte).
@@ -373,12 +374,12 @@ erDiagram
 
 ### 📝 Aufgabe 1: ER-Modell Online-Shop in 3NF Tabellenmodell umwandeln (10 Punkte)
 
-#### Gegebenes ER-Modell aus der Aufgabenstellung:
+#### Gegebenes ER-Modell aus der Aufgabenstellung
 * Entität `Kunde` (`KundeID` PK, `Vorname`, `Nachname`)
 * 1:N-Beziehung `hat` zu Entität `Bestellung` (`BestellID` PK, `Datum`)
 * N:M-Beziehung `hat` mit Attribut `Anzahl` zu Entität `Artikel` (`ArtikelID` PK, `Bezeichnung`)
 
-#### Überführung in das relational-logische Tabellenmodell (3NF):
+#### Überführung in das relational-logische Tabellenmodell (3NF)
 1. **Regel 1:N-Beziehung:** Der Primärschlüssel der 1-Seite (`Kunde.KundeID`) wird als Fremdschlüssel `KundeID` [FK] in die N-Tabelle `Bestellung` übernommen.
 2. **Regel N:M-Beziehung:** Die N:M-Beziehung wird in eine eigenständige **Koppeltabelle** (z. B. `Bestellposition`) aufgespalten.
    * Der Primärschlüssel der Koppeltabelle setzt sich zusammen aus `BestellID` [PK, FK] und `ArtikelID` [PK, FK].
@@ -433,7 +434,7 @@ erDiagram
 
 ### 📝 Aufgabe 2: Unnormalisierte Tabelle & 1NF-Analyse (9 Punkte)
 
-#### Gegebene Beispieltabelle:
+#### Gegebene Beispieltabelle
 
 | BestNr [PK] | KundenNr | Name | BestDatum | Position | Artikel |
 | :---: | :---: | :--- | :---: | :--- | :--- |
@@ -443,7 +444,7 @@ erDiagram
 
 ---
 
-#### a) Nennen Sie drei Spalten, die der 1. Normalform (1NF) widersprechen (3 Punkte):
+#### a) Nennen Sie drei Spalten, die der 1. Normalform (1NF) widersprechen (3 Punkte)
 
 1. **Spalte `Position`:** Enthält Aufzählungen/Wiederholungsgruppen (mehrere Werte pro Zelle).
 2. **Spalte `Artikel`:** Enthält zusammengesetzte, nicht-atomare Werte (Menge, Artikelbezeichnung und Artikel-ID in einem Textfeld vereinigt).
@@ -454,7 +455,7 @@ erDiagram
 
 ---
 
-#### b) Problemstellung & Lösung des Primärschlüssels bei Überführung in 1NF (6 Punkte):
+#### b) Problemstellung & Lösung des Primärschlüssels bei Überführung in 1NF (6 Punkte)
 
 * **Das Problem (3 Punkte):**
   Wenn die Mehrfachwerte/Wiederholungsgruppen in der Spalte `Artikel` atomisiert werden (d. h. für jede gekaufte Position wird eine eigene Zeile angelegt), entsteht Redundanz bei der Spalte `BestNr`. Die Spalte `BestNr` ist dann **nicht mehr eindeutig** (z. B. existiert `BestNr = 1` nun zweimal für Position 1 und 2). Sie verliert ihre Eigenschaft als Primärschlüssel!
@@ -466,7 +467,7 @@ erDiagram
 
 ### 📝 Aufgabe 3: 2NF zu 3NF Überführung (11 Punkte)
 
-#### Gegebene Tabelle (bereits in 2NF):
+#### Gegebene Tabelle (bereits in 2NF)
 
 | BestNr [PK] | BestDatum | GesamtWert | KundenNr | KundeVorname | KundeName |
 | :---: | :---: | :---: | :---: | :--- | :--- |
@@ -478,14 +479,14 @@ erDiagram
 
 ---
 
-#### a) Nennen Sie die beiden Spalten, die der 3. Normalform widersprechen (2 Punkte):
+#### a) Nennen Sie die beiden Spalten, die der 3. Normalform widersprechen (2 Punkte)
 
 1. **`KundeVorname`**
 2. **`KundeName`**
 
 ---
 
-#### b) Beschreiben Sie, warum diese Spalten der 3. Normalform widersprechen (4 Punkte):
+#### b) Beschreiben Sie, warum diese Spalten der 3. Normalform widersprechen (4 Punkte)
 
 Die 3. Normalform fordert, dass kein Nicht-Schlüsselattribut **transitiv** von einem Schlüsselattribut abhängt.
 * In dieser Tabelle ist `BestNr` der Primärschlüssel.
@@ -496,16 +497,17 @@ Die 3. Normalform fordert, dass kein Nicht-Schlüsselattribut **transitiv** von 
 
 ---
 
-#### c) Vorgehensweise zur Überführung in die 3. Normalform (5 Punkte):
+#### c) Vorgehensweise zur Überführung in die 3. Normalform (5 Punkte)
 
 1. **Auslagerung der Kundendaten:** Wir erstellen eine neue Tabelle **`Kunde`**.
    * Spalten: `KundenNr` **[PK]**, `KundeVorname`, `KundeName`.
 2. **Bereinigung der Bestellungstabelle:** Die transitiven Attribute `KundeVorname` und `KundeName` werden aus der Tabelle **`Bestellung`** entfernt.
 3. **Verknüpfung beibehalten:** Die Spalte `KundenNr` bleibt in der Tabelle `Bestellung` als **Fremdschlüssel [FK]** erhalten.
 
-#### 📋 Ergebnisstruktur in 3NF:
+#### 📋 Ergebnisstruktur in 3NF
 
 **Tabelle `Kunde`:**
+
 | KundenNr [PK] | KundeVorname | KundeName |
 | :---: | :--- | :--- |
 | 1357 | Marla | Müller |
@@ -513,6 +515,7 @@ Die 3. Normalform fordert, dass kein Nicht-Schlüsselattribut **transitiv** von 
 | 9911 | Gundel | Gaukeley |
 
 **Tabelle `Bestellung`:**
+
 | BestNr [PK] | BestDatum | GesamtWert | KundenNr [FK] |
 | :---: | :---: | :---: | :---: |
 | 1 | 01.10.2010 | 199,90 | 1357 |
@@ -529,7 +532,7 @@ Die 3. Normalform fordert, dass kein Nicht-Schlüsselattribut **transitiv** von 
 
 ### 📝 Aufgabe 1: DDL – Erstellung der Tabelle `Kunde` (7 Punkte)
 
-#### Gegebenes Relationales Modell aus der Klausur:
+#### Gegebenes Relationales Modell aus der Klausur
 
 ```
 +------------------+             +------------------+
@@ -544,7 +547,7 @@ Die 3. Normalform fordert, dass kein Nicht-Schlüsselattribut **transitiv** von 
 +------------------+
 ```
 
-#### T-SQL DDL Codeblock:
+#### T-SQL DDL Codeblock
 
 ```sql
 -- Erstellung der Elterntabelle Ansprechpartner (Voraussetzung für Foreign Key)
