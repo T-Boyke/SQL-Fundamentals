@@ -80,6 +80,84 @@ flowchart TD
 
 ---
 
+## 🗄️ Datenbankschema: ProjektDB (Single Source of Truth – SoT)
+
+> [!IMPORTANT]
+> **Kanonische Datenbasis für das gesamte Repository:**
+> Die **`ProjektDB`** ist die verbindliche **Single Source of Truth (SoT)** für alle Kursmodule (`Day_01` bis `Day_25`). Alle praktischen Übungen, Skripte, Abfragen und Modul-Dokumentationen basieren konsistent auf diesem relationalen Schema.
+
+Das folgende Entity-Relationship-Diagramm (ERD) visualisiert die zentrale Übungsdatenbank `ProjektDB`:
+
+```mermaid
+erDiagram
+    ABTEILUNG ||--o{ MITARBEITER : "beschaeftigt (abt_id)"
+    MITARBEITER ||--o{ MITARBEITER : "leitet (chef_id)"
+    MITARBEITER ||--|| GEHALT : "bezieht (mit_id)"
+    MITARBEITER ||--o{ ARBEIT : "arbeitet_in (mit_id)"
+    PROJEKT ||--o{ ARBEIT : "beschaeftigt (pro_id)"
+    KUNDE ||--o{ PROJEKT : "beauftragt (kunde_id)"
+    MITARBEITER ||--o{ UMSATZ : "erzielt (mit_id)"
+
+    MITARBEITER {
+        int id PK "Personalnummer"
+        string vorname "Vorname"
+        string nachname "Nachname"
+        int abt_id FK "Abteilung -> Abteilung(id)"
+        string ort "Wohnort"
+        int chef_id FK "Vorgesetzter -> Mitarbeiter(id)"
+    }
+
+    GEHALT {
+        int mit_id PK, FK "Mitarbeiter-ID -> Mitarbeiter(id)"
+        decimal gehalt "Monatsgehalt in EUR"
+    }
+
+    ABTEILUNG {
+        int id PK "Abteilungs-ID"
+        string kuerzel "Kürzel (z.B. BE, DI, FR)"
+        string bezeichnung "Abteilungsname"
+        string ort "Standort"
+    }
+
+    KUNDE {
+        int id PK "Kunden-ID"
+        string firma "Firmenname"
+        string ort "Firmensitz"
+    }
+
+    PROJEKT {
+        int id PK "Projekt-ID"
+        string kuerzel "Kürzel (z.B. AP, GM, MK)"
+        string bezeichnung "Projektname (Apollo, Gemini...)"
+        decimal mittel "Projektbudget in EUR"
+        int kunde_id FK "Kunden-ID -> Kunde(id)"
+    }
+
+    ARBEIT {
+        int mit_id PK, FK "Mitarbeiter-ID -> Mitarbeiter(id)"
+        int pro_id PK, FK "Projekt-ID -> Projekt(id)"
+        string aufgabe "Rolle / Aufgabe"
+        date einst_dat "Eintrittsdatum / Beginn"
+    }
+
+    UMSATZ {
+        int id PK "Umsatz-ID"
+        int mit_id FK "Mitarbeiter-ID -> Mitarbeiter(id)"
+        date datum "Umsatzdatum"
+        decimal umsatz "Umsatzbetrag in EUR"
+    }
+```
+
+### Relationen & Kardinalitäten im Überblick
+* **`Mitarbeiter` ➔ `Abteilung` (n:1):** Mehrere Mitarbeiter gehören zu einer Abteilung (`abt_id`).
+* **`Mitarbeiter` ➔ `Mitarbeiter` (1:n Selbstreferenz):** Ein Mitarbeiter kann Vorgesetzter (`chef_id`) mehrerer Mitarbeiter sein.
+* **`Mitarbeiter` ➔ `Gehalt` (1:1):** Jeder Mitarbeiter besitzt genau einen Gehaltseintrag (`mit_id`).
+* **`Mitarbeiter` ➔ `Projekt` über `Arbeit` (n:m):** Verknüpfungstabelle mit zusammengesetztem Primärschlüssel (`mit_id`, `pro_id`), zusätzlicher Rolle (`aufgabe`) und Eintrittsdatum (`einst_dat` / `beginn`).
+* **`Kunde` ➔ `Projekt` (1:n):** Ein Kunde kann Auftraggeber mehrerer Projekte sein (`kunde_id`).
+* **`Mitarbeiter` ➔ `Umsatz` (1:n):** Ein Mitarbeiter kann mehrere Umsatzerlöse verbuchen (`mit_id`).
+
+---
+
 ## 📂 Kursmodule & Tagesübersicht (ToC)
 
 ### 📅 Woche 1: Relationales Modell & DQL Basics
