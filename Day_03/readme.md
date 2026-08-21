@@ -1,96 +1,89 @@
-# 📅 Day_03: Normalisierung & Datenbankanomalien (1NF, 2NF, 3NF)
+# 📅 Day_03: Normalisierung & Datenanomalien (1NF, 2NF, 3NF)
 
 ## ℹ️ Kurs-Informationen
-*   **Datum:** Mittwoch, 05.08.2026
-*   **Arbeitszeit:** 08:15 - 16:00 Uhr
-*   **Dozent:** Tom S.
-*   **Autor:** Tobias Boyke
+
+* **Datum:** Mittwoch, 05.08.2026
+* **Arbeitszeit:** 08:15 - 16:00 Uhr
+* **Dozent:** Tom S.
+* **Autor:** Tobias Boyke
 
 ---
 
 ## 🎯 Lernziele des Tages
-*   Datenbank-Anomalien (Einfüge-, Änderungs- und Lösch-Anomalien) erkennen und erklären können.
-*   Die Kriterien der 1., 2. und 3. Normalform (NF) beherrschen.
-*   Eine unnormalisierte Tabelle schrittweise in die 3. Normalform überführen können.
+
+- [x] **Datenbank-Anomalien:** Einfüge-, Änderungs- und Lösch-Anomalien sicher erkennen und deren Ursachen (Redundanzen) erklären.
+- [x] **Die drei klassischen Normalformen (1NF, 2NF, 3NF):** Formale Kriterien und praktische Anwendung beherrschen.
+- [x] **Funktionale Abhängigkeiten:** Voll funktionale vs. partielle Abhängigkeiten und transitive Abhängigkeiten identifizieren.
+- [x] **Schrittweises Refactoring:** Überführung unnormalisierter Daten in ein redundanzfreies 3NF-Schema.
+- [x] **IHK-Prüfungsaufgaben Normalisierung:** Bearbeitung realer Prüfungsszenarien (PC-Shop, Getränkebestellung, Fahrräder).
 
 ---
 
 ## 📖 Theorie & Konzepte
 
 ### 1. Warum Normalisierung? (Datenanomalien)
-Unter **Normalisierung** versteht man die Aufteilung von Tabellen zur Reduzierung von Redundanzen (doppelten Daten). Unnormalisierte Tabellen führen zu schwerwiegenden Fehlern bei Datenmanipulationen:
 
-*   **Redundanz:** Gleiche Daten werden mehrfach gespeichert (z. B. die Adresse eines Kunden bei jeder Bestellung). Verbraucht Speicher und verlangsamt Abfragen.
-*   **Einfüge-Anomalie (Insert Anomaly):** Daten können nicht eingefügt werden, weil andere Daten fehlen. Z. B. kann kein neuer Kurs eingepflegt werden, solange sich kein Schüler dafür angemeldet hat (wenn SchülerID und KursID gemeinsam der Primärschlüssel sind).
-*   **Änderungs-Anomalie (Update Anomaly):** Wird eine Information (z. B. der Name eines Kunden) geändert, muss dies an mehreren Stellen gleichzeitig geschehen. Wird eine Zeile vergessen, ist der Datenbestand inkonsistent.
-*   **Lösch-Anomalie (Delete Anomaly):** Beim Löschen eines Datensatzes gehen ungewollt andere wichtige Informationen verloren. Z. B. wird der letzte Schüler eines Kurses gelöscht und dadurch geht auch die Information verloren, dass der Kurs existiert und wer ihn leitet.
+Unter **Normalisierung** versteht man die systematische Zerlegung von Relationen zur Minimierung von Datenredundanzen und Vermeidung von Inkonsistenzen:
+
+* **Redundanz:** Mehrfache Speicherung identischer Fakten führt zu erhöhtem Speicherbedarf und Inkonsistenzrisiken.
+* **Einfüge-Anomalie (Insert Anomaly):** Ein neuer Fakt kann nicht gespeichert werden, solange andere Pflichtdaten fehlen (z. B. Kurs kann nicht angelegt werden ohne Teilnehmer).
+* **Änderungs-Anomalie (Update Anomaly):** Änderungen müssen an vielen Stellen parallel durchgeführt werden; wird eine Stelle vergessen, ist der Datenbestand widersprüchlich.
+* **Lösch-Anomalie (Delete Anomaly):** Beim Löschen eines Eintrags gehen unbeabsichtigt andere wichtige Informationen verloren (z. B. Löschen des letzten Schülers löscht den gesamten Kurs).
 
 ---
 
-### 2. Die drei Normalformen (1NF, 2NF, 3NF)
+### 2. Die drei Normalformen im Überblick
+
+```mermaid
+flowchart TD
+    UNF["Unnormalisierte Tabelle (UNF)"] -->|Atomare Werte & Primärschlüssel| NF1["1. Normalform (1NF)"]
+    NF1 -->|Keine Teilabhängigkeiten vom PK| NF2["2. Normalform (2NF)"]
+    NF2 -->|Keine transitiven Abhängigkeiten| NF3["3. Normalform (3NF)"]
+```
 
 #### 1. Normalform (1NF)
-> Eine Tabelle befindet sich in der 1. Normalform, wenn alle Attribute **atomare** (unteilbare) Werte aufweisen und die Tabelle einen **Primärschlüssel** besitzt. Keine Wiederholungsgruppen oder Listen in einer Zelle.
+> Alle Attribute enthalten **atomare** (unteilbare) Werte, und die Tabelle besitzt einen eindeutigen **Primärschlüssel**. Keine Wiederholungsgruppen oder Wertelisten in Zellen.
 
 #### 2. Normalform (2NF)
-> Eine Tabelle befindet sich in der 2. Normalform, wenn sie in der **1. Normalform** ist und jedes Nicht-Schlüsselfeld vom **gesamten** Primärschlüssel voll funktional abhängig ist.
-*   *Relevanz:* Betrifft nur Tabellen mit zusammengesetzten Primärschlüsseln. Attribute, die nur von einem *Teil* des Schlüssels abhängen, müssen in eine eigene Tabelle ausgelagert werden.
+> Die Tabelle befindet sich in der **1NF** und jedes Nicht-Schlüsselfeld ist vom **gesamten** Primärschlüssel voll funktional abhängig (keine Teilabhängigkeiten bei zusammengesetzten Schlüsseln).
 
 #### 3. Normalform (3NF)
-> Eine Tabelle befindet sich in der 3. Normalform, wenn sie in der **2. Normalform** ist und **keine transitiven Abhängigkeiten** vorliegen. Nicht-Schlüsselfelder dürfen nicht von anderen Nicht-Schlüsselfeldern abhängen.
+> Die Tabelle befindet sich in der **2NF** und enthält **keine transitiven Abhängigkeiten** (Nicht-Schlüsselfelder dürfen nicht von anderen Nicht-Schlüsselfeldern abhängen).
 
 ---
 
-### 3. Schritt-für-Schritt-Beispiel zur Normalisierung
+### 3. Normalisierungs-Beispiel (Verlag & Bestellwesen)
 
-#### Ausgangszustand: Unnormalisierte Tabelle (UNF)
+#### 1NF: Auflösen von Wertelisten
+* Aus unteilbaren Zeichenfolgen wie `"Buch A, Buch B"` werden separate Datensätze erzeugt.
 
-| **<u>SchülerID</u>** | **SchülerName** | **ProjektID** | **ProjektName** | **ProjektLeiter** | **Note** |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 100 | Tobias, Max | P01 | SQL, Java | Tom S., Herr M. | 1, 2 |
+#### 2NF: Auslagern von Teilabhängigkeiten
+* Artikeldaten (Name, Preis) hängen nur von der `ArtikelNr` ab, nicht von der zusammengesetzten `(BestellNr, ArtikelNr)` ➔ Auslagerung in Tabelle `Artikel`.
 
-#### Schritt 1: Überführung in die 1. Normalform (Atomisierung)
-*Listen werden aufgelöst, jede Zelle enthält nur einen Wert. Primärschlüssel wird zusammengesetzt: `(SchülerID, ProjektID)`.*
-
-##### Tabelle: SchülerProjekte_1NF
-
-| **<u>SchülerID</u>** | **<u>ProjektID</u>** | **SchülerName** | **ProjektName** | **ProjektLeiter** | **Note** |
-| :--- | :---: | :--- | :--- | :--- | :---: |
-| 100 | P01 | Tobias | SQL | Tom S. | 1 |
-| 100 | P02 | Max | Java | Herr M. | 2 |
-
-#### Schritt 2: Überführung in die 2. Normalform (Teilabhängigkeiten eliminieren)
-*Die Note hängt vom gesamten Schlüssel ab (Wer hat in welchem Projekt welche Note?). Aber:*
-*   *`SchülerName` hängt nur von `SchülerID` ab.*
-*   *`ProjektName` und `ProjektLeiter` hängen nur von `ProjektID` ab.*
-*   *Lösung:* Aufteilung in drei Tabellen.
-
-*   **Tabelle A: Schüler (SchülerID [PK], SchülerName)**
-*   **Tabelle B: Projekte (ProjektID [PK], ProjektName, ProjektLeiter)**
-*   **Tabelle C: SchülerProjektNoten (SchülerID [PK, FK], ProjektID [PK, FK], Note)**
-
-#### Schritt 3: Überführung in die 3. Normalform (Transitive Abhängigkeiten eliminieren)
-*In der Tabelle `Projekte` hängt `ProjektLeiter` transitiv vom `ProjektName` ab (bzw. ist eine eigene Entität mit eigenen Attributen). Wir lagern den Projektleiter aus.*
-
-*   **Tabelle: Schüler** (SchülerID [PK], SchülerName)
-*   **Tabelle: ProjektLeiter** (LeiterID [PK], Name)
-*   **Tabelle: Projekte** (ProjektID [PK], ProjektName, LeiterID [FK])
-*   **Tabelle: SchülerProjektNoten** (SchülerID [PK, FK], ProjektID [PK, FK], Note)
+#### 3NF: Beseitigen transitiver Abhängigkeiten
+* Kundenort und Bundesland hängen von der `PLZ` bzw. `KundenNr` ab ➔ Auslagerung in Tabellen `Kunde` und `Ort`.
 
 ---
 
-### 🎓 IHK-Prüfungsrelevanz: Normalisierung
+## 📂 Begleitmaterialien & Dokumente
 
-#### Frage 1: Erklären Sie den Begriff "Änderungsanomalie" anhand eines Beispiels (3 Punkte)
+Im Ordner `assets/` stehen die Vorlesungsaufgaben und IHK-Abschlussprüfungsunterlagen bereit:
+* 📄 **[Aufgabe Normalisierung Vorlesung 1-3.pdf](./assets/):** Vorlesungsübungen zur schrittweisen Normalisierung.
+* 📄 **[Datenbank-Entwurf-BeispielNormalisierung Verlag.ods](./assets/Datenbank-Entwurf-BeispielNormalisierung%20Verlag.ods):** Tabellenkalkulationsmodell zur Normalisierung.
+* 📄 **[IHK Prüfungsaufgaben Normalisierung](./assets/):**
+  * *PC-Shop (AP 2003 S GA2 HS6)*
+  * *Getränkebestellung (AP 2016 S GA1 FIAE HS4)*
+  * *Fahrräder (AP 2019 W GA1 FIAE HS4)*
+
+---
+
+## 🎓 IHK-Prüfungsrelevanz: Normalisierung
+
+### Frage 1: Erklären Sie den Begriff "Löschanomalie" anhand eines konkreten Beispiels (3 Punkte)
 > **IHK-Musterantwort:**
-> Eine Änderungsanomalie tritt auf, wenn redundante Daten in einer Tabelle nicht an allen Stellen gleichzeitig aktualisiert werden. Zieht z. B. ein Kunde um und seine Adresse wird bei einer Bestellung aktualisiert, bei einer älteren Bestellung jedoch nicht, entstehen widersprüchliche (inkonsistente) Daten im System.
+> Eine Löschanomalie liegt vor, wenn beim Löschen eines Datensatzes unbeabsichtigt andere, sachlich eigenständige Informationen unwiderruflich verloren gehen. 
+> *Beispiel:* In einer unnormalisierten Tabelle `KursTeilnehmer (TeilnehmerID, KursID, DozentenName)` führt das Abmelden des letzten Teilnehmers dazu, dass der gesamte Datensatz gelöscht wird – und damit auch die Information, dass der Kurs existiert und wer ihn leitet.
 
-#### Frage 2: Nennen Sie die Bedingung, damit sich eine Tabelle in der 2. Normalform befindet (3 Punkte)
+### Frage 2: Wann befindet sich eine Tabelle in der 3. Normalform? (3 Punkte)
 > **IHK-Musterantwort:**
-> Die Tabelle muss sich bereits in der 1. Normalform befinden (atomare Attribute, Primärschlüssel existiert). Zudem muss jedes Nicht-Schlüsselfeld vom gesamten Primärschlüssel voll funktional abhängig sein (keine Teilabhängigkeiten bei zusammengesetzten Schlüsseln).
-
----
-
-## 💡 Wichtige Notizen
-> [!TIP]
-> **Praxisnähe:** In produktiven Systemen wird fast immer bis zur 3. Normalform normalisiert. Höhere Normalformen (z. B. BCNF, 4NF, 5NF) spielen in der Praxis eine untergeordnete Rolle. Gelegentlich wird aus Performance-Gründen (z. B. in Data Warehouses) gezielt *denormalisiert*, um teure `JOIN`-Operationen einzusparen.
+> Eine Tabelle ist in der 3. Normalform, wenn sie sich bereits in der 2. Normalform befindet und kein Nicht-Schlüsselattribut transitiv von einem Primärschlüssel abhängt (d. h. kein Nicht-Schlüsselfeld darf funktional von einem anderen Nicht-Schlüsselfeld abhängig sein).
