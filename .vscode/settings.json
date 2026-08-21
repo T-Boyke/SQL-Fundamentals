@@ -1,5 +1,5 @@
 {
-  "sqlfluff.executablePath": "C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\sqlfluff.exe",
+  "sqlfluff.executablePath": "sqlfluff",
   "sqlfluff.dialect": "tsql",
   "sqlfluff.runTrigger": "onSave",
   "markdownlint.run": "onSave"
