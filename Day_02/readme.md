@@ -1,71 +1,82 @@
 # 📅 Day_02: ERM-Besonderheiten & Das Relationale Tabellenmodell
 
 ## ℹ️ Kurs-Informationen
-*   **Datum:** Dienstag, 04.08.2026
-*   **Arbeitszeit:** 08:15 - 16:00 Uhr
-*   **Dozent:** Tom S.
-*   **Autor:** Tobias Boyke
+
+* **Datum:** Dienstag, 04.08.2026
+* **Arbeitszeit:** 08:15 - 16:00 Uhr
+* **Dozent:** Tom S.
+* **Autor:** Tobias Boyke
 
 ---
 
 ## 🎯 Lernziele des Tages
-*   Komplexe ERM-Strukturen (rekursive und ternäre Beziehungen) verstehen.
-*   Die Transformationsregeln vom ERM zum physischen Tabellenmodell beherrschen.
-*   Schlüsselkonzepte (Primärschlüssel, Fremdschlüssel, zusammengesetzte Schlüssel) richtig anwenden.
+
+- [x] **Komplexe ERM-Strukturen:** Rekursive Beziehungen (Selbstbeziehung) und ternäre (dreistellige) Beziehungen sicher modellieren.
+- [x] **Relationales Mapping:** Beherrschung der Transformationsregeln vom ERM zum physischen Tabellenmodell (Relational Schema).
+- [x] **Schlüsselkonzepte:** Primärschlüssel, Fremdschlüssel und zusammengesetzte Schlüssel (Composite Keys) korrekt anwenden.
+- [x] **Referenzielle Integrität:** Vermeidung verwaister Datensätze durch Fremdschlüssel-Beziehungen.
+- [x] **IHK-Prüfungstraining Tabellenmodell:** Bearbeitung realer IHK-Szenarien (Kassensystem, Weine, Tarifübersicht).
 
 ---
 
 ## 📖 Theorie & Konzepte
 
 ### 1. Besonderheiten im ERM (Chen-Notation)
-*   **Mehrere Beziehungen:** Zwischen denselben zwei Entitäten können verschiedene Beziehungen bestehen (z. B. `Mitarbeiter` *leitet* `Abteilung` vs. `Mitarbeiter` *arbeitet_in* `Abteilung`).
-*   **Rekursive Beziehungen (Selbstbeziehung):** Eine Entität steht mit sich selbst in Beziehung (z. B. `Mitarbeiter` *ist Vorgesetzter von* `Mitarbeiter`).
-*   **Ternäre Beziehungen (Mehrstellige Beziehungen):** Verknüpfen drei Entitäten gleichzeitig (z. B. `Lieferant` *liefert* `Teil` *an* `Projekt`). Kann nicht einfach in binäre Beziehungen zerlegt werden.
+
+* **Mehrere Beziehungen:** Zwischen denselben zwei Entitäten können verschiedene fachliche Beziehungen bestehen (z. B. `Mitarbeiter` *leitet* `Abteilung` vs. `Mitarbeiter` *arbeitet_in* `Abteilung`).
+* **Rekursive Beziehungen (Selbstreferenz):** Eine Entität steht mit sich selbst in Beziehung (z. B. `Mitarbeiter` *ist Vorgesetzter von* `Mitarbeiter`).
+* **Ternäre Beziehungen:** Verknüpfen drei Entitäten gleichzeitig (z. B. `Lieferant` *liefert* `Teil` *an* `Projekt`).
 
 ---
 
-### 2. Vom ERM zum Tabellenmodell (Relational Mapping)
-Die logische ERM-Struktur muss in konkrete Tabellendefinitionen überführt werden. Dafür gelten feste Regeln:
+### 2. Transformationsregeln: Vom ERM zum Tabellenmodell
 
-#### Regel 1: Entitäten werden zu Tabellen
-Jede Entität wird zu einer eigenständigen Tabelle. Die Attribute werden zu Spalten. Der Primärschlüssel identifiziert jede Zeile eindeutig.
+Die logische ERM-Struktur wird nach festen mathematischen Regeln in Tabellendefinitionen überführt:
 
-#### Regel 2: 1:N-Beziehung abbilden
-Der Primärschlüssel (PK) der **1-Seite** wird als Fremdschlüssel (FK) in die Tabelle der **N-Seite** aufgenommen.
-*   *Beispiel:* `Kunde (1) -> bestellt -> Bestellung (N)`
-    *   Tabelle `Bestellung` erhält eine Spalte `KundenID (FK)` verweisend auf `Kunde(KundenID)`.
+```mermaid
+flowchart TD
+    A["ERM Entität"] -->|Regel 1| B["Eigene Tabelle mit PK"]
+    C["1 : N Beziehung"] -->|Regel 2| D["PK der 1-Seite wird FK auf der N-Seite"]
+    E["M : N Beziehung"] -->|Regel 3| F["Neue Koppeltabelle mit zusammengesetztem PK (PK1, PK2)"]
+    G["1 : 1 Beziehung"] -->|Regel 4| H["PK einer Seite als FK mit UNIQUE auf der anderen"]
+    I["Rekursive Beziehung"] -->|Regel 5| J["Selbstreferenzierender FK in derselben Tabelle"]
+```
 
-#### Regel 3: M:N-Beziehung abbilden (Koppeltabelle)
-Eine M:N-Beziehung kann relational nicht direkt gespeichert werden. Es wird eine neue **Koppeltabelle (Relationstabelle)** erzeugt.
-*   *Struktur der Koppeltabelle:* Besteht mindestens aus den Primärschlüsseln der beteiligten Tabellen.
-*   *Schlüssel:* Beide Spalten bilden zusammen einen **zusammengesetzten Primärschlüssel** und verweisen einzeln als **Fremdschlüssel** auf ihre Ursprungstabellen.
-*   *Beispiel:* `Mitarbeiter (M) -> arbeitet_an -> Projekt (N)`
-    *   Koppeltabelle `MitarbeiterProjekt` mit Spalten `MitarbeiterID (PK, FK)` und `ProjektID (PK, FK)`.
-
-#### Regel 4: 1:1-Beziehung abbilden
-Hier wird der Primärschlüssel einer Seite als Fremdschlüssel auf der anderen Seite eingetragen und mit einem **UNIQUE**-Constraint versehen (damit er nur einmal vorkommen kann). Alternativ können beide Entitäten zu einer Tabelle verschmolzen werden.
-
-#### Regel 5: Rekursive Beziehung (Selbstbeziehung) abbilden
-Es wird eine Fremdschlüsselspalte in derselben Tabelle angelegt, die auf den eigenen Primärschlüssel verweist.
-*   *Beispiel:* `Mitarbeiter` erhält Spalte `VorgesetzterID (FK)` verweisend auf `Mitarbeiter(MitarbeiterID)`.
+#### Regel-Details im Überblick
+1. **Entitäten ➔ Tabellen:** Jede Entität wird zu einer Tabelle; Attribute werden Spalten.
+2. **1:N-Beziehungen:** Der Primärschlüssel (PK) der **1-Seite** wird als Fremdschlüssel (FK) in die Tabelle der **N-Seite** eingetragen (`Bestellung.KundenID -> Kunde.KundenID`).
+3. **M:N-Beziehungen (Koppeltabelle):** Eine relationale Spalte darf keine Wertelisten enthalten. Es wird eine **Koppeltabelle** erzeugt, die die PKs beider Entitäten als Fremdschlüssel aufnimmt und gemeinsam als zusammengesetzten Primärschlüssel definiert (`MitarbeiterProjekt(MitarbeiterID [PK,FK], ProjektID [PK,FK])`).
+4. **1:1-Beziehungen:** PK einer Seite wird FK der anderen Seite mit `UNIQUE`-Constraint.
+5. **Rekursive Beziehungen:** Fremdschlüsselspalte verweist auf den Primärschlüssel derselben Tabelle (`Mitarbeiter.VorgesetzterID -> Mitarbeiter.MitarbeiterID`).
 
 ---
 
-### 🎓 IHK-Prüfungsrelevanz: Mapping-Regeln
+## 📂 Begleitmaterialien & Dokumente
 
-#### Frage 1: Warum kann eine M:N-Beziehung nicht direkt in einer relationalen Tabelle abgebildet werden, und wie wird dieses Problem gelöst? (4 Punkte)
-> **IHK-Musterantwort:**
-> Eine relationale Spalte darf pro Zelle nur einen atomaren Wert enthalten (1. Normalform). Bei einer M:N-Beziehung müsste man Listen in einer Zelle speichern oder redundante Zeilen anlegen. 
-> Die Lösung ist eine zusätzliche Koppeltabelle (Zwischentabelle), die die Primärschlüssel beider Entitäten als Fremdschlüssel aufnimmt und diese gemeinsam als zusammengesetzten Primärschlüssel nutzt.
+Im Ordner `assets/` stehen die Vorlesungsunterlagen und IHK-Abschlussprüfungsaufgaben bereit:
+* 📄 **[Datenbank-Entwurf.pdf](./assets/Datenbank-Entwurf.pdf):** Detaillierter Leitfaden zur Überführung von ER-Modellen in Tabellenmodelle.
+* 📄 **[Vom ERM zum TabMod.pdf](./assets/Vom%20ERM%20zum%20TabMod%20-%20Aufgabe.pdf):** Schritt-für-Schritt-Übung zur Schema-Transformation.
+* 📄 **[IHK Tabellenmodell Aufgaben](./assets/):**
+  * *Kassensystem (AP 2015 W)*
+  * *Weine (AP 2020 W)*
+  * *Tarifübersicht (AP2 2022 S)*
 
-#### Frage 2: Wie bilden Sie eine rekursive Vorgesetzten-Beziehung in einer Tabelle ab? (4 Punkte)
-> **Sachverhalt:** Gegeben ist die Tabelle `Mitarbeiter` mit den Spalten `MitarbeiterID (PK)`, `Vorname`, `Nachname`.
+---
+
+## 🎓 IHK-Prüfungsrelevanz: Mapping-Regeln
+
+### Frage 1: Warum erfordert eine M:N-Beziehung eine eigene Koppeltabelle? (4 Punkte)
 > **IHK-Musterantwort:**
-> Es wird eine zusätzliche Fremdschlüsselspalte (z. B. `VorgesetzterID`) eingeführt, die auf den Primärschlüssel `MitarbeiterID` derselben Tabelle verweist.
-> *   Schema: `Mitarbeiter (MitarbeiterID [PK], Vorname, Nachname, VorgesetzterID [FK])`
+> Nach den Prinzipien des relationalen Datenmodells (1. Normalform) muss jedes Datenfeld atomar (unteilbar) sein. Eine direkte Speicherung einer M:N-Beziehung würde zu Listen in einzelnen Zellen oder unkontrollierten Datenredundanzen führen. Die Koppeltabelle löst die M:N-Beziehung in zwei 1:N-Beziehungen auf und speichert die Kombinationen als eigenständige Zeilen.
+
+### Frage 2: Wie wird eine rekursive Beziehung im relationalen Schema umgesetzt? (4 Punkte)
+> **IHK-Musterantwort:**
+> In der betreffenden Tabelle wird eine zusätzliche Fremdschlüsselspalte definiert, die auf den Primärschlüssel derselben Tabelle verweist.
+> * Beispiel: `Mitarbeiter (MitarbeiterID [PK], Vorname, Nachname, VorgesetzterID [FK -> Mitarbeiter.MitarbeiterID])`
 
 ---
 
 ## 💡 Wichtige Notizen
 > [!IMPORTANT]
-> **Referenzielle Integrität:** Fremdschlüssel garantieren, dass keine verwaisten Einträge entstehen können. Ein Eintrag mit einer `KundenID` in der Tabelle `Bestellung` darf nur eingefügt werden, wenn diese `KundenID` in der Tabelle `Kunde` auch physisch existiert!
+> **Referenzielle Integrität:**
+> Ein Fremdschlüsselwert darf in der Kind-Tabelle nur existieren, wenn der zugehörige Primärschlüsselwert in der Eltern-Tabelle physisch vorhanden ist oder der Fremdschlüssel `NULL` enthält.
