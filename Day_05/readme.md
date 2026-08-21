@@ -1,91 +1,78 @@
 # 📅 Day_05: DML (Data Manipulation Language) & Datenmanipulation
 
 ## ℹ️ Kurs-Informationen
-*   **Datum:** Freitag, 07.08.2026
-*   **Arbeitszeit:** 08:15 - 16:00 Uhr
-*   **Dozent:** Tom S.
-*   **Autor:** Tobias Boyke
+
+* **Datum:** Freitag, 07.08.2026
+* **Arbeitszeit:** 08:15 - 16:00 Uhr
+* **Dozent:** Tom S.
+* **Autor:** Tobias Boyke
 
 ---
 
 ## 🎯 Lernziele des Tages
-*   Daten in relationale Tabellen einfügen (`INSERT`), ändern (`UPDATE`) und löschen (`DELETE`) können.
-*   Den Unterschied zwischen `DELETE` und `TRUNCATE TABLE` im Detail kennen und begründen können.
-*   Datenabfragen zur Kontrolle der manipulierten Zeilen durchführen.
+
+- [x] **DML-Operationen (Data Manipulation Language):** Daten in relationale Tabellen einfügen (`INSERT`), aktualisieren (`UPDATE`) und entfernen (`DELETE`).
+- [x] **Vergleich `DELETE` vs. `TRUNCATE TABLE`:** Technische Unterschiede, Transaction Log Verhalten, Triggereinfluss und Identitätsrücksetzung im Detail verstehen.
+- [x] **Datenkonsistenz & Integrität bei Manipulationen:** Umgang mit Fremdschlüssel-Einschränkungen und Prüfbedingungen.
+- [x] **Übungsprojekt tarifDB:** Vollständiges DDL & DML Refactoring der Tarifdatenbank.
 
 ---
 
 ## 📖 Theorie & Konzepte
 
 ### 1. DML – Data Manipulation Language
-DML umfasst Befehle zur Arbeit *mit* den Daten, die sich in den Tabellenstrukturen befinden. DML-Befehle lesen und manipulieren Datensätze:
 
-*   **`INSERT`:** Fügt neue Zeilen (Tupel) in eine Tabelle ein.
-*   **`UPDATE`:** Ändert Werte in bestehenden Zeilen einer Tabelle.
-*   **`DELETE`:** Löscht Zeilen aus einer Tabelle.
-*   **`SELECT`:** Ruft Daten ab (oft auch der DQL - Data Query Language zugeordnet).
+* **`INSERT INTO`:** Fügt neue Datensätze ein (immer mit expliziter Spaltenliste arbeiten).
+* **`UPDATE`:** Ändert Daten in bestehenden Zeilen (immer mit gezielter `WHERE`-Einschränkung!).
+* **`DELETE`:** Löscht Zeilen zeilenweise aus einer Tabelle.
 
 ---
 
-### 2. DML Befehlssyntax & Best Practices
-
-#### INSERT INTO (Daten einfügen)
-Es ist bewährte Praxis, Spaltennamen beim Einfügen explizit anzugeben, um Fehler bei späteren Schemaänderungen zu verhindern.
-```sql
--- Sicherer Einfügevorgang mit expliziter Spaltenliste
-INSERT INTO Schule.Schueler (Name, [Alter], Email)
-VALUES ('Tobias Boyke', 25, 'tobias@example.com');
-```
-
-#### UPDATE (Daten ändern)
-> [!CAUTION]
-> **Vorsicht bei `UPDATE` ohne `WHERE`-Klausel!**  
-> Vergisst man die `WHERE`-Klausel bei einem `UPDATE`, ändert SQL Server die Werte in **allen** Zeilen der gesamten Tabelle unwiderruflich!
-
-```sql
--- Aktualisiert nur das Alter des spezifischen Schülers
-UPDATE Schule.Schueler
-SET [Alter] = 26
-WHERE SchuelerID = 1;
-```
-
----
-
-### 3. Gegenüberstellung: `DELETE` vs. `TRUNCATE TABLE`
-Beide Befehle entfernen Daten aus einer Tabelle, unterscheiden sich jedoch grundlegend in Arbeitsweise und Performance:
+### 2. Gegenüberstellung: `DELETE` vs. `TRUNCATE TABLE`
 
 | Kriterium | `DELETE` | `TRUNCATE TABLE` |
 | :--- | :--- | :--- |
-| **Befehlsart** | DML (Data Manipulation Language) | DDL (Data Definition Language) |
-| **Selektivität** | Zeilenweise Löschung über `WHERE` möglich. | Löscht immer **alle** Zeilen der gesamten Tabelle. |
-| **Protokollierung** | Jede gelöschte Zeile wird einzeln im Transaction Log protokolliert (langsam bei großen Datenmengen). | Protokolliert nur die Freigabe der Datenseiten (Extents) (extrem schnell). |
-| **Triggers** | Aktiviert `DELETE`-Trigger. | Ignoriert und umgeht Trigger vollständig. |
-| **Identitätsspalte** | Setzt den Auto-Inkrement (`IDENTITY`)-Zähler **nicht** zurück. | Setzt den `IDENTITY`-Zähler wieder auf den Startwert zurück. |
-| **Einschränkung** | Kann ausgeführt werden, wenn Fremdschlüssel verweisen (solange diese Zeilen nicht referenziert werden). | Schlägt fehl, wenn Fremdschlüssel (`FOREIGN KEY`) von anderen Tabellen auf die Tabelle verweisen. |
+| **Kategorie** | DML | DDL |
+| **Zeilenfilterung** | Mittels `WHERE` gezielt zeilenweise filterbar | Löscht ausnahmslos **alle** Zeilen |
+| **Protokollierung** | Zeilenweise im Transaction Log (langsam bei Massendaten) | Gibt nur die Seitenzuweisungen (Extents) frei (extrem schnell) |
+| **Triggers** | Feuert `DELETE`-Trigger | Umgeht Trigger vollständig |
+| **IDENTITY-Zähler** | Bleibt auf aktuellem Stand | Wird auf Seed-Startwert zurückgesetzt |
+| **Fremdschlüssel** | Funktioniert, sofern keine Kind-Datensätze verweisen | Schlägt fehl, wenn Fremdschlüssel auf die Tabelle verweisen |
+
+---
+
+## 📂 Begleitmaterialien & Dokumente
+
+Im Ordner `assets/` stehen die Vorlesungsunterlagen und Übungsdateien bereit:
+* 📄 **[SQL 03 - DML Teil 1.pdf](./assets/SQL%2003%20-%20DML%20Teil%201.pdf):** Vorlesungsskript zu DML-Befehlen und Syntaxregeln.
+* 📄 **[Aufgabe tarifDB - DDL&DML.sql](./assets/Aufgabe%20tarifDB%20-%20DDL&DML.sql):** Vollständiges DDL/DML-Szenario der Tarifdatenbank.
 
 ---
 
 ## 💻 Praktische Übungen
-Die SQL-Skripte im Ordner `src/` enthalten praktische Beispiele zur Demonstration:
-1.  **[dml_demo.sql](./src/dml_demo.sql):** Befüllt die in Day_04 angelegten Tabellen, führt Aktualisierungen und Löscharbeiten aus und demonstriert die Verhaltensunterschiede der Befehle.
+
+Die lauffähigen SQL-Skripte befinden sich in `src/`:
+* 👉 **[dml_demo.sql](./src/dml_demo.sql):** Praktische Demonstrationen für `INSERT`, `UPDATE`, `DELETE` und `TRUNCATE`.
 
 ---
 
-### 🎓 IHK-Prüfungsrelevanz: DML
+## 🎓 IHK-Prüfungsrelevanz: DML
 
-#### Frage 1: Nennen Sie zwei wesentliche Unterschiede zwischen den SQL-Befehlen `DELETE` und `TRUNCATE TABLE` (4 Punkte)
+### Frage 1: Nennen Sie zwei Unterschiede zwischen `DELETE` und `TRUNCATE TABLE` (4 Punkte)
 > **IHK-Musterantwort:**
-> 1. **Selektivität:** `DELETE` erlaubt das gezielte Löschen bestimmter Zeilen mittels einer `WHERE`-Klausel, während `TRUNCATE TABLE` immer alle Zeilen der Tabelle unwiderruflich löscht.
-> 2. **Auto-Inkrement:** `TRUNCATE TABLE` setzt den Identitätszähler (`IDENTITY`) einer Tabelle auf den Startwert zurück, während `DELETE` den Zählerstand beibehält.
+> 1. `DELETE` erlaubt das gezielte Löschen bestimmter Zeilen mittels einer `WHERE`-Klausel, während `TRUNCATE TABLE` immer alle Zeilen der Tabelle leert.
+> 2. `TRUNCATE TABLE` setzt die automatische Zählung (`IDENTITY`) zurück, während `DELETE` den aktuellen Zählerstand beibehält.
 
-#### Frage 2: Ein Datenbankadministrator möchte eine Tabelle mit 10 Millionen Zeilen leeren. Welchen Befehl sollte er wählen? (3 Punkte)
-> **Sachverhalt:** Die Tabelle hat keine Fremdschlüsselverbindungen oder Trigger.
-> **IHK-Musterantwort:**
-> Er sollte `TRUNCATE TABLE` wählen. Da dieser Befehl die Datenfreigabe auf Seitenebene (und nicht zeilenweise) im Transaction Log aufzeichnet, verbraucht er deutlich weniger Systemressourcen und läuft um ein Vielfaches schneller als ein `DELETE`-Befehl.
+### Frage 2: Ein Entwickler möchte ein Datenfeld leeren, nicht jedoch den Datensatz löschen. Welche Anweisung ist korrekt? (3 Punkte)
+```sql
+UPDATE Mitarbeiter
+SET telefon = NULL
+WHERE id = 10102;
+```
 
 ---
 
 ## 💡 Wichtige Notizen
-> [!TIP]
-> **Transaktionsschutz bei DML:**
-> Da DML-Operationen (`INSERT`, `UPDATE`, `DELETE`) die Daten direkt verändern, sollten sie bei komplexen Logiken immer in Transaktionsblöcken (`BEGIN TRAN ... COMMIT / ROLLBACK`) gekapselt werden, um Datenverlust bei Fehlern zu vermeiden.
+> [!CAUTION]
+> **Vorsicht vor UPDATE und DELETE ohne WHERE!**
+> Beide Anweisungen wirken ohne `WHERE`-Bedingung auf **jeden einzelnen Datensatz** der gesamten Tabelle!
