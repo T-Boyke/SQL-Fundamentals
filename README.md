@@ -19,31 +19,31 @@ Willkommen im zentralen Hub für die SQL-Fundamentals-Serie. Dieses Repository d
 
 ```mermaid
 flowchart TD
-    subgraph W1["📅 Woche 1: Relationales Modell & DQL Basics"]
-        D01["Tag 01: Relationales Modell"] --> D02["Tag 02: SELECT & WHERE"]
-        D02 --> D03["Tag 03: GROUP BY & HAVING"]
-        D03 --> D04["Tag 04: Joins I"]
-        D04 --> D05["Tag 05: Joins II & Subqueries"]
+    subgraph W1["📅 Woche 1: Relationales Modell, DDL & DML"]
+        D01["Tag 01: Relationales Modell & ERM"] --> D02["Tag 02: Relationales Tabellenmodell"]
+        D02 --> D03["Tag 03: Normalisierung (1NF-3NF)"]
+        D03 --> D04["Tag 04: DDL & Datentypen"]
+        D04 --> D05["Tag 05: DML & Datenmanipulation"]
     end
 
-    subgraph W2["📅 Woche 2: DDL, DML, Performance & Klausur"]
-        D06["Tag 06: DML & DDL Basics"] --> D07["Tag 07: Indizes & Transaktionen"]
-        D07 --> D08["Tag 08: Constraints & Datentypen"]
-        D08 --> D09["Tag 09: Views & CTEs"]
+    subgraph W2["📅 Woche 2: Refactoring, Indizes, Transaktionen & Klausur"]
+        D06["Tag 06: 3NF-Refactoring & DDL/DML"] --> D07["Tag 07: Indizes & Transaktionen (ACID)"]
+        D07 --> D08["Tag 08: Probeklausur & Datentypen"]
+        D08 --> D09["Tag 09: Klausurvorbereitung & IHK-Training"]
         D09 --> D10["Tag 10: 1. Klausur"]
     end
 
-    subgraph W3["📅 Woche 3: Programmierbarkeit & Trigger"]
-        D11["Tag 11: Fensterfunktionen"] --> D12["Tag 12: Stored Procedures"]
-        D12 --> D13["Tag 13: Functions (UDFs)"]
-        D13 --> D14["Tag 14: Trigger"]
-        D14 --> D15["Tag 15: Error Handling"]
+    subgraph W3["📅 Woche 3: DQL Masterclass & ProjektDB (SoT)"]
+        D11["Tag 11: ProjektDB DQL, WHERE & LIKE"] --> D12["Tag 12: ORDER BY & Aggregationen"]
+        D12 --> D13["Tag 13: SQL-Wiederholung & IHK-Training"]
+        D13 --> D14["Tag 14: Subqueries & Subselects"]
+        D14 --> D15["Tag 15: Joins & Verknüpfungen"]
     end
 
     subgraph W4["📅 Woche 4: Advanced SQL & Optimization"]
-        D16["Tag 16: Dynamisches SQL"] --> D17["Tag 17: Temp Tables"]
-        D17 --> D18["Tag 18: Query Optimization"]
-        D18 --> D19["Tag 19: Backup & Restore"]
+        D16["Tag 16: Dynamisches SQL"] --> D17["Tag 17: Temp Tables & CTEs"]
+        D18["Tag 18: Query Optimization"] --> D19["Tag 19: Backup & Restore"]
+        D17 --> D18
         D19 --> D20["Tag 20: XML & JSON"]
     end
 
@@ -65,9 +65,9 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11 completed;
-    class D12 current;
-    class D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14 completed;
+    class D15 current;
+    class D16,D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
     class D10 exam;
 
     %% Subgraph Styles
@@ -160,42 +160,42 @@ erDiagram
 
 ## 📂 Kursmodule & Tagesübersicht (ToC)
 
-### 📅 Woche 1: Relationales Modell & DQL Basics
-In der ersten Woche wurden die relationalen Grundlagen geschaffen. Der Fokus lag auf Entitätsbeziehungen sowie DQL-Abfragekonzepten (Filterungen, Gruppen und Verknüpfungen über Joins).
+### 📅 Woche 1: Relationales Modell, DDL & DML
+In der ersten Woche wurden die konzeptionellen und relationalen Grundlagen geschaffen. Der Fokus lag auf ER-Modellierung, relationalem Mapping, Normalisierung und grundlegenden DDL/DML-Befehlen.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
-| **Tag 01** | ✅ | Relationales Datenmodell & Keys | Struktur relationaler Tabellen, Definition und Wichtigkeit von Primär- und Fremdschlüsseln. | [📖 Day_01](./Day_01/readme.md) |
-| **Tag 02** | ✅ | DQL-Einstieg: SELECT & WHERE | Daten abfragen, Filtern mit Operatoren (`AND`, `OR`, `LIKE`, `IN`, `BETWEEN`) sowie Sortieren. | [📖 Day_02](./Day_02/readme.md) |
-| **Tag 03** | ✅ | Aggregation & Gruppierung | Konsolidierung von Datensätzen mittels `GROUP BY`, Filterung aggregierter Zeilen via `HAVING`. | [📖 Day_03](./Day_03/readme.md) |
-| **Tag 04** | ✅ | Tabellenbeziehungen: Joins I | Zusammenführen von Tabellen mit `INNER JOIN`, `LEFT JOIN`, `RIGHT JOIN` und `FULL OUTER JOIN`. | [📖 Day_04](./Day_04/readme.md) |
-| **Tag 05** | ✅ | Subqueries & Fortgeschrittene Joins | Verschachtelte SELECT-Befehle (Subqueries), korrelierte Unterabfragen und Performance-Aspekte. | [📖 Day_05](./Day_05/readme.md) |
+| **Tag 01** | ✅ | Relationales Datenmodell & ERM | Grundlagen von DBMS (Codd-Regeln), SQL vs. NoSQL, Mengenlehre und Chen-Notation. | [📖 Day_01](./Day_01/readme.md) |
+| **Tag 02** | ✅ | Relationales Tabellenmodell | Transformationsregeln vom ERM zum Tabellenmodell (1:1, 1:N, M:N, Selbstreferenz). | [📖 Day_02](./Day_02/readme.md) |
+| **Tag 03** | ✅ | Normalisierung & Anomalien | Datenanomalien (Einfüge-, Änderungs-, Löschanomalie) und Normalformen (1NF, 2NF, 3NF). | [📖 Day_03](./Day_03/readme.md) |
+| **Tag 04** | ✅ | DDL & SQL-Datentypen | Anlegen und Verwalten von Tabellen (`CREATE`, `ALTER`, `DROP`) und Constraints (`PK`, `FK`, `CHECK`). | [📖 Day_04](./Day_04/readme.md) |
+| **Tag 05** | ✅ | DML & Datenmanipulation | Daten manipulieren (`INSERT`, `UPDATE`, `DELETE`), Vergleich `DELETE` vs. `TRUNCATE TABLE`. | [📖 Day_05](./Day_05/readme.md) |
 
 ---
 
-### 📅 Woche 2: DDL, DML, Performance & Klausur
-Die zweite Woche erweitert die SQL-Kenntnisse auf Schreiboperationen, Tabellenerstellung, Performanceoptimierungen durch Indizes sowie Transaktionssicherheit (ACID). Die Woche schließt mit der ersten Leistungsüberprüfung ab.
+### 📅 Woche 2: Refactoring, Indizes, Transaktionen & Klausur
+Die zweite Woche vertiefte das 3NF-Refactoring, physische Speicherarchitektur (Pages/Extents), B-Baum-Indizes und Transaktionssicherheit (ACID / Isolation Levels) vor der ersten Leistungskontrolle.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
-| **Tag 06** | ✅ | DML & DDL Grundlagen | Einfügen (`INSERT`), Aktualisieren (`UPDATE`), Löschen (`DELETE`) und Tabellenmanipulationen (`CREATE`/`ALTER`). | [📖 Day_06](./Day_06/readme.md) |
-| **Tag 07** | ✅ | Indizes & Transaktionen | Clustered vs. Non-Clustered Index, Seeks vs. Scans. ACID-Prinzip, Isolation Levels und Locking-Verhalten. | [📖 Day_07](./Day_07/readme.md) |
-| **Tag 08** | ✅ | Probeklausur & Datentypen | Vollständige Ausarbeitung der Probeklausur "Datenbanken und SQL - Teil 1" inkl. Constraints und Datentypen. | [📖 Day_08](./Day_08/readme.md) |
-| **Tag 09** | ✅ | Views & Common Table Expressions | Erstellung logischer Sichten (`VIEW`) und Strukturierung komplexer SQLs über CTEs. | [📖 Day_09](./Day_09/readme.md) |
-| **Tag 10** | ✅ | 1. Klausur | Schriftliche Leistungsüberprüfung über alle Themen der Wochen 1 und 2 mit Klausurbesprechung. | [📖 Day_10](./Day_10/readme.md) |
+| **Tag 06** | ✅ | 3NF-Refactoring & DDL/DML | Schema-Transformation bestehender Altdaten in die 3. Normalform mittels DDL und DML. | [📖 Day_06](./Day_06/readme.md) |
+| **Tag 07** | ✅ | Indizes & Transaktionen | Clustered/Non-Clustered Index, B-Bäume, Seeks vs. Scans, ACID und Transaktions-Isolationsstufen. | [📖 Day_07](./Day_07/readme.md) |
+| **Tag 08** | ✅ | Probeklausur & Datentypen | Vollständige Ausarbeitung der Probeklausur "Datenbanken und SQL - Teil 1" inkl. IHK-Syntax. | [📖 Day_08](./Day_08/readme.md) |
+| **Tag 09** | ✅ | Klausurvorbereitung & IHK-Training | Intensiv-Repetitorium aller Themen der Wochen 1 & 2 anhand realer IHK-Prüfungssätze. | [📖 Day_09](./Day_09/readme.md) |
+| **Tag 10** | ✅ | 1. Klausur | Schriftliche Leistungsüberprüfung über die Module der Wochen 1 und 2. | [📖 Day_10](./Day_10/readme.md) |
 
 ---
 
-### 📅 Woche 3: Programmierbarkeit & Trigger
-Woche 3 verlässt das rein deklarative SQL und führt in die prozedurale Programmierung (T-SQL) ein. Es werden Logiken und Automatisierungen direkt auf Datenbankebene entwickelt.
+### 📅 Woche 3: DQL Masterclass & ProjektDB (SoT)
+In Woche 3 steht die Beherrschung komplexer Datenabfragen auf der kanonischen Übungsdatenbank `ProjektDB` im Mittelpunkt.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
-| **Tag 11** | ✅ | Fensterfunktionen (Window Functions) | Analytische Funktionen wie `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` und die Klausel `OVER(PARTITION BY)`. | [📖 Day_11](./Day_11/readme.md) |
-| **Tag 12** | 📝 | Sortierung & Aggregationen (Heute) | Sortieren mit `ORDER BY`, Handling von `NULL`-Werten, Ergebnisbegrenzung (`TOP`/`WITH TIES`), Aggregatfunktionen und Gruppierungen (`GROUP BY`/`HAVING`). | [📖 Day_12](./Day_12/readme.md) |
-| **Tag 13** | ⏳ | User Defined Functions (UDFs) | Skalarwertfunktionen und Tabellenwertfunktionen (Inline- vs. Multi-Statement-UDFs). | [📖 Day_13](./Day_13/readme.md) |
-| **Tag 14** | ⏳ | Trigger | Automatische DML-Reaktionen (AFTER-Trigger und INSTEAD OF-Trigger). | [📖 Day_14](./Day_14/readme.md) |
-| **Tag 15** | ⏳ | Fehlerbehandlung in T-SQL | Strukturierte Ausnahmebehandlung mit `TRY...CATCH`, Auslösen von Fehlern via `THROW`. | [📖 Day_15](./Day_15/readme.md) |
+| **Tag 11** | ✅ | ProjektDB DQL, WHERE & LIKE | Einrichtung der `ProjektDB`, Vergleichsoperatoren, Dreiwertige Logik (`IS NULL`), LIKE & Wildcards. | [📖 Day_11](./Day_11/readme.md) |
+| **Tag 12** | ✅ | Sortierung & Aggregationen | `ORDER BY`, `NULL`-Handling, `TOP / WITH TIES`, `SUM()`, `AVG()`, `COUNT()` und `GROUP BY / HAVING`. | [📖 Day_12](./Day_12/readme.md) |
+| **Tag 13** | ✅ | SQL-Wiederholung & IHK-Training | Große SQL-Wiederholung (Aufgaben 20 & 21) sowie 6 reale IHK-Abschlussprüfungen. | [📖 Day_13](./Day_13/readme.md) |
+| **Tag 14** | ✅ | Unterabfragen (Subqueries) | Skalare, Listen- und Tabellen-Unterabfragen (`IN`), `INSERT...SELECT`, korrelierte Subqueries. | [📖 Day_14](./Day_14/readme.md) |
+| **Tag 15** | 📝 | Joins & Tabellenverknüpfungen (Heute) | `INNER JOIN`, `LEFT/RIGHT JOIN`, `FULL OUTER JOIN`, `CROSS JOIN` und Selbstreferenz-Joins. | [📖 Day_15](./Day_15/readme.md) |
 
 ---
 
