@@ -27,19 +27,20 @@
 
 ```mermaid
 flowchart TD
-    subgraph J1["1. CROSS JOIN"]
-        A1["Tabelle A (n Zeilen)"] -->|Jede Zeile kombiniert mit jeder| A2["Tabelle B (m Zeilen)"]
-        A2 --> A3["Ergebnis: n * m Zeilen (Kartesisches Produkt)"]
+    subgraph J1["1. CROSS JOIN (Kreuzprodukt)"]
+        A1["Tabelle A (n Zeilen)"] -->|"Kombination jeder Zeile"| A2["Tabelle B (m Zeilen)"]
+        A2 --> A3["Ergebnis: n * m Zeilen"]
     end
 
-    subgraph J2["2. INNER JOIN"]
-        B1["Tabelle A"] & B2["Tabelle B"] -->|Nur Schnittmenge (ON A.key = B.key)| B3["Ergebnis: Nur gemeinsame Datensätze"]
+    subgraph J2["2. INNER JOIN (Schnittmenge)"]
+        B1["Tabelle A"] -->|"ON A.key = B.key"| B3["Gemeinsame Datensätze"]
+        B2["Tabelle B"] -->|"ON A.key = B.key"| B3
     end
 
     subgraph J3["3. OUTER JOINS"]
         C1["LEFT JOIN: Alle Zeilen von A + Treffer aus B"]
         C2["RIGHT JOIN: Alle Zeilen von B + Treffer aus A"]
-        C3["FULL OUTER JOIN: Alle Zeilen aus A und B (inkl. NULLs)"]
+        C3["FULL OUTER JOIN: Alle Zeilen aus A und B"]
     end
 ```
 
