@@ -14,6 +14,7 @@
   - *Skalar:* Liefert genau 1 Wert (1 Zeile, 1 Spalte) für Vergleiche (`=`, `<`, `>`).
   - *Listen-Unterabfrage:* Liefert 1 Spalte mit mehreren Zeilen für Mengenoperatoren (`IN`, `NOT IN`).
   - *Tabellen-Unterabfrage (Derived Table):* Liefert eine virtuelle Tabelle im `FROM` mit **T-SQL Alias-Pflicht**.
+- [x] **Mengen-Vergleichsoperatoren (ALL, ANY, SOME):** Verständnis des `ALL`-Operators (universelle Bedingungserfüllung), Äquivalenzen zu Extremwerten ($\le \text{ALL} \equiv \le \min$, $\ge \text{ALL} \equiv \ge \max$) und praxisnahe Anwendung für korrelierte Gruppen-Minima/Maxima.
 - [x] **DQL-Einsatzorte:** Souveräner Einsatz von Subqueries in der `SELECT`-, `FROM`- und `WHERE`/`HAVING`-Klausel.
 - [x] **DML-Unterabfragen:** Dynamische Datenmanipulation mit `INSERT INTO ... SELECT` (ohne `VALUES`), `UPDATE` und `DELETE` über Subqueries.
 - [x] **Korreliert vs. Unkorreliert:** Erkennen des Unterschieds zwischen einmaliger Ausführung (autark) und zeilenweiser Berechnung (abhängig).
@@ -28,18 +29,19 @@
 flowchart TD
     A["Unterabfragen (Subqueries)"] --> B["1. DQL (Data Query)"]
     A --> C["2. DML (Data Manipulation)"]
-    A --> D["3. Ausführungsart"]
+    A --> D["3. Mengen-Operatoren"]
     
     B --> B1["im WHERE: Dynamischer Filter (Skalar oder IN)"]
     B --> B2["im FROM: Virtuelle Tabelle (Alias-Pflicht!)"]
-    B --> B3["im SELECT: Spalten-Erweiterung & Aggregat-Lookups"]
+    B --> B3["im SELECT: Spalten-Erweiterung & Lookups"]
     
     C --> C1["INSERT INTO ... SELECT (ohne VALUES)"]
     C --> C2["UPDATE ... SET ... WHERE id IN (SELECT ...)"]
     C --> C3["DELETE FROM ... WHERE id IN (SELECT ...)"]
     
-    D --> D1["Unkorreliert (Unabhängig): Läuft 1x, sehr schnell"]
-    D --> D2["Korreliert (Abhängig): Läuft pro Zeile der Außenabfrage"]
+    D --> D1["ALL: Gilt für ausnahmslos ALLE Zeilen"]
+    D --> D2["ANY / SOME: Gilt für MINDESTENS EINE Zeile"]
+    D --> D3["IN / NOT IN / EXISTS / NOT EXISTS"]
 ```
 
 ---
@@ -111,7 +113,126 @@ FROM Mitarbeiter AS m;
 
 ---
 
-### 4. DML-Unterabfragen: INSERT, UPDATE & DELETE
+### 4. Besondere Mengen-Vergleichsoperatoren: ALL, ANY und SOME
+
+Der Operator `ALL` (sowie die synonymen Operatoren `ANY` / `SOME`) vergleicht einen Skalarwert mit **allen** Werten, die von einer Unterabfrage zurückgegeben werden.
+
+```mermaid
+flowchart LR
+    A["Skalarwert (z.B. id)"] -->|Vergleich: <=, >=, <>, =| B{"Mengen-Operator"}
+    B -->|Bedingung gilt für ALLE Zeilen| C["ALL: TRUE"]
+    B -->|Bedingung gilt für MINDESTENS 1 Zeile| D["ANY / SOME: TRUE"]
+```
+
+#### Mathematische Äquivalenzen des ALL-Operators
+
+Die Gesamtbedingung liefert genau dann `TRUE`, wenn der Vergleichsausdruck für **jeden einzelnen Wert** der Unterabfrage wahr ist:
+
+| Ausdruck | Mathematische Bedeutung | Äquivalent zu Extremwerten |
+| :--- | :--- | :--- |
+| `x <= ALL (SELECT y ...)` | $x$ ist kleiner oder gleich **allen** Werten in $y$ | $x \le \min(y)$ *(kleiner gleich Minimum)* |
+| `x >= ALL (SELECT y ...)` | $x$ ist größer oder gleich **allen** Werten in $y$ | $x \ge \max(y)$ *(größer gleich Maximum)* |
+| `x < ALL (SELECT y ...)` | $x$ ist echt kleiner als **alle** Werte in $y$ | $x < \min(y)$ |
+| `x > ALL (SELECT y ...)` | $x$ ist echt größer als **alle** Werte in $y$ | $x > \max(y)$ |
+| `x <> ALL (SELECT y ...)` | $x$ ist ungleich **allen** Werten in $y$ | `x NOT IN (SELECT y ...)` |
+
+---
+
+#### 🔬 Praxis-Analyse: Das korrelierte Gruppen-Minimum mit ALL
+
+Betrachten wir die folgende Abfrage:
+
+```sql
+SELECT * 
+FROM Mitarbeiter AS m1 
+WHERE id <= ALL (
+    SELECT id 
+    FROM Mitarbeiter AS m2 
+    WHERE m2.abt_id = m1.abt_id
+);
+```
+
+##### Wie arbeitet diese Abfrage im Detail?
+1. **Äußere Schleife (`m1`):** SQL Server iteriert über jeden Mitarbeiter `m1`.
+2. **Korrelierte Subquery (`m2.abt_id = m1.abt_id`):** Für den aktuellen Mitarbeiter `m1` liefert die Unterabfrage alle Mitarbeiter-IDs (`m2.id`) seiner eigenen Abteilung.
+3. **Mengenprüfung (`id <= ALL(...)`):** Es wird geprüft, ob die ID von `m1` kleiner oder gleich **allen** Mitarbeiter-IDs dieser Abteilung ist.
+4. **Ergebnis:** Das trifft für jede Abteilung exakt auf den Datensatz mit der **kleinsten Personalnummer (`MIN(id)`)** zu.
+5. **Der große Vorteil gegenüber GROUP BY:**
+   * Ein einfaches `SELECT abt_id, MIN(id) FROM Mitarbeiter GROUP BY abt_id;` liefert nur die beiden Spalten `abt_id` und `id`.
+   * Mit der `ALL`-Abfrage erhält man **sofort den vollständigen Datensatz (`SELECT *`)** mit Vorname, Nachname, Wohnort, Chef-ID etc., ohne zusätzlichen `JOIN`!
+
+> [!WARNING]
+> **Sonderfälle bei ALL:**
+> * **Leere Menge (0 Zeilen):** Liefert die Unterabfrage keine Zeilen zurück, wertet `ALL` immer zu **`TRUE`** aus (*"vacuously true"*).
+> * **`NULL`-Werte:** Enthält die Unterabfrage `NULL`-Werte, wertet `ALL` zu `UNKNOWN` aus, falls kein Vergleich `FALSE` liefert.
+
+---
+
+### 5. Der EXISTS und NOT EXISTS Operator (Existenzprüfung)
+
+Der Operator **`EXISTS`** prüft, ob eine Unterabfrage **mindestens eine Zeile** zurückliefert. Der eigentliche Inhalt der Zeilen ist dabei irrelevant:
+
+* **`EXISTS (subquery)`:** Liefert `TRUE`, sobald mindestens 1 Datensatz existiert.
+* **`NOT EXISTS (subquery)`:** Liefert `TRUE`, wenn exakt 0 Datensätze existieren (die Menge ist leer).
+
+```mermaid
+flowchart TD
+    A["EXISTS (Unterabfrage)"] --> B{"Gibt die Subquery >= 1 Zeile zurück?"}
+    B -->|Ja (mind. 1 Zeile)| C["Ergebnis: TRUE (Treffer!)"]
+    B -->|Nein (0 Zeilen)| D["Ergebnis: FALSE"]
+    
+    E["NOT EXISTS (Unterabfrage)"] --> F{"Gibt die Subquery genau 0 Zeilen zurück?"}
+    F -->|Ja (leer)| G["Ergebnis: TRUE (Treffer!)"]
+    F -->|Nein (Zeilen existieren)| H["Ergebnis: FALSE"]
+```
+
+#### ⚡ Warum EXISTS so performant ist (Short-Circuit Evaluation)
+
+1. **Early Exit:** Sobald das DBMS die erste Zeile findet, die die Bedingung erfüllt, bricht es die Auswertung der Subquery für diesen Datensatz sofort ab. Es muss nicht die gesamte Tabelle durchsucht werden!
+2. **`SELECT 1` statt `SELECT *`:** Da der Rückgabewert der Spalten ignoriert wird, ist die Konvention `SELECT 1` üblich und verdeutlicht, dass nur die reine Existenz geprüft wird.
+
+#### 🛡️ Der größte Vorteil: Immunität gegen die NULL-Falle von NOT IN
+
+> [!CAUTION]
+> **Die gefährlichste SQL-Falle: `NOT IN` mit NULL-Werten!**  
+> Gibt eine Unterabfrage mit `NOT IN` auch nur einen einzigen `NULL`-Wert zurück, wird die gesamte Bedingung zu `UNKNOWN` ausgewertet und die Abfrage liefert **0 Datensätze**, selbst wenn Tausende passende Zeilen existieren!
+> 
+> **Die Lösung:** `NOT EXISTS` ist **vollkommen immun gegen NULL-Werte** und arbeitet immer 100% zuverlässig!
+
+#### 🔬 Praxis-Beispiele mit EXISTS & NOT EXISTS
+
+```sql
+-- 1. Finde alle Mitarbeiter, die in mindestens einem Projekt arbeiten (EXISTS):
+SELECT m.id, m.vorname, m.nachname
+FROM Mitarbeiter AS m
+WHERE EXISTS (
+    SELECT 1
+    FROM Arbeit AS a
+    WHERE a.mit_id = m.id
+);
+
+-- 2. Finde alle Mitarbeiter, die noch NIE einen Umsatz erzielt haben (NOT EXISTS):
+SELECT m.id, m.vorname, m.nachname
+FROM Mitarbeiter AS m
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Umsatz AS u
+    WHERE u.mit_id = m.id
+);
+
+-- 3. Finde alle Abteilungen, in denen aktuell KEIN Mitarbeiter arbeitet (NOT EXISTS):
+SELECT abt.id, abt.bezeichnung
+FROM Abteilung AS abt
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Mitarbeiter AS m
+    WHERE m.abt_id = abt.id
+);
+```
+
+---
+
+### 6. DML-Unterabfragen: INSERT, UPDATE & DELETE
 
 Subqueries ermöglichen es, Datenänderungen von komplexen Kriterien aus verknüpften Tabellen abhängig zu machen.
 
@@ -150,7 +271,7 @@ WHERE mit_id IN (
 
 ---
 
-### 5. Der T-SQL Stolperstein: Fehlercode 512 (Skalaritäts-Fehler)
+### 6. Der T-SQL Stolperstein: Fehlercode 512 (Skalaritäts-Fehler)
 
 ```text
 Meldung 512, Ebene 16, Status 1:

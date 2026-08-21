@@ -93,7 +93,67 @@ FROM (
 WHERE team.abt_id = 2;
 
 -- ------------------------------------------------------------------------------
--- 1.6 DML-Unterabfragen: INSERT, UPDATE & DELETE
+-- 1.6 Besondere Mengen-Vergleichsoperatoren: ALL, ANY und SOME
+-- ------------------------------------------------------------------------------
+
+-- A) ALL-Operator: Bedingung muss für ALLE Elemente der Subquery TRUE sein.
+-- Beispiel: Finde den Mitarbeiter mit der kleinsten ID innerhalb jeder Abteilung
+-- (Minimum pro Gruppe ohne GROUP BY mit vollständigen Datensätzen)
+SELECT *
+FROM Mitarbeiter AS m1
+WHERE id <= ALL (
+    SELECT id
+    FROM Mitarbeiter AS m2
+    WHERE m2.abt_id = m1.abt_id
+);
+
+-- Äquivalente Abfrage mit ANY (entspricht IN / kleiner als Maximum):
+-- Wer verdient mehr als mindestens ein Mitarbeiter der Abteilung 2?
+SELECT vorname, nachname, gehalt
+FROM Mitarbeiter AS m
+INNER JOIN Gehalt AS g ON m.id = g.mit_id
+WHERE gehalt > ANY (
+    SELECT gehalt
+    FROM Gehalt
+    INNER JOIN Mitarbeiter ON Gehalt.mit_id = Mitarbeiter.id
+    WHERE abt_id = 2
+);
+
+-- ------------------------------------------------------------------------------
+-- 1.7 Der EXISTS und NOT EXISTS Operator (Prüfung auf Zeilen-Existenz)
+-- ------------------------------------------------------------------------------
+
+-- A) EXISTS: Liefert TRUE, wenn die Subquery mindestens 1 Zeile liefert
+-- Finde alle Mitarbeiter, die in mindestens einem Projekt arbeiten:
+SELECT m.id, m.vorname, m.nachname
+FROM Mitarbeiter AS m
+WHERE EXISTS (
+    SELECT 1
+    FROM Arbeit AS a
+    WHERE a.mit_id = m.id
+);
+
+-- B) NOT EXISTS: Liefert TRUE, wenn die Subquery 0 Zeilen liefert
+-- Finde alle Mitarbeiter, die noch NIE einen Umsatz verbucht haben (sicher vor NULL-Werten):
+SELECT m.id, m.vorname, m.nachname
+FROM Mitarbeiter AS m
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Umsatz AS u
+    WHERE u.mit_id = m.id
+);
+
+-- Finde alle Abteilungen, denen kein Mitarbeiter zugeordnet ist:
+SELECT abt.id, abt.bezeichnung
+FROM Abteilung AS abt
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Mitarbeiter AS m
+    WHERE m.abt_id = abt.id
+);
+
+-- ------------------------------------------------------------------------------
+-- 1.8 DML-Unterabfragen: INSERT, UPDATE & DELETE
 -- ------------------------------------------------------------------------------
 
 -- A) INSERT INTO ... SELECT (ohne VALUES)
