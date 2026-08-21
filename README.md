@@ -65,9 +65,9 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14 completed;
-    class D15 current;
-    class D16,D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15 completed;
+    class D16 current;
+    class D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
     class D10 exam;
 
     %% Subgraph Styles
@@ -195,7 +195,7 @@ In Woche 3 steht die Beherrschung komplexer Datenabfragen auf der kanonischen Ü
 | **Tag 12** | ✅ | Sortierung & Aggregationen | `ORDER BY`, `NULL`-Handling, `TOP / WITH TIES`, `SUM()`, `AVG()`, `COUNT()` und `GROUP BY / HAVING`. | [📖 Day_12](./Day_12/readme.md) |
 | **Tag 13** | ✅ | SQL-Wiederholung & IHK-Training | Große SQL-Wiederholung (Aufgaben 20 & 21) sowie 6 reale IHK-Abschlussprüfungen. | [📖 Day_13](./Day_13/readme.md) |
 | **Tag 14** | ✅ | Unterabfragen (Subqueries) | Skalare, Listen- und Tabellen-Unterabfragen (`IN`), `INSERT...SELECT`, korrelierte Subqueries. | [📖 Day_14](./Day_14/readme.md) |
-| **Tag 15** | 📝 | Joins & Tabellenverknüpfungen (Heute) | `INNER JOIN`, `LEFT/RIGHT JOIN`, `FULL OUTER JOIN`, `CROSS JOIN` und Selbstreferenz-Joins. | [📖 Day_15](./Day_15/readme.md) |
+| **Tag 15** | ✅ | Joins & Tabellenverknüpfungen (Heute) | `INNER JOIN`, `LEFT/RIGHT JOIN`, `FULL OUTER JOIN`, `CROSS JOIN` und Selbstreferenz-Joins. | [📖 Day_15](./Day_15/readme.md) |
 
 ---
 
