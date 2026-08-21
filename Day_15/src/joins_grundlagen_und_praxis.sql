@@ -143,24 +143,134 @@ LEFT JOIN Mitarbeiter AS c ON m.chef_id = c.id;
 GO
 
 -- ============================================================================
--- 📂 TEIL 5: KOMPLEXE PRAXISAUFGABEN AUF DER PROJEKTDB
+-- 📂 TEIL 5: AUFGABENREIHE PROJEKTDB 06 - INNER JOIN 1 (Aufgaben 6.1 – 6.8)
 -- ============================================================================
 
--- Aufgabe 1: 
--- Nennen Sie für jeden Mitarbeiter den Vor- und Nachnamen, die Abteilungsbezeichnung 
--- sowie das Monatsgehalt. Sortieren Sie aufsteigend nach der Abteilung.
+-- Aufgabe 6.1:
+-- Schreiben Sie eine Abfrage, die alle Mitarbeiter aus der Abteilung 4 ausgibt.
+-- Geben Sie die Felder vorname, nachname und Abteilungsname aus.
 SELECT m.vorname,
        m.nachname,
-       a.bezeichnung AS abteilung,
-       g.gehalt
+       a.bezeichnung
 FROM Mitarbeiter AS m
 INNER JOIN Abteilung AS a ON m.abt_id = a.id
-INNER JOIN Gehalt AS g ON m.id = g.mit_id
-ORDER BY a.bezeichnung ASC, m.nachname ASC;
+WHERE a.id = 4;
 
--- Aufgabe 2:
+-- Aufgabe 6.2:
+-- Schreiben Sie eine Abfrage, die alle Projekte mit den zugehörigen Projektleitern ausgibt.
+-- Geben Sie alle Daten aus der Projekt-Tabelle und zusätzlich Id und Einstell-Datum 
+-- aus der Arbeit-Tabelle aus. Sortieren Sie das Ergebnis nach der Projekt-ID.
+SELECT p.id,
+       p.kuerzel,
+       p.bezeichnung,
+       p.mittel,
+       p.kunde_id,
+       a.mit_id,
+       a.einst_dat
+FROM Projekt AS p
+INNER JOIN Arbeit AS a ON p.id = a.pro_id
+WHERE a.aufgabe = 'Projektleiter'
+ORDER BY p.id ASC;
+
+-- Aufgabe 6.3:
+-- Verändern Sie die Abfrage aus Aufgabe 6.2, indem Sie statt der Mitarbeiter-Id 
+-- den Nachnamen des Mitarbeiters in das Ergebnis einbauen.
+SELECT p.id,
+       p.kuerzel,
+       p.bezeichnung,
+       p.mittel,
+       p.kunde_id,
+       m.nachname,
+       a.einst_dat
+FROM Projekt AS p
+INNER JOIN Arbeit AS a ON p.id = a.pro_id
+INNER JOIN Mitarbeiter AS m ON a.mit_id = m.id
+WHERE a.aufgabe = 'Projektleiter'
+ORDER BY p.id ASC;
+
+-- Aufgabe 6.4:
+-- Erweitern Sie die Abfrage aus Aufgabe 6.3, indem Sie zusätzlich die Bezeichnung 
+-- der Abteilung in das Ergebnis einbauen.
+SELECT p.id,
+       p.kuerzel,
+       p.bezeichnung AS pro_bezeichnung,
+       p.mittel,
+       p.kunde_id,
+       m.nachname,
+       a.einst_dat,
+       abt.bezeichnung AS abt_bezeichnung
+FROM Projekt AS p
+INNER JOIN Arbeit AS a ON p.id = a.pro_id
+INNER JOIN Mitarbeiter AS m ON a.mit_id = m.id
+INNER JOIN Abteilung AS abt ON m.abt_id = abt.id
+WHERE a.aufgabe = 'Projektleiter'
+ORDER BY p.id ASC;
+
+-- Aufgabe 6.5:
+-- Erstellen Sie eine Abfrage, die die Mitarbeiter mit allen zusätzlichen Informationen 
+-- zu Abteilung, Gehalt, Arbeit und Projekt ausgibt. Geben Sie dabei keine Spalten doppelt aus.
+SELECT m.id,
+       m.nachname,
+       m.vorname,
+       m.abt_id,
+       m.ort,
+       m.chef_id,
+       abt.kuerzel,
+       abt.bezeichnung AS abt_bezeichnung,
+       abt.ort AS abt_ort,
+       g.gehalt,
+       arb.aufgabe,
+       arb.einst_dat,
+       p.id AS pro_id,
+       p.bezeichnung AS pro_bezeichnung,
+       p.kunde_id
+FROM Mitarbeiter AS m
+INNER JOIN Abteilung AS abt ON m.abt_id = abt.id
+INNER JOIN Gehalt AS g ON m.id = g.mit_id
+INNER JOIN Arbeit AS arb ON m.id = arb.mit_id
+INNER JOIN Projekt AS p ON arb.pro_id = p.id;
+
+-- Aufgabe 6.6:
+-- Geben Sie für die Projekte die mit "A" beginnen die geforderten Informationen aus. 
+-- Sortieren Sie die Ausgabe nach dem Projektnamen aufsteigend und der Mitarbeiter-Id absteigend.
+SELECT p.bezeichnung,
+       k.firma,
+       arb.mit_id,
+       arb.aufgabe
+FROM Projekt AS p
+INNER JOIN Kunde AS k ON p.kunde_id = k.id
+INNER JOIN Arbeit AS arb ON p.id = arb.pro_id
+WHERE p.bezeichnung LIKE 'A%'
+ORDER BY p.bezeichnung ASC, arb.mit_id DESC;
+
+-- Aufgabe 6.7:
+-- Finden Sie Namen und Vornamen aller Mitarbeiter, die im Projekt Merkur arbeiten.
+SELECT m.nachname,
+       m.vorname
+FROM Mitarbeiter AS m
+INNER JOIN Arbeit AS arb ON m.id = arb.mit_id
+INNER JOIN Projekt AS p ON arb.pro_id = p.id
+WHERE p.bezeichnung = 'Merkur';
+
+-- Aufgabe 6.8:
+-- Nennen Sie Namen und Vornamen aller Projektleiter, deren Abteilung den Standort München hat.
+SELECT m.nachname,
+       m.vorname
+FROM Mitarbeiter AS m
+INNER JOIN Arbeit AS arb ON m.id = arb.mit_id
+INNER JOIN Abteilung AS abt ON m.abt_id = abt.id
+WHERE arb.aufgabe = 'Projektleiter' 
+  AND abt.ort = 'München';
+
+GO
+
+-- ============================================================================
+-- 📂 TEIL 6: WEITERE KOMPLEXE PRAXISAUFGABEN AUF DER PROJEKTDB
+-- ============================================================================
+
+-- Praxis 1: 
 -- Berechnen Sie den Gesamtumsatz pro Abteilung. Geben Sie Abteilungsbezeichnung 
--- und die formatierte Summe aus.
+-- und die Summe absteigend sortiert aus.
 SELECT a.bezeichnung AS abteilung,
        SUM(u.umsatz) AS gesamtumsatz
 FROM Abteilung AS a
@@ -169,30 +279,7 @@ INNER JOIN Umsatz AS u ON m.id = u.mit_id
 GROUP BY a.bezeichnung
 ORDER BY gesamtumsatz DESC;
 
--- Aufgabe 3:
--- Ermitteln Sie alle Mitarbeiter, die Projektleiter sind, zusammen mit dem Projektnamen, 
--- dem Projektbudget und dem Kundennamen.
-SELECT CONCAT(m.vorname, ' ', m.nachname) AS projektleiter,
-       p.bezeichnung AS projekt,
-       p.mittel AS budget,
-       k.firma AS kunde
-FROM Mitarbeiter AS m
-INNER JOIN Arbeit AS arb ON m.id = arb.mit_id
-INNER JOIN Projekt AS p ON arb.pro_id = p.id
-INNER JOIN Kunde AS k ON p.kunde_id = k.id
-WHERE arb.aufgabe = 'Projektleiter';
-
--- Aufgabe 4:
--- Erstellen Sie eine Übersicht aller Projekte mit der Anzahl der beteiligten Mitarbeiter 
--- sowie einer kommagetrennten Liste aller Rollen/Aufgaben in diesem Projekt.
-SELECT p.bezeichnung AS projekt,
-       COUNT(DISTINCT arb.mit_id) AS anzahl_mitarbeiter,
-       STRING_AGG(ISNULL(arb.aufgabe, 'Keine Angabe'), ', ') WITHIN GROUP (ORDER BY arb.aufgabe) AS rollen
-FROM Projekt AS p
-LEFT JOIN Arbeit AS arb ON p.id = arb.pro_id
-GROUP BY p.bezeichnung;
-
--- Aufgabe 5:
+-- Praxis 2:
 -- Identifizieren Sie alle Mitarbeiter, deren Gehalt höher ist als das Gehalt ihres Chefs.
 SELECT m.nachname AS mitarbeiter,
        gm.gehalt AS gehalt_mitarbeiter,
@@ -205,3 +292,4 @@ INNER JOIN Gehalt AS gc ON c.id = gc.mit_id
 WHERE gm.gehalt > gc.gehalt;
 
 GO
+
