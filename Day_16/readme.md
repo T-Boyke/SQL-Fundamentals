@@ -790,6 +790,248 @@ ORDER BY c.nachname ASC, m.nachname ASC;
 > **⚠️ Die Königsdisziplin-Falle:**
 > Wenn man die Bedingung `AND am.pro_id = ac.pro_id` vergisst, joint man alle Projekte des Mitarbeiters mit allen Projekten des Chefs. Das Ergebnis wäre ein falsches Kreuzprodukt aller Projekteinsätze!
 
+## 💻 Praktische Übungen: Teil 3 (ProjektDB 08 - OUTER JOIN 1)
+
+* [ProjektDB 08 - OUTER JOIN 1 - Aufgaben.sql](./assets/ProjektDB%2008%20-%20OUTER%20JOIN%201%20-%20Aufgaben.sql)
+* [ProjektDB 08 - OUTER JOIN 1 - Lösungen.sql](./assets/ProjektDB%2008%20-%20OUTER%20JOIN%201%20-%20Lösungen.sql)
+
+---
+
+### 📂 Aufgabe 8.1: Kunden und Abteilungen am selben Standort (LEFT JOIN)
+
+* **Was:** Zeige alle Kunden und dazu alle Abteilungen, die ihren Sitz am selben Ort haben.
+* **Wo:** `Kunde (k)` $\rightarrow$ `Abteilung (a)` verknüpft über die Spalte `ort`.
+* **Erwartete Ausgabe:**
+  ```text
+  id  firma                    ort          bezeichnung
+  1   Im- und Export AG        München      Beratung
+  1   Im- und Export AG        München      Diagnose
+  1   Im- und Export AG        München      Einkauf
+  2   Technische Produkte oHG  Ulm          Verkauf
+  3   Frankreich-Reisen GmbH   Saarlouis    NULL
+  4   Getränke Schneider       Heidenheim   NULL
+  5   Finanzamt Ulm            Fürth        NULL
+  6   100% Sonderzeichen AG    Baden_Baden  NULL
+  ```
+
+```sql
+SELECT k.id, k.firma, k.ort, a.bezeichnung
+FROM Kunde AS k
+LEFT JOIN Abteilung AS a ON k.ort = a.ort;
+```
+
+> [!NOTE]
+> **💡 Warum genau 8 Zeilen?**
+> * **München (3 Abteilungen):** Kunde 1 wird mit allen 3 Münchner Abteilungen verknüpft $\rightarrow \mathbf{3 \text{ Zeilen}}$.
+> * **Ulm (1 Abteilung):** Kunde 2 wird mit der Abteilung Verkauf verknüpft $\rightarrow \mathbf{1 \text{ Zeile}}$.
+> * **Saarlouis, Heidenheim, Fürth, Baden_Baden (0 Abteilungen):** Da kein Partner existiert, füllt der `LEFT JOIN` die Spalte `bezeichnung` mit `NULL` auf $\rightarrow \mathbf{4 \text{ Zeilen}}$.
+> * **Summe:** $3 + 1 + 4 = \mathbf{8 \text{ Zeilen}}$.
+
+---
+
+### 📂 Aufgabe 8.2: Abteilungen und Kunden am selben Standort (RIGHT JOIN)
+
+* **Was:** Kehre die Perspektive um: Alle Abteilungen sollen angezeigt werden und dazu eventuell vorhandene Kunden am selben Ort.
+* **Wo:** `Kunde (k)` RIGHT JOIN `Abteilung (a)` über `k.ort = a.ort`.
+* **Erwartete Ausgabe:**
+  ```text
+  id    firma                    ort      bezeichnung
+  1     Im- und Export AG        München  Beratung
+  1     Im- und Export AG        München  Diagnose
+  NULL  NULL                     NULL     Freigabe
+  1     Im- und Export AG        München  Einkauf
+  2     Technische Produkte oHG  Ulm      Verkauf
+  ```
+
+```sql
+SELECT k.id, k.firma, k.ort, a.bezeichnung
+FROM Kunde AS k
+RIGHT JOIN Abteilung AS a ON k.ort = a.ort;
+```
+
+> [!NOTE]
+> **💡 Warum steht bei Freigabe `NULL` für die Kundendaten?**
+> Die Abteilung *Freigabe* sitzt in Stuttgart. In der Tabelle `Kunde` gibt es keinen Kunden mit Firmensitz in Stuttgart. Der `RIGHT JOIN` sorgt dafür, dass die Abteilung trotzdem gelistet wird, während die Kundenspalten mit `NULL` aufgefüllt werden.
+
+---
+
+### 📂 Aufgabe 8.3: NULL-Werte ersetzen (`ISNULL` / `COALESCE`)
+
+* **Was:** Statt des technischen Wertes `NULL` soll in der Spalte für die Abteilung der lesbare Text `'- k. A. -'` ausgegeben werden.
+* **Erwartete Ausgabe:**
+  ```text
+  id  firma                    ort          bezeichnung
+  1   Im- und Export AG        München      Beratung
+  1   Im- und Export AG        München      Diagnose
+  1   Im- und Export AG        München      Einkauf
+  2   Technische Produkte oHG  Ulm          Verkauf
+  3   Frankreich-Reisen GmbH   Saarlouis    - k. A. -
+  4   Getränke Schneider       Heidenheim   - k. A. -
+  5   Finanzamt Ulm            Fürth        - k. A. -
+  6   100% Sonderzeichen AG    Baden_Baden  - k. A. -
+  ```
+
+```sql
+SELECT k.id, k.firma, k.ort,
+       ISNULL(a.bezeichnung, '- k. A. -') AS bezeichnung
+FROM Kunde AS k
+LEFT JOIN Abteilung AS a ON k.ort = a.ort;
+```
+
+> [!TIP]
+> **`ISNULL(spalte, ersatzwert)` vs. `COALESCE(spalte1, spalte2, ..., ersatzwert)`:**
+> * `ISNULL()` ist eine T-SQL-spezifische Funktion von Microsoft SQL Server für genau zwei Argumente.
+> * `COALESCE()` ist der ANSI-SQL-Standard und kann beliebig viele Parameter nacheinander prüfen. Beide eignen sich perfekt zur Nullwert-Behandlung.
+
+---
+
+### 📂 Aufgabe 8.4: Kunden und ihre Projekte
+
+* **Was:** Eine Liste aller Kunden und deren Projekte ausgeben (sofern vorhanden).
+* **Wo:** `Kunde (k)` LEFT JOIN `Projekt (p)` über `k.id = p.kunde_id`.
+* **Erwartete Ausgabe:**
+  ```text
+  firma                    ort          bezeichnung
+  Im- und Export AG        München      Merkur
+  Technische Produkte oHG  Ulm          Ariane
+  Frankreich-Reisen GmbH   Saarlouis    Apollo
+  Getränke Schneider       Heidenheim   Pluto
+  Finanzamt Ulm            Fürth        Gemini
+  100% Sonderzeichen AG    Baden_Baden  NULL
+  ```
+
+```sql
+SELECT k.firma, k.ort, p.bezeichnung
+FROM Kunde AS k
+LEFT JOIN Projekt AS p ON k.id = p.kunde_id;
+```
+
+---
+
+### 📂 Aufgabe 8.5: Kunden ohne Projekte (Der klassische Anti-Join)
+
+* **Was:** Gib ausschließlich die Kunden aus, die bisher noch kein einziges Projekt beauftragt haben.
+* **Wo:** `Kunde (k)` LEFT JOIN `Projekt (p)` über `k.id = p.kunde_id` mit Filter `WHERE p.id IS NULL`.
+* **Erwartete Ausgabe:**
+  ```text
+  firma                  ort          bezeichnung
+  100% Sonderzeichen AG  Baden_Baden  NULL
+  ```
+
+```sql
+SELECT k.firma, k.ort, p.bezeichnung
+FROM Kunde AS k
+LEFT JOIN Projekt AS p ON k.id = p.kunde_id
+WHERE p.id IS NULL;
+```
+
+> [!IMPORTANT]
+> **Das Anti-Join-Muster verstehen:**
+> 1. `LEFT JOIN` verknüpft alle Kunden mit ihren Projekten.
+> 2. `WHERE p.id IS NULL` filtert gezielt alle Kunden heraus, bei denen die Verknüpfung ins Leere lief.
+
+---
+
+### 📂 Aufgabe 8.6: Kunden und Mitarbeiter am selben Wohnort
+
+* **Was:** Liste aller Kunden und der Mitarbeiter, die in derselben Stadt wohnen.
+* **Wo:** `Kunde (k)` LEFT JOIN `Mitarbeiter (m)` über `k.ort = m.ort`.
+* **Erwartete Ausgabe (10 Zeilen):**
+  ```text
+  firma                   ort         nachname
+  Im- und Export AG       München     Richter
+  Im- und Export AG       München     Vogel
+  Im- und Export AG       München     Schubert
+  Im- und Export AG       München     Keller
+  Frankreich-Reisen GmbH  Saarlouis   NULL
+  Getränke Schneider      Heidenheim  Wolf
+  Finanzamt Ulm           Fürth       Fuchs
+  100% Sonderzeichen AG   Baden_Baden NULL
+  Technische Produkte oHG Ulm         Krüger
+  Technische Produkte oHG Ulm         Mozer
+  ```
+
+```sql
+SELECT k.firma, k.ort, m.nachname
+FROM Kunde AS k
+LEFT JOIN Mitarbeiter AS m ON k.ort = m.ort;
+```
+
+---
+
+### 📂 Aufgabe 8.7: Anzahl Mitarbeiter pro Kunden-Standort
+
+* **Was:** Liste aller Kunden mit der genauen Anzahl der am selben Ort wohnenden Mitarbeiter.
+* **Wo:** `Kunde (k)` LEFT JOIN `Mitarbeiter (m)` über `k.ort = m.ort` gruppiert nach `k.firma, k.ort`.
+* **Erwartete Ausgabe:**
+  ```text
+  firma                    ort          mitarbeiter
+  100% Sonderzeichen AG    Baden_Baden  0
+  Finanzamt Ulm            Fürth        1
+  Getränke Schneider       Heidenheim   1
+  Im- und Export AG        München      4
+  Frankreich-Reisen GmbH   Saarlouis    0
+  Technische Produkte oHG  Ulm          2
+  ```
+
+```sql
+SELECT k.firma, k.ort,
+       COUNT(m.id) AS mitarbeiter
+FROM Kunde AS k
+LEFT JOIN Mitarbeiter AS m ON k.ort = m.ort
+GROUP BY k.firma, k.ort;
+```
+
+> [!CAUTION]
+> **🚨 DIE GROSSE AGGREGATIONS-FALLE: `COUNT(*)` vs. `COUNT(m.id)` beim LEFT JOIN!**
+> 
+> * **`COUNT(*)` (FALSCH):** Zählt physische Zeilen im Resultset! Für *100% Sonderzeichen AG* existiert eine Zeile (mit `NULL`), daher würde `COUNT(*)` fälschlicherweise **`1`** Mitarbeiter ausgeben!
+> * **`COUNT(m.id)` (RICHTIG):** Zählt nur Werte, die **nicht NULL** sind. Da für *100% Sonderzeichen AG* kein Mitarbeiter existiert (`m.id IS NULL`), wird korrekt **`0`** ausgegeben!
+
+---
+
+### 📂 Aufgabe 8.8: Multi-Left-Join mit Mehrfachaggregation (Mitarbeiter & Abteilungen)
+
+* **Was:** Liste aller Kunden mit der Anzahl der ansässigen Mitarbeiter **und** der Anzahl der Abteilungen am Standort.
+* **Erwartete Ausgabe:**
+  ```text
+  firma                    stadt        mitarbeiter  abteilungen
+  100% Sonderzeichen AG    Baden_Baden  0            0
+  Finanzamt Ulm            Fürth        1            0
+  Getränke Schneider       Heidenheim   1            0
+  Im- und Export AG        München      4            3
+  Frankreich-Reisen GmbH   Saarlouis    0            0
+  Technische Produkte oHG  Ulm          2            1
+  ```
+
+#### 🔹 Variante 1: Standard mit `COUNT(DISTINCT ...)` (Empfohlen)
+```sql
+SELECT k.firma,
+       k.ort AS stadt,
+       COUNT(DISTINCT m.id) AS mitarbeiter,
+       COUNT(DISTINCT a.id) AS abteilungen
+FROM Kunde AS k
+LEFT JOIN Mitarbeiter AS m ON k.ort = m.ort
+LEFT JOIN Abteilung AS a ON k.ort = a.ort
+GROUP BY k.firma, k.ort;
+```
+
+#### 🔄 Variante 2: Alternative mit korrelierten Unterabfragen (Subqueries)
+```sql
+SELECT k.firma,
+       k.ort AS stadt,
+       (SELECT COUNT(*) FROM Mitarbeiter WHERE ort = k.ort) AS mitarbeiter,
+       (SELECT COUNT(*) FROM Abteilung WHERE ort = k.ort) AS abteilungen
+FROM Kunde AS k;
+```
+
+> [!WARNING]
+> **⚠️ Die Multi-Join Kreuzprodukt-Falle bei Aufgabe 8.8:**
+> * In München wohnen **4 Mitarbeiter** und es gibt **3 Abteilungen**.
+> * Durch die beiden `LEFT JOIN`s entsteht für München ein kartesisches Zwischenprodukt von $4 \times 3 = \mathbf{12 \text{ Zeilen}}$!
+> * Ein einfaches `COUNT(m.id)` würde fälschlicherweise **12** Mitarbeiter und `COUNT(a.id)` ebenfalls **12** Abteilungen zählen!
+> * Durch **`COUNT(DISTINCT m.id)`** und **`COUNT(DISTINCT a.id)`** werden die Duplikate ignoriert und die korrekten Zahlen (4 und 3) ermittelt.
+
 ---
 
 ## 💡 Wichtige Best Practices & Profi-Tipps
