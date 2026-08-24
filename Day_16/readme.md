@@ -18,7 +18,7 @@
 - [x] **SELF JOIN (Selbstverknüpfung):**
   - Hierarchische Beziehungen (Mitarbeiter $\leftrightarrow$ Vorgesetzter via `chef_id`) mittels `INNER` und `LEFT SELF JOIN` abbilden.
   - Horizontale Beziehungen (Standortübereinstimmungen, Fahrgemeinschaften, gleiche Aufgaben im selben Projekt) ermitteln.
-  - Duplikate und Spiegelpaare gezielt über Ungleichheitsoperatoren (`<>`, `>`, `<`) steuern.
+  - Duplikate und Spiegelpaare gezielt über relationale Operatoren (`<>`, `>`, `<`) steuern.
 - [x] **Single Source of Truth (SoT):** Konsequente Einhaltung des kanonischen `ProjektDB`-Schemas.
 
 ---
@@ -106,7 +106,24 @@ flowchart TD
 
 ## 👥 Vertiefungsthema: SELF JOIN (Selbstverknüpfung)
 
-Ein **SELF JOIN** ist kein eigener SQL-Befehl, sondern ein **INNER JOIN** oder **LEFT JOIN**, bei dem eine Tabelle **mit sich selbst** verknüpft wird.
+Ein **SELF JOIN** ist kein eigener SQL-Befehl, sondern ein regulärer **INNER JOIN** oder **LEFT JOIN**, bei dem eine Tabelle **mit sich selbst** verknüpft wird.
+
+### 🧭 Die 2 Grundmuster von Self-Joins
+
+```mermaid
+flowchart TD
+    subgraph MusterA["1. Horizontale Vergleiche (Kollegen / Peers / Standorte)"]
+        H1["Tabelle A (Instanz 1)"] <-->|"Vergleich gleicher Attribute (Ort, Abteilung, Aufgabe)"| H2["Tabelle A (Instanz 2)"]
+        H3["Beispiele: Aufgaben 7.1 bis 7.5"]
+    end
+
+    subgraph MusterB["2. Vertikale Hierarchien (Eltern / Kind / Vorgesetzte)"]
+        V1["Mitarbeiter (m)"] -->|"Fremdschlüssel: m.chef_id = c.id"| V2["Chef (c)"]
+        V3["Beispiele: Aufgaben 7.6 bis 7.9"]
+    end
+```
+
+---
 
 ### 🏢 Die Vorgesetzten-Hierarchie in der `ProjektDB`
 
@@ -129,17 +146,17 @@ flowchart TD
     AV -->|"leitet (chef_id = 22222)"| UR["Ursula Richter (12121)"]:::emp
 ```
 
-### 🔑 Die 4 goldenen Regeln für Self-Joins
+---
 
-1. **Aliasse sind zwingend erforderlich:** Das DBMS muss unterscheiden können, welche Instanz der Tabelle welche Rolle einnimmt (z. B. `AS m` für Mitarbeiter und `AS c` für Chef).
-2. **`INNER JOIN` vs. `LEFT JOIN` bei Hierarchien:**
-   * `INNER JOIN Mitarbeiter c ON m.chef_id = c.id` $\rightarrow$ Schließt die oberste Führungskraft (`chef_id IS NULL`) aus!
-   * `LEFT JOIN Mitarbeiter c ON m.chef_id = c.id` $\rightarrow$ Behält alle Mitarbeiter inklusive der Geschäftsführung (`Chef = NULL`).
-3. **Horizontale Vergleiche (z. B. gleicher Ort / gleiche Abteilung):**
-   * Verhindere Selbstpaarungen (`id <> id`) und Spiegelpaare (`A-B` und `B-A`) mit dem Operator `>` bzw. `<`:
-   * `ON a1.ort = a2.ort AND a1.id > a2.id`
-4. **Praxisskript im Repository:**
-   * Ausführliche Praxisfälle befinden sich unter [`src/01_self_joins_hierarchien_praxis.sql`](./src/01_self_joins_hierarchien_praxis.sql).
+### 🔑 Die 4 goldenen Regeln & Operatoren für Self-Joins
+
+| Operator / Syntax | Einsatzzweck | Effekt |
+| :---: | :--- | :--- |
+| **`AS alias1, AS alias2`** | **Pflicht bei jedem Self-Join** | Das DBMS muss Instanz 1 (z. B. `m` für Mitarbeiter) von Instanz 2 (`c` für Chef) unterscheiden können. |
+| **`=`** | Equi-Join | Verbindet Chef mit Mitarbeiter (`m.chef_id = c.id`) oder sucht identische Merkmale (`a1.ort = a2.ort`). |
+| **`<>` bzw. `!=`** | Anti-Selbstpaarung | Verhindert, dass ein Datensatz mit sich selbst gepaart wird ($id \neq id$). |
+| **`>` oder `<`** | Eindeutige Paarung | Verhindert Selbstpaarung **und** Spiegelpaare ($A-B$ und $B-A$) in einem einzigen Schritt. |
+| **`LEFT JOIN`** | Hierarchie-Erhalt | Stellt sicher, dass Führungskräfte ohne Chef (`chef_id IS NULL`) nicht aus dem Ergebnis herausfallen. |
 
 ---
 
@@ -391,7 +408,9 @@ ORDER BY k.firma ASC;
 ---
 
 ### 📂 Aufgabe 7.1: Abteilungen an gleichen Standorten (Alle Paare inkl. Selbstpaarung)
-* **Aufgabenstellung:** Finden Sie alle Abteilungen, an deren Standorten sich weitere Abteilungen befinden. Geben Sie jeweils die Ids, Namen und Städte der Abteilungen aus.
+
+* **Was:** Finde alle Abteilungen, die den gleichen Standort haben wie eine andere (oder dieselbe) Abteilung.
+* **Wo:** Tabelle `Abteilung a1` und `Abteilung a2`, verknüpft über die Spalte `ort`.
 * **Erwartete Ausgabe (Auszug - 11 Zeilen):**
   ```text
   id  bezeichnung  ort      id  bezeichnung  ort
@@ -412,10 +431,21 @@ FROM Abteilung AS a1
 INNER JOIN Abteilung AS a2 ON a1.ort = a2.ort;
 ```
 
+> [!NOTE]
+> **💡 Warum genau 11 Zeilen? (Die Anfänger-Falle):**
+> * **München (3 Abteilungen: 1, 2, 4):** Jede der 3 wird mit jeder der 3 kombiniert $\rightarrow 3 \times 3 = \mathbf{9 \text{ Zeilen}}$.
+> * **Stuttgart (1 Abteilung: 3):** Wird mit sich selbst gepaart $\rightarrow 1 \times 1 = \mathbf{1 \text{ Zeile}}$.
+> * **Ulm (1 Abteilung: 5):** Wird mit sich selbst gepaart $\rightarrow 1 \times 1 = \mathbf{1 \text{ Zeile}}$.
+> * **Summe:** $9 + 1 + 1 = \mathbf{11 \text{ Zeilen}}$.
+> 
+> **Falle:** Stuttgart und Ulm tauchen auf, obwohl sie alleine am Standort sind, weil die Bedingung `'Stuttgart' = 'Stuttgart'` für die Zeile mit sich selbst wahr ist!
+
 ---
 
 ### 📂 Aufgabe 7.2: Abteilungen an gleichen Standorten (Ohne Selbstpaarung)
-* **Aufgabenstellung:** Überarbeiten Sie die Abfrage aus Aufgabe 7.1. Diesmal sollen nur Zeilen ins Ergebnis übernommen werden, bei denen die Abteilungen sich unterscheiden.
+
+* **Was:** Nur Standorte mit *echten Nachbarn* (verschiedene Abteilungen am selben Ort).
+* **Wo:** `Abteilung a1` und `Abteilung a2`, Filter `a1.id <> a2.id`.
 * **Erwartete Ausgabe:**
   ```text
   id  bezeichnung  ort      id  bezeichnung  ort
@@ -435,10 +465,18 @@ INNER JOIN Abteilung AS a2 ON a1.ort = a2.ort
 WHERE a1.id <> a2.id;
 ```
 
+> [!NOTE]
+> **💡 Warum genau 6 Zeilen?**
+> Durch `a1.id <> a2.id` (oder `!=`) fliegen alle Selbstpaarungen ($1-1, 2-2, 3-3, 4-4, 5-5$) heraus. Stuttgart und Ulm haben keine Nachbarn und fallen komplett weg. In München bleiben von den 9 Kombinationen genau $9 - 3 = \mathbf{6 \text{ Zeilen}}$ übrig.
+> 
+> **Die neue Besonderheit (Spiegelpaare):** Wir haben jetzt `1-2` (Beratung/Diagnose) **und** `2-1` (Diagnose/Beratung) im Ergebnis.
+
 ---
 
 ### 📂 Aufgabe 7.3: Eindeutige Standortpaare (Ohne Spiegelpaare A-B / B-A)
-* **Aufgabenstellung:** Überarbeiten Sie die Abfrage aus Aufgabe 7.2. Diesmal soll jede Kombination nur einmal angezeigt werden. D.h. A-B ist das gleiche wie B-A.
+
+* **Was:** Jedes Paar darf nur genau **einmal** erscheinen ($A-B$ ist identisch mit $B-A$).
+* **Wo:** `Abteilung a1` und `Abteilung a2`, Bedingung `a1.id > a2.id`.
 * **Erwartete Ausgabe:**
   ```text
   id  bezeichnung  ort      id  bezeichnung  ort
@@ -455,14 +493,21 @@ INNER JOIN Abteilung AS a2 ON a1.ort = a2.ort
                           AND a1.id > a2.id;
 ```
 
-> [!NOTE]
-> **Erklärung zum Operator `>`:**
-> Durch `a1.id > a2.id` wird erzwungen, dass die linke ID immer größer ist als die rechte. Dadurch fällt sowohl die Selbstpaarung ($id = id$) als auch die gespiegelte Variante ($1-2$ neben $2-1$) automatisch weg!
+> [!TIP]
+> **💡 Der mathematische Trick mit `>`:**
+> * Bei zwei unterschiedlichen Zahlen ist **immer genau eine größer** als die andere ($x > y$).
+> * Beim Vergleich von ID 1 und ID 2 ist $2 > 1$ wahr (`TRUE`), aber $1 > 2$ falsch (`FALSE`).
+> * Dadurch wird **sowohl die Selbstpaarung ($id = id$) als auch das gespiegelte Duplikat** in einer einzigen Bedingung eliminiert!
+> * Aus 6 Zeilen werden exakt $6 / 2 = \mathbf{3 \text{ Zeilen}}$.
+> 
+> *(Hinweis: `a1.id < a2.id` funktioniert genauso gut und liefert dieselben 3 Paare mit vertauschten Spalten: 1-2, 1-4, 2-4).*
 
 ---
 
-### 📂 Aufgabe 7.4: Fahrgemeinschaften (Gleiche Abteilung & gleicher Wohnort)
-* **Aufgabenstellung:** Finden Sie heraus, ob es Mitarbeiter gibt, die einen Kollegen oder eine Kollegin aus derselben Abteilung in ihrem Wohnort haben.
+### 📂 Aufgabe 7.4: Fahrgemeinschaften (Gleiche Abteilung & Wohnort)
+
+* **Was:** Finde Mitarbeiter, die mindestens einen Kollegen aus derselben Abteilung im selben Wohnort haben.
+* **Wo:** `Mitarbeiter m1` und `Mitarbeiter m2` über `m1.abt_id = m2.abt_id AND m1.ort = m2.ort`.
 * **Erwartete Ausgabe:**
   ```text
   id     abt_id  nachname  ort
@@ -482,10 +527,31 @@ WHERE m1.ort IS NOT NULL
 ORDER BY m1.id ASC;
 ```
 
+> [!WARNING]
+> **⚠️ Fallen & Besonderheiten bei Aufgabe 7.4:**
+> 1. **Die `NULL`-Falle:** Brigitte Kaufmann (2581) und Rainer Meier (9031) haben `ort = NULL`. In SQL ergibt `NULL = NULL` in der dreiwertigen Logik **UNKNOWN (False)**. Sie werden richtigerweise nicht fälschlich als Fahrgemeinschaft gewertet!
+> 2. **Warum `DISTINCT`?** Wenn in einer Abteilung 3 Personen am selben Ort wohnen (A, B, C), wird A mit B und mit C gematcht. Ohne `DISTINCT` würde Person A zweimal im Resultset auftauchen.
+
+> [!NOTE]
+> **🔄 Alternativer Lösungsweg mit `EXISTS` (Subquery):**
+> ```sql
+> SELECT m1.id, m1.abt_id, m1.nachname, m1.ort
+> FROM Mitarbeiter AS m1
+> WHERE m1.ort IS NOT NULL
+>   AND EXISTS (
+>       SELECT 1 FROM Mitarbeiter AS m2
+>       WHERE m1.abt_id = m2.abt_id 
+>         AND m1.ort = m2.ort 
+>         AND m1.id <> m2.id
+>   );
+> ```
+
 ---
 
 ### 📂 Aufgabe 7.5: Gleiche Aufgabe im gleichen Projekt
-* **Aufgabenstellung:** Geben Sie die Mitarbeiter-Id, die Projektnummer und die Aufgabe der Mitarbeiter aus, die im gleichen Projekt die gleiche Aufgabe ausführen.
+
+* **Was:** Mitarbeiter finden, die im selben Projekt dieselbe Rolle ausüben (z. B. zwei Sachbearbeiter in Projekt 2).
+* **Wo:** `Arbeit a1` und `Arbeit a2` über `pro_id` und `aufgabe`.
 * **Erwartete Ausgabe:**
   ```text
   mit_id  pro_id  aufgabe
@@ -505,10 +571,15 @@ WHERE a1.aufgabe IS NOT NULL
 ORDER BY a1.pro_id ASC, a1.mit_id ASC;
 ```
 
+> [!NOTE]
+> **💡 Falle:** Lässt man `a1.mit_id <> a2.mit_id` weg, matcht jeder Mitarbeiter sich selbst und man erhält **jede einzelne Zeile** der gesamten `Arbeit`-Tabelle zurück!
+
 ---
 
 ### 📂 Aufgabe 7.6: Mitarbeiter und deren Vorgesetzte
-* **Aufgabenstellung:** Ermitteln Sie die Mitarbeiter mit Id, Vorname, Nachname und dem Nachnamen des Vorgesetzten.
+
+* **Was:** Liste aller Mitarbeiter mit dem Nachnamen ihres Chefs.
+* **Wo:** `Mitarbeiter m` (Mitarbeiter) und `Mitarbeiter c` (Chef) über `m.chef_id = c.id`.
 * **Erwartete Ausgabe (Auszug - 15 Zeilen):**
   ```text
   id     vorname   nachname  chef
@@ -528,14 +599,18 @@ LEFT JOIN Mitarbeiter AS c ON m.chef_id = c.id
 ORDER BY m.id ASC;
 ```
 
-> [!NOTE]
-> **Warum `LEFT JOIN`?**
-> Brigitte Kaufmann hat `chef_id = NULL`. Bei einem `INNER JOIN` würde sie herausfallen (nur 14 Zeilen). Um alle 15 Mitarbeiter im Ergebnis zu behalten, ist ein `LEFT JOIN` nötig.
+> [!IMPORTANT]
+> **⚠️ Die 14 vs. 15 Zeilen-Falle:**
+> * **`INNER JOIN`:** Brigitte Kaufmann hat `chef_id = NULL` (sie ist die Chefin an der Spitze). Ein `INNER JOIN` filtert `NULL`-Fremdschlüssel weg $\rightarrow$ liefert **nur 14 Zeilen**.
+> * **`LEFT JOIN`:** Behält Brigitte Kaufmann im Ergebnis (mit `chef = NULL`) $\rightarrow$ liefert alle **15 Zeilen**.
+> * **Praxisregel:** Bei Vorgesetzten-Hierarchien immer `LEFT JOIN` nutzen, damit die oberste Führungskraft nicht "verschwindet".
 
 ---
 
 ### 📂 Aufgabe 7.7: Abteilungen der beiden Vorgesetzten
-* **Aufgabenstellung:** Finden Sie die Abteilungen, in denen die beiden Vorgesetzten arbeiten.
+
+* **Was:** Finde die Abteilungen, in denen Führungskräfte arbeiten.
+* **Wo:** `Abteilung a`, `Mitarbeiter chef`, `Mitarbeiter mit`.
 * **Erwartete Ausgabe:**
   ```text
   id  kuerzel  bezeichnung  ort
@@ -543,6 +618,7 @@ ORDER BY m.id ASC;
   4   EK       Einkauf      München
   ```
 
+#### 🔹 Lösung über SELF JOIN (Standard in Join-Modulen):
 ```sql
 SELECT DISTINCT a.id, a.kuerzel, a.bezeichnung, a.ort
 FROM Abteilung AS a
@@ -551,10 +627,24 @@ INNER JOIN Mitarbeiter AS mit ON mit.chef_id = chef.id
 ORDER BY a.id ASC;
 ```
 
+#### 🔄 Alternative Lösung über Subquery (`WHERE IN`):
+```sql
+SELECT a.id, a.kuerzel, a.bezeichnung, a.ort
+FROM Abteilung AS a
+INNER JOIN Mitarbeiter AS m ON a.id = m.abt_id
+WHERE m.id IN (SELECT DISTINCT chef_id FROM Mitarbeiter WHERE chef_id IS NOT NULL)
+ORDER BY a.id ASC;
+```
+
+> [!NOTE]
+> **Erklärung:** Ein Mitarbeiter ist genau dann Chef, wenn seine `id` in der Spalte `chef_id` mindestens eines anderen Mitarbeiters auftaucht. Ohne `DISTINCT` würde Abteilung 2 mehrfach auftauchen, da Brigitte Kaufmann mehrere Mitarbeiter leitet.
+
 ---
 
 ### 📂 Aufgabe 7.8: Mitarbeiter im gleichen Wohnort wie ihr Chef
-* **Aufgabenstellung:** Ermitteln Sie, welche Mitarbeiter in der gleichen Stadt wohnen wie ihre Vorgesetzten.
+
+* **Was:** Welche Mitarbeiter wohnen in derselben Stadt wie ihr Vorgesetzter?
+* **Wo:** `Mitarbeiter m` und `Mitarbeiter c` über `m.chef_id = c.id` mit Filter `m.ort = c.ort`.
 * **Erwartete Ausgabe:**
   ```text
   vorname  nachname  ort      chef_ort
@@ -570,10 +660,19 @@ WHERE m.ort = c.ort
   AND m.ort IS NOT NULL;
 ```
 
+> [!NOTE]
+> **Erkenntnis:** Anke Vogel (Chef-ID 22222) wohnt in München. Ihre Mitarbeiterinnen Ursula Richter und Rolf Schubert wohnen ebenfalls in München $\rightarrow$ Treffer!
+
 ---
 
-### 📂 Aufgabe 7.9: Mitarbeiter im gleichen Projekt wie ihr Chef
-* **Aufgabenstellung:** Ermitteln Sie, welche Mitarbeiter im gleichen Projekt arbeiten wie ihre Vorgesetzten.
+### 📂 Aufgabe 7.9: Mitarbeiter im gleichen Projekt wie ihr Chef (Der doppelte Self-Join)
+
+* **Was:** Mitarbeiter ermitteln, die am selben Projekt arbeiten wie ihr Chef.
+* **Wo:** 4 Tabelleninstanzen:
+  1. `Mitarbeiter m` (Mitarbeiter)
+  2. `Mitarbeiter c` (Chef)
+  3. `Arbeit am` (Projekt des Mitarbeiters)
+  4. `Arbeit ac` (Projekt des Chefs)
 * **Erwartete Ausgabe:**
   ```text
   nachname  pro_id  chef_name  chef_pro_id
@@ -595,6 +694,10 @@ INNER JOIN Arbeit AS ac ON c.id = ac.mit_id
                        AND am.pro_id = ac.pro_id
 ORDER BY c.nachname ASC, m.nachname ASC;
 ```
+
+> [!WARNING]
+> **⚠️ Die Königsdisziplin-Falle:**
+> Wenn man die Bedingung `AND am.pro_id = ac.pro_id` vergisst, joint man alle Projekte des Mitarbeiters mit allen Projekten des Chefs. Das Ergebnis wäre ein falsches Kreuzprodukt aller Projekteinsätze!
 
 ---
 
