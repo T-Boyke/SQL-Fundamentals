@@ -187,7 +187,6 @@ CROSS JOIN Abteilung AS a;
 ### 📂 Aufgabe 6.11: Mitarbeiter und fremde Abteilungen (Anti-Zuordnung)
 
 * **Aufgabenstellung:** Finden Sie alle Mitarbeiter und dazu alle Abteilungen, in denen diese Mitarbeiter NICHT arbeiten.
-* **Join-Typ:** `CROSS JOIN` mit Filter auf Ungleichheit (`WHERE m.abt_id <> a.id`)
 * **Erwartete Ausgabe (Auszug - 60 Zeilen):**
   ```text
   id     nachname  vorname   abt_id  ort         chef_id  id  kuerzel  bezeichnung  ort
@@ -201,6 +200,7 @@ CROSS JOIN Abteilung AS a;
   (60 Zeilen)
   ```
 
+#### 🔹 Variante 1: SQL-92 mit `CROSS JOIN` + `WHERE` (⭐ Best Practice)
 ```sql
 SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
        a.id AS abt_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
@@ -209,9 +209,38 @@ CROSS JOIN Abteilung AS a
 WHERE m.abt_id <> a.id;
 ```
 
-> [!NOTE]
-> **Erklärung:**
-> Der Operator `<>` (entspricht `!=`) schließt genau die 15 Kombinationen aus, bei denen die Fremdschlüssel-ID des Mitarbeiters mit der Primärschlüssel-ID der Abteilung übereinstimmt. Es bleiben exakt die 60 Nicht-Zuordnungen übrig.
+#### 🔹 Variante 2: SQL-92 mit `INNER JOIN` (Theta-Join über `<>`)
+```sql
+SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
+       a.id AS abt_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
+FROM Mitarbeiter AS m
+INNER JOIN Abteilung AS a ON m.abt_id <> a.id;
+```
+
+#### 🔹 Variante 3: SQL-89 Syntax (Veraltete Komma-Trennung)
+```sql
+SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
+       a.id AS abt_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
+FROM Mitarbeiter AS m, Abteilung AS a
+WHERE m.abt_id <> a.id;
+```
+
+---
+
+#### ⚖️ Vergleich & Analyse: Was, Warum und Wie ist am besten?
+
+| Kriterium | Variante 1: `CROSS JOIN` + `WHERE` | Variante 2: `INNER JOIN ON <>` | Variante 3: SQL-89 (`FROM A, B`) |
+| :--- | :--- | :--- | :--- |
+| **Standard** | SQL-92 (Modern) | SQL-92 (Modern) | SQL-89 (Veraltet) |
+| **Lesbarkeit** | ⭐⭐⭐⭐⭐ **Exzellent** | ⭐⭐⭐ **Gewöhnungsbedürftig** | ⭐ **Schlecht** |
+| **Fehleranfälligkeit** | **Sehr gering** (Klare Absicht) | **Gering** | **Sehr hoch** (Gefahr unbemerkter Kreuzprodukte) |
+| **Ausführungsplan (DBMS)** | Identisch (Nested Loops / Filter) | Identisch (Nested Loops / Filter) | Identisch (Nested Loops / Filter) |
+
+> [!TIP]
+> **🏆 Warum ist Variante 1 (`CROSS JOIN` + `WHERE`) am besten?**
+> 1. **Semantische Klarheit:** Das Problem ist eine zweistufige Mengenoperation: Erst *alle* Möglichkeiten aufspannen ($15 \times 5 = 75$), dann die $15$ tatsächlichen Matches abziehen ($75 - 15 = 60$). `CROSS JOIN` gefolgt von `WHERE <>` drückt diese Absicht exakt so aus, wie ein Entwickler denkt.
+> 2. **Keine Verwirrung bei `INNER JOIN`:** Entwickler erwarten bei einem `INNER JOIN` zu 99% einen Gleichheitsabgleich (`ON A.id = B.id`). Ein Nicht-Gleichheits-Join (`ON A.id <> B.id`) ist zwar syntaktisch als Theta-Join erlaubt, führt beim Code-Review aber häufig zu Missverständnissen ("Wollte der Autor hier wirklich `<>` oder ist das ein Tippfehler?").
+> 3. **SQL-89 ist veraltet:** Die Komma-Syntax vermischt Tabellenverknüpfung und Filterkriterien in einem unübersichtlichen `WHERE`-Block und wird in modernen Datenbankprojekten vermieden.
 
 ---
 

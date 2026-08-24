@@ -58,7 +58,7 @@ GO
 -- (60 Zeilen: 75 Zeilen Kartesisches Produkt minus 15 tatsächliche Zuordnungen)
 -- ============================================================================
 
--- Variante mit CROSS JOIN und WHERE:
+-- Variante 1 (⭐ Best Practice - SQL-92 CROSS JOIN mit WHERE-Filter):
 SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
        a.id AS abt_tabelle_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
 FROM Mitarbeiter AS m
@@ -66,11 +66,19 @@ CROSS JOIN Abteilung AS a
 WHERE m.abt_id <> a.id;
 GO
 
--- Variante mit Nicht-Gleichheits-INNER-JOIN (Theta-Join):
--- SELECT m.*, a.*
--- FROM Mitarbeiter AS m
--- INNER JOIN Abteilung AS a ON m.abt_id <> a.id;
--- GO
+-- Variante 2 (SQL-92 INNER JOIN als Theta-Join über Ungleichheit):
+SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
+       a.id AS abt_tabelle_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
+FROM Mitarbeiter AS m
+INNER JOIN Abteilung AS a ON m.abt_id <> a.id;
+GO
+
+-- Variante 3 (Veraltete SQL-89 Syntax mit Komma-Trennung):
+SELECT m.id, m.nachname, m.vorname, m.abt_id, m.ort, m.chef_id,
+       a.id AS abt_tabelle_id, a.kuerzel, a.bezeichnung, a.ort AS abt_ort
+FROM Mitarbeiter AS m, Abteilung AS a
+WHERE m.abt_id <> a.id;
+GO
 
 -- ============================================================================
 -- Aufgabe 6.12
