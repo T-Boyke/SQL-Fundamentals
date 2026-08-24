@@ -1,4 +1,4 @@
-# 📅 Day_16: Fortgeschrittene Joins (INNER JOIN 2) & Vertiefung
+# 📅 Day_16: Fortgeschrittene Joins (INNER JOIN 2) & SELF JOINs
 
 ## ℹ️ Kurs-Informationen
 
@@ -14,8 +14,8 @@
 - [x] **Tabellenbeziehungen visualisieren:** Verstehen, wie Primärschlüssel (PK) und Fremdschlüssel (FK) einen Verknüpfungspfad über mehrere Tabellen bilden.
 - [x] **Multi-Table INNER JOINs meistern:** Daten aus 3 bis 4 Tabellen (`Kunde` ➔ `Projekt` ➔ `Arbeit` ➔ `Gehalt` / `Mitarbeiter` ➔ `Abteilung`) logisch zusammenführen.
 - [x] **CROSS JOIN vs. Anti-Zuordnung:** Das Kartesische Produkt ($n \times m$) verstehen und mittels Nicht-Gleichheitsoperator (`m.abt_id <> a.id`) Differenzmengen ermitteln.
-- [x] **Filterung auf Datum & Rollen:** Datumsfilter (`einst_dat = '2019-01-01'`) und textuelle Rollenfilter (`aufgabe = 'Projektleiter'`) im `WHERE`-Block präzise anwenden.
 - [x] **Aggregation & Duplikatsvermeidung:** Aggregatfunktionen (`COUNT(DISTINCT ...)`) bei verknüpften $\text{1:n}$- und $\text{n:m}$-Tabellen fehlerfrei einsetzen.
+- [x] **SELF JOIN (Selbstverknüpfung):** Hierarchische Beziehungen (Mitarbeiter $\leftrightarrow$ Vorgesetzter via `chef_id`) und horizontale Beziehungen (Kollegenpaare) innerhalb derselben Tabelle abbilden.
 - [x] **Single Source of Truth (SoT):** Konsequente Einhaltung des kanonischen `ProjektDB`-Schemas.
 
 ---
@@ -51,6 +51,7 @@ flowchart TD
     MIT -->|"1 : n (id = mit_id)"| ARB
     PROJ -->|"1 : n (id = pro_id)"| ARB
     KUN -->|"1 : n (id = kunde_id)"| PROJ
+    MIT -.->|"Self-Referenz (chef_id = id)"| MIT
 ```
 
 > [!TIP]
@@ -84,14 +85,6 @@ flowchart LR
 2. **Echte Zugehörigkeiten:** Jeder der 15 Mitarbeiter arbeitet in genau **1** Abteilung $\rightarrow 15 \text{ Zeilen}$ erfüllen $m.abt\_id = a.id$.
 3. **Differenz (Anti-Matches):** $75 - 15 = \mathbf{60 \text{ Zeilen}}$, in denen der Mitarbeiter **nicht** zu dieser Abteilung gehört.
 
-```sql
--- Erzeugt alle 60 Kombinationen von Mitarbeitern mit Abteilungen, in denen sie NICHT arbeiten
-SELECT m.id, m.nachname, a.bezeichnung AS fremde_abteilung
-FROM Mitarbeiter AS m
-CROSS JOIN Abteilung AS a
-WHERE m.abt_id <> a.id;
-```
-
 ---
 
 ### 2. Multi-Table Joins mit Aggregation Schritt für Schritt (Aufgabe 6.15)
@@ -106,11 +99,45 @@ flowchart TD
     S4 --> S5["<b>Schritt 5: Sortieren (ORDER BY)</b><br/>Alphabetische Ausgabe der Kunden"]
 ```
 
-> [!WARNING]
-> **Achtung Stolperfalle: `COUNT(*)` vs. `COUNT(DISTINCT arb.mit_id)`:**
-> Wenn Mitarbeiter `28559` an **zwei verschiedenen Projekten** desselben Kunden arbeitet, taucht er im Zwischenergebnis zweimal auf. 
-> * `COUNT(*)` würde fälschlicherweise **2** zählen.
-> * `COUNT(DISTINCT arb.mit_id)` zählt die Personalnummer eindeutig und liefert das korrekte Ergebnis **1** (ein Mitarbeiter).
+---
+
+## 👥 Vertiefungsthema: SELF JOIN (Selbstverknüpfung)
+
+Ein **SELF JOIN** ist kein eigenständiger SQL-Befehl, sondern ein **INNER JOIN** oder **LEFT JOIN**, bei dem eine Tabelle **mit sich selbst** verknüpft wird.
+
+### 🏢 Die Vorgesetzten-Hierarchie in der `ProjektDB`
+
+In der Tabelle `Mitarbeiter` verweist der Fremdschlüssel `chef_id` rekursiv auf den Primärschlüssel `id` desselben oder eines anderen Mitarbeiters.
+
+```mermaid
+flowchart TD
+    classDef boss fill:#b8860b,stroke:#8b6508,stroke-width:2px,color:#fff;
+    classDef lead fill:#2b5797,stroke:#1e3f73,stroke-width:2px,color:#fff;
+    classDef emp fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff;
+
+    BK["👑 Brigitte Kaufmann (2581)<br/><i>chef_id: NULL (Geschäftsführung)</i>"]:::boss
+
+    BK -->|"leitet (chef_id = 2581)"| SS["Sabine Schäfer (5765)"]:::lead
+    BK -->|"leitet (chef_id = 2581)"| RM["Rainer Meier (9031)"]:::lead
+    BK -->|"leitet (chef_id = 2581)"| PH["Petra Huber (10102)"]:::lead
+    BK -->|"leitet (chef_id = 2581)"| AV["Anke Vogel (22222)"]:::lead
+
+    AV -->|"leitet (chef_id = 22222)"| KW["Klaus Wolf (9912)"]:::emp
+    AV -->|"leitet (chef_id = 22222)"| UR["Ursula Richter (12121)"]:::emp
+```
+
+### 🔑 Die 3 goldenen Regeln für Self-Joins
+
+1. **Aliasse sind Pflicht:** Das DBMS muss unterscheiden können, welche Rolle die Tabelle einnimmt (z. B. `AS m` für Mitarbeiter und `AS c` für Chef).
+2. **INNER JOIN vs. LEFT JOIN bei Hierarchien:**
+   * `INNER JOIN Mitarbeiter c ON m.chef_id = c.id` $\rightarrow$ Schließt die oberste Führungskraft (`chef_id IS NULL`) aus!
+   * `LEFT JOIN Mitarbeiter c ON m.chef_id = c.id` $\rightarrow$ Behält alle Mitarbeiter inklusive der Geschäftsführung (`Chef = NULL`).
+3. **Horizontale Paarfindung (z. B. gleicher Wohnort):**
+   * Verhindere Selbstpaarungen und Spiegelpaare mit dem Operator `<`:
+   * `ON m1.ort = m2.ort AND m1.id < m2.id`
+
+#### Praxisskript:
+* Vollständige Beispiele befinden sich in [`src/01_self_joins_hierarchien_praxis.sql`](./src/01_self_joins_hierarchien_praxis.sql).
 
 ---
 
@@ -263,9 +290,17 @@ INNER JOIN Arbeit AS arb ON m.id = arb.mit_id
 WHERE arb.einst_dat = '2019-01-01';
 ```
 
-> [!NOTE]
-> **Erklärung:**
-> Das Einstellungsdatum (`einst_dat`) liegt in der Tabelle `Arbeit`, der Name der Abteilung (`bezeichnung`) in der Tabelle `Abteilung`. Wir nutzen `Mitarbeiter` als Bindeglied zwischen beiden Tabellen.
+> [!CAUTION]
+> **🚫 Warum ist Text-Hardcoding mit `CHAR(13)+CHAR(10)` falsch?**
+> Ein Versuch wie:
+> ```sql
+> -- ❌ FALSCH: Erzeugt nur einen einzigen unstrukturierten String!
+> SELECT 'bezeichnung' + CHAR(13) + CHAR(10) + 'Freigabe' + CHAR(13) + CHAR(10) + 'Einkauf';
+> ```
+> ist aus relationaler Sicht fundamental fehlerhaft:
+> 1. **Kein relationales Resultset:** SQL-Clients erwarten eine Tabelle mit 1 Spalte (`bezeichnung`) und 2 Zeilen (Datensätzen). Das String-Kleben erzeugt **1 Zeile mit einem einzigen Textklumpen**.
+> 2. **Kein DB-Zugriff:** Ändern sich Datensätze in der Datenbank, bleibt die Ausgabe statisch und falsch.
+> 3. **Inkompatibel mit C# / APIs:** Ein `SqlDataReader` in C# iteriert zeilenweise mit `reader.Read()` und liest Spalten mit `reader["bezeichnung"]`. Bei einem Textklumpen schlägt jede strukturierte Verarbeitung fehl.
 
 ---
 
@@ -289,10 +324,6 @@ WHERE arb.aufgabe = 'Projektleiter'
   AND a.ort = 'Stuttgart';
 ```
 
-> [!NOTE]
-> **Erklärung:**
-> Hier filtern wir mit `WHERE` über zwei verschiedene Tabellen gleichzeitig: Die Rolle `aufgabe = 'Projektleiter'` aus der Tabelle `Arbeit` und den Abteilungsstandort `ort = 'Stuttgart'` aus der Tabelle `Abteilung`.
-
 ---
 
 ### 📂 Aufgabe 6.14: Projekte mit Mitarbeitern aus Abteilung Beratung
@@ -314,10 +345,6 @@ INNER JOIN Mitarbeiter AS m ON arb.mit_id = m.id
 INNER JOIN Abteilung AS a ON m.abt_id = a.id
 WHERE a.bezeichnung = 'Beratung';
 ```
-
-> [!NOTE]
-> **Erklärung:**
-> Eine 4-Tabellen-Kette: Von `Projekt` über die Zuweisung `Arbeit` zum `Mitarbeiter` und schließlich zu dessen `Abteilung`.
 
 ---
 
@@ -345,12 +372,17 @@ GROUP BY k.firma
 ORDER BY k.firma ASC;
 ```
 
-> [!NOTE]
-> **Erklärung:**
-> 1. `INNER JOIN` verknüpft Kunden über ihre Projekte mit den tätigen Mitarbeitern und deren Gehältern.
-> 2. `WHERE g.gehalt >= 5000` filtert alle Mitarbeiter heraus, die weniger als 5.000 € verdienen.
-> 3. `GROUP BY k.firma` fasst alle verbliebenen Zeilen pro Kunde zusammen.
-> 4. `COUNT(DISTINCT arb.mit_id)` zählt die eindeutigen Mitarbeiter-IDs, damit ein Mitarbeiter, der in zwei Projekten derselben Firma arbeitet, nicht doppelt gezählt wird.
+> [!WARNING]
+> **🚨 Deep-Dive: Kann man `DISTINCT` bei `COUNT(DISTINCT arb.mit_id)` weglassen?**
+> **Nein!** Auch wenn im aktuellen Demo-Datenbestand `COUNT(*)` zufällig dieselben Zahlen liefert, ist das Weglassen von `DISTINCT` fachlich ein schwerer Fehler:
+> 
+> * **Das Problem:** Ein Mitarbeiter kann für denselben Kunden an **zwei verschiedenen Projekten** arbeiten.
+> * **Beispiel:** Mitarbeiter `28559` arbeitet für *Frankreich-Reisen GmbH* an Projekt 1 **und** Projekt 2.
+>
+> | Zähl-Methode | Was wird gezählt? | Ergebnis bei 2 Projekten desselben Mitarbeiters | Bewertung |
+> | :--- | :--- | :---: | :--- |
+> | `COUNT(*)` oder `COUNT(arb.mit_id)` | Alle verknüpften **Einsatzzeilen** | **2** | ❌ Falsch: Zählt denselben Mitarbeiter 2-mal! |
+> | **`COUNT(DISTINCT arb.mit_id)`** | Eindeutige **Personen (Köpfe)** | **1** | ✅ Richtig: Genau 1 Mitarbeiter mit Gehalt $\ge 5.000\text{ €}$! |
 
 ---
 
@@ -370,3 +402,4 @@ ORDER BY k.firma ASC;
 > * `gehalt` (Monatsbetrag in `Gehalt`)
 > * `mittel` (Projektbudget in `Projekt`)
 > * `bezeichnung` (Name in `Abteilung` und `Projekt`)
+> * `chef_id` (Vorgesetzten-ID in `Mitarbeiter`)
