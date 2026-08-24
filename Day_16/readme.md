@@ -29,31 +29,26 @@ Um Joins über mehrere Tabellen zu verstehen, hilft die Vorstellung einer **Brü
 
 ```mermaid
 flowchart TD
-    classDef pk fill:#2b5797,stroke:#1e3f73,stroke-width:2px,color:#fff;
-    classDef fk fill:#d9534f,stroke:#c9302c,stroke-width:2px,color:#fff;
-    classDef table fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff;
-    classDef bridge fill:#5cb85c,stroke:#4cae4c,stroke-width:2px,color:#fff;
-
     subgraph Stamm1["Unternehmensstruktur"]
-        ABT["🏢 Abteilung<br/>• <b>id</b> (PK)<br/>• bezeichnung<br/>• ort"]:::table
-        MIT["👤 Mitarbeiter<br/>• <b>id</b> (PK)<br/>• vorname, nachname<br/>• <i>abt_id</i> (FK) ➔ Abteilung<br/>• <i>chef_id</i> (FK) ➔ Mitarbeiter"]:::table
-        GEH["💰 Gehalt<br/>• <b>mit_id</b> (PK, FK) ➔ Mitarbeiter<br/>• gehalt"]:::table
+        ABT["Abteilung (id PK, bezeichnung, ort)"]
+        MIT["Mitarbeiter (id PK, vorname, nachname, abt_id FK, chef_id FK)"]
+        GEH["Gehalt (mit_id PK/FK, gehalt)"]
     end
 
-    subgraph Stamm2["Projekt- & Kundenwelt"]
-        KUN["🏭 Kunde<br/>• <b>id</b> (PK)<br/>• firma, ort"]:::table
-        PROJ["🚀 Projekt<br/>• <b>id</b> (PK)<br/>• bezeichnung, mittel<br/>• <i>kunde_id</i> (FK) ➔ Kunde"]:::table
+    subgraph Stamm2["Projekt- und Kundenwelt"]
+        KUN["Kunde (id PK, firma, ort)"]
+        PROJ["Projekt (id PK, bezeichnung, mittel, kunde_id FK)"]
     end
 
-    subgraph Bruecke["Die n:m-Verknüpfungstabelle"]
-        ARB["⚡ Arbeit (Wer macht was wo?)<br/>• <b><i>mit_id</i></b> (FK ➔ Mitarbeiter)<br/>• <b><i>pro_id</i></b> (FK ➔ Projekt)<br/>• aufgabe, einst_dat"]:::bridge
+    subgraph Bruecke["Die n:m Brueckentabelle"]
+        ARB["Arbeit (mit_id FK, pro_id FK, aufgabe, einst_dat)"]
     end
 
-    ABT -->|"1 : n (abt_id = id)"| MIT
-    MIT -->|"1 : 1 (id = mit_id)"| GEH
-    MIT -->|"1 : n (id = mit_id)"| ARB
-    PROJ -->|"1 : n (id = pro_id)"| ARB
-    KUN -->|"1 : n (id = kunde_id)"| PROJ
+    ABT -->|"1:n (abt_id = id)"| MIT
+    MIT -->|"1:1 (id = mit_id)"| GEH
+    MIT -->|"1:n (id = mit_id)"| ARB
+    PROJ -->|"1:n (id = pro_id)"| ARB
+    KUN -->|"1:n (id = kunde_id)"| PROJ
     MIT -.->|"Self-Referenz (chef_id = id)"| MIT
 ```
 
@@ -72,14 +67,14 @@ Wenn zwei Tabellen **ohne** Bedingung miteinander multipliziert werden, entsteht
 
 ```mermaid
 flowchart LR
-    subgraph Multiplikation["1. CROSS JOIN (Alle Möglichkeiten)"]
-        M15["15 Mitarbeiter"] -->|"15 × 5"| RES75["75 Kombinationszeilen<br/>(Jeder Mitarbeiter mit jeder Abteilung)"]
-        A5["5 Abteilungen"] -->|"15 × 5"| RES75
+    subgraph Multiplikation["1. CROSS JOIN (Alle Moeglichkeiten)"]
+        M15["15 Mitarbeiter"] -->|"15 x 5"| RES75["75 Kombinationszeilen"]
+        A5["5 Abteilungen"] -->|"15 x 5"| RES75
     end
 
-    subgraph Filterung["2. Filterung auf fremde Abteilungen (Aufgabe 6.11)"]
-        RES75 -->|"Filter: WHERE m.abt_id <> a.id"| MATCH15["15 Zeilen echte Zugehörigkeit (Weggefiltert)"]
-        RES75 -->|"Bedingung erfüllt"| NONMATCH60["<b>60 Zeilen Nicht-Zugehörigkeit</b><br/>(Mitarbeiter mit fremden Abteilungen)"]
+    subgraph Filterung["2. Filterung auf fremde Abteilungen"]
+        RES75 -->|"Filter: WHERE m.abt_id <> a.id"| MATCH15["15 echte Zugehoerigkeiten (Weggefiltert)"]
+        RES75 -->|"Bedingung erfuellt"| NONMATCH60["60 Nicht-Zugehoerigkeiten (Ergebnis)"]
     end
 ```
 
@@ -96,10 +91,10 @@ Wie arbeitet das Datenbank-Managementsystem (DBMS), wenn wir Kunden, Projekte, M
 
 ```mermaid
 flowchart TD
-    S1["<b>Schritt 1: Tabellen verbinden</b><br/>Kunde ➔ Projekt ➔ Arbeit ➔ Gehalt"] --> S2["<b>Schritt 2: Zeilen filtern (WHERE)</b><br/>Nur Datensätze mit gehalt >= 5000 behalten"]
-    S2 --> S3["<b>Schritt 3: Gruppieren (GROUP BY)</b><br/>Alle Zeilen nach Kunde (k.firma) zusammenfassen"]
-    S3 --> S4["<b>Schritt 4: Aggregieren (COUNT DISTINCT)</b><br/>COUNT(DISTINCT arb.mit_id) zählt jeden Spitzenverdiener pro Kunde nur 1x"]
-    S4 --> S5["<b>Schritt 5: Sortieren (ORDER BY)</b><br/>Alphabetische Ausgabe der Kunden"]
+    S1["1. Tabellen verbinden: Kunde - Projekt - Arbeit - Gehalt"] --> S2["2. Zeilen filtern: WHERE gehalt >= 5000"]
+    S2 --> S3["3. Gruppieren: GROUP BY k.firma"]
+    S3 --> S4["4. Aggregieren: COUNT(DISTINCT arb.mit_id)"]
+    S4 --> S5["5. Sortieren: ORDER BY k.firma"]
 ```
 
 ---
@@ -113,12 +108,12 @@ Ein **SELF JOIN** ist kein eigener SQL-Befehl, sondern ein regulärer **INNER JO
 ```mermaid
 flowchart TD
     subgraph MusterA["1. Horizontale Vergleiche (Kollegen / Peers / Standorte)"]
-        H1["Tabelle A (Instanz 1)"] <-->|"Vergleich gleicher Attribute (Ort, Abteilung, Aufgabe)"| H2["Tabelle A (Instanz 2)"]
+        H1["Tabelle A (Instanz 1)"] ---|"Vergleich gleicher Attribute (Ort, Abteilung, Aufgabe)"| H2["Tabelle A (Instanz 2)"]
         H3["Beispiele: Aufgaben 7.1 bis 7.5"]
     end
 
     subgraph MusterB["2. Vertikale Hierarchien (Eltern / Kind / Vorgesetzte)"]
-        V1["Mitarbeiter (m)"] -->|"Fremdschlüssel: m.chef_id = c.id"| V2["Chef (c)"]
+        V1["Mitarbeiter (m)"] -->|"Fremdschluessel: m.chef_id = c.id"| V2["Chef (c)"]
         V3["Beispiele: Aufgaben 7.6 bis 7.9"]
     end
 ```
@@ -131,20 +126,17 @@ In der Tabelle `Mitarbeiter` verweist der Fremdschlüssel `chef_id` rekursiv auf
 
 ```mermaid
 flowchart TD
-    classDef boss fill:#b8860b,stroke:#8b6508,stroke-width:2px,color:#fff;
-    classDef lead fill:#2b5797,stroke:#1e3f73,stroke-width:2px,color:#fff;
-    classDef emp fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff;
+    BK["Brigitte Kaufmann (2581) - Geschaeftsfuehrung (chef_id: NULL)"]
 
-    BK["👑 Brigitte Kaufmann (2581)<br/><i>chef_id: NULL (Geschäftsführung)</i>"]:::boss
+    BK -->|"leitet (chef_id = 2581)"| SS["Sabine Schaefer (5765)"]
+    BK -->|"leitet (chef_id = 2581)"| RM["Rainer Meier (9031)"]
+    BK -->|"leitet (chef_id = 2581)"| PH["Petra Huber (10102)"]
+    BK -->|"leitet (chef_id = 2581)"| AV["Anke Vogel (22222)"]
 
-    BK -->|"leitet (chef_id = 2581)"| SS["Sabine Schäfer (5765)"]:::lead
-    BK -->|"leitet (chef_id = 2581)"| RM["Rainer Meier (9031)"]:::lead
-    BK -->|"leitet (chef_id = 2581)"| PH["Petra Huber (10102)"]:::lead
-    BK -->|"leitet (chef_id = 2581)"| AV["Anke Vogel (22222)"]:::lead
-
-    AV -->|"leitet (chef_id = 22222)"| KW["Klaus Wolf (9912)"]:::emp
-    AV -->|"leitet (chef_id = 22222)"| UR["Ursula Richter (12121)"]:::emp
+    AV -->|"leitet (chef_id = 22222)"| KW["Klaus Wolf (9912)"]
+    AV -->|"leitet (chef_id = 22222)"| UR["Ursula Richter (12121)"]
 ```
+
 
 ---
 
