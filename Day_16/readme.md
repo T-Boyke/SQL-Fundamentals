@@ -19,6 +19,10 @@
   - Hierarchische Beziehungen (Mitarbeiter $\leftrightarrow$ Vorgesetzter via `chef_id`) mittels `INNER` und `LEFT SELF JOIN` abbilden.
   - Horizontale Beziehungen (Standortübereinstimmungen, Fahrgemeinschaften, gleiche Aufgaben im selben Projekt) ermitteln.
   - Duplikate und Spiegelpaare gezielt über relationale Operatoren (`<>`, `>`, `<`) steuern.
+- [x] **OUTER JOINs (LEFT, RIGHT, FULL OUTER JOIN):**
+  - Beibehalten unvollständiger Datensätze mit automatischer `NULL`-Auffüllung.
+  - **Anti-Joins:** Gezieltes Finden verwaister Datensätze mittels `WHERE B.id IS NULL`.
+  - **Die fundamentale Unterscheidung:** Filterbedingungen in der `ON`-Klausel vs. Filterbedingungen in der `WHERE`-Klausel beim `LEFT JOIN`.
 - [x] **Single Source of Truth (SoT):** Konsequente Einhaltung des kanonischen `ProjektDB`-Schemas.
 
 ---
@@ -148,7 +152,102 @@ flowchart TD
 | **`=`** | Equi-Join | Verbindet Chef mit Mitarbeiter (`m.chef_id = c.id`) oder sucht identische Merkmale (`a1.ort = a2.ort`). |
 | **`<>` bzw. `!=`** | Anti-Selbstpaarung | Verhindert, dass ein Datensatz mit sich selbst gepaart wird ($id \neq id$). |
 | **`>` oder `<`** | Eindeutige Paarung | Verhindert Selbstpaarung **und** Spiegelpaare ($A-B$ und $B-A$) in einem einzigen Schritt. |
-| **`LEFT JOIN`** | Hierarchie-Erhalt | Stellt sicher, dass Führungskräfte ohne Chef (`chef_id IS NULL`) nicht aus dem Ergebnis herausfallen. |
+---
+
+## 🌐 Vertiefungsthema: OUTER JOINs (LEFT, RIGHT, FULL OUTER JOIN)
+
+Während ein `INNER JOIN` ausschließlich die **Schnittmenge** übereinstimmender Datensätze liefert, sorgen **OUTER JOINs** dafür, dass auch Datensätze erhalten bleiben, die **kein Gegenstück** in der verknüpften Tabelle besitzen. Fehlende Werte werden automatisch mit `NULL` aufgefüllt.
+
+```mermaid
+flowchart TD
+    subgraph JTypes["Die 3 Typen des OUTER JOINs"]
+        L1["LEFT JOIN: Alle Zeilen links plus Treffer rechts"]
+        R1["RIGHT JOIN: Alle Zeilen rechts plus Treffer links"]
+        F1["FULL JOIN: Alle Zeilen aus beiden Tabellen"]
+    end
+```
+
+---
+
+### 1. Die 3 Varianten im Detail
+
+```mermaid
+flowchart LR
+    subgraph LJ["LEFT OUTER JOIN (Tabelle A ist dominant)"]
+        A_L["Tabelle A (Alle Datensaetze)"] -->|"Ergaenzung"| B_L["Tabelle B (Nur Treffer, sonst NULL)"]
+    end
+
+    subgraph RJ["RIGHT OUTER JOIN (Tabelle B ist dominant)"]
+        A_R["Tabelle A (Nur Treffer, sonst NULL)"] <--|"Ergaenzung"| B_R["Tabelle B (Alle Datensaetze)"]
+    end
+
+    subgraph FJ["FULL OUTER JOIN (Vollstaendige Vereinigung)"]
+        A_F["Tabelle A (Alle)"] ---|"Verbindung"| B_F["Tabelle B (Alle)"]
+    end
+```
+
+
+* **LEFT OUTER JOIN:** Behält **alle** Zeilen der linken Tabelle. Gibt es in der rechten Tabelle keinen Treffer, werden deren Spalten mit `NULL` befüllt.
+  * *Praxisbeispiel:* Alle Kunden ausgeben – auch Kunden wie *100% Sonderzeichen AG*, die noch kein Projekt beauftragt haben.
+* **RIGHT OUTER JOIN:** Behält **alle** Zeilen der rechten Tabelle. Syntaktisch ist `A RIGHT JOIN B` identisch mit `B LEFT JOIN A`.
+* **FULL OUTER JOIN:** Behält **alle** Zeilen beider Tabellen. Zeilen ohne Treffer auf der Gegenseite werden jeweils mit `NULL` aufgefüllt.
+
+---
+
+### 2. Anti-Joins: Gezielte Suche nach verwaisten Datensätzen
+
+Ein **Anti-Join** ist ein `LEFT JOIN`, der mit einem `WHERE ... IS NULL`-Filter kombiniert wird, um Datensätze zu finden, die **keine Beziehung** zur Zieltabelle besitzen.
+
+```mermaid
+flowchart LR
+    subgraph AntiJoin["Anti-Join Prinzip (Ausschluss der Schnittmenge)"]
+        ALL_A["Alle Kunden (Tabelle A)"] -->|"LEFT JOIN"| MATCH_B["Kunden mit Projekten (Schnittmenge)"]
+        ALL_A -->|"WHERE p.id IS NULL"| ORPHAN["Verwaiste Kunden ohne Projekte (Ergebnis)"]
+    end
+```
+
+```sql
+-- Finde alle Kunden, die bisher KEIN EINZIGES Projekt beauftragt haben
+SELECT k.id, k.firma, k.ort
+FROM Kunde AS k
+LEFT JOIN Projekt AS p ON k.id = p.kunde_id
+WHERE p.id IS NULL;
+```
+
+---
+
+### 3. 🚨 DER GROSSE KLASSIKER: `ON` vs. `WHERE` beim LEFT JOIN
+
+Dies ist eine der **wichtigsten und häufigsten Prüfungs- und Praxisfragen** in SQL!
+
+```mermaid
+flowchart TD
+    P1["Schritt 1: ON-Klausel wertet Verknüpfungsbedingung aus"] --> P2["Schritt 2: LEFT JOIN behält alle linken Zeilen (Nicht-Treffer erhalten NULL)"]
+    P2 --> P3["Schritt 3: WHERE-Klausel filtert das Gesamtergebnis (Nach dem Join!)"]
+```
+
+#### Der entscheidende Unterschied:
+
+1. **Bedingung im `ON` (Verknüpfungsfilter):**
+   * Entscheidet: *„Welche Zeilen der rechten Tabelle werden an die linke Tabelle angehängt?“*
+   * Ist die Bedingung für eine rechte Zeile falsch, bleibt die linke Zeile **trotzdem im Ergebnis** (die rechten Spalten werden einfach `NULL`).
+2. **Bedingung im `WHERE` (Ergebnisfilter):**
+   * Entscheidet: *„Welche Zeilen aus dem gesamten Zwischenergebnis werden an den Benutzer ausgegeben?“*
+   * Wird nach dem Join ausgeführt. Steht im `WHERE` ein Filter auf eine Spalte der rechten Tabelle (z. B. `WHERE p.mittel >= 100000`), fliegt jede Zeile raus, bei der diese Spalte `NULL` ist (da `NULL >= 100000` nicht wahr ist).
+   * ⚠️ **Konsequenz:** Ein Filter auf die rechte Tabelle im `WHERE` macht den `LEFT JOIN` unbemerkt zu einem `INNER JOIN`!
+
+---
+
+#### ⚖️ Praxis-Vergleich an der `ProjektDB`:
+
+> **Szenario:** Wir möchten eine Liste **aller Kunden** und dazu ihre Großprojekte mit Budget $\ge 100.000\text{ €}$ sehen. Kunden mit kleineren Projekten oder ohne Projekte sollen **trotzdem** aufgeführt werden.
+
+| Variante | SQL-Statement | Verhalten & Ergebnis | Bewertung |
+| :--- | :--- | :--- | :--- |
+| **Bedingung im `ON`** | `FROM Kunde k`<br/>`LEFT JOIN Projekt p ON k.id = p.kunde_id`<br/>`AND p.mittel >= 100000;` | **Alle 6 Kunden** bleiben in der Liste. Kunden ohne Großprojekt erhalten `NULL`. | ✅ **Richtig:** Echter LEFT JOIN |
+| **Bedingung im `WHERE`** | `FROM Kunde k`<br/>`LEFT JOIN Projekt p ON k.id = p.kunde_id`<br/>`WHERE p.mittel >= 100000;` | **Nur noch 3 Kunden** im Ergebnis. Alle Kunden ohne Großprojekt fliegen raus! | ❌ **Logikfehler:** Heimlicher INNER JOIN |
+
+*Praxisskripte befinden sich in [`src/02_outer_joins_praxis.sql`](./src/02_outer_joins_praxis.sql).*
 
 ---
 
