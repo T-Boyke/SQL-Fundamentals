@@ -17,6 +17,7 @@
 - [x] **Anti-Joins für Geschäftsberichte einsetzen:** Verwaiste Entitäten (z. B. Mitarbeiter ohne jegliche Umsätze) via `LEFT JOIN ... WHERE B.id IS NULL` isolieren.
 - [x] **Multi-Table OUTER JOINs mit Rollenfiltern strukturieren:** Präzise Steuerung von Bedingungen in der `ON`-Klausel (z. B. `AND arb.aufgabe = 'Projektleiter'`), um alle Basisdatensätze zu erhalten.
 - [x] **Filterplatzierung verinnerlichen:** Filter auf die *linke Basistabelle* (`WHERE m.abt_id = 2`) sauber von Verknüpfungsfiltern auf die *rechte Tabelle* (`ON`) abgrenzen.
+- [x] **IHK-Abschlussprüfung meistern:** Reale Prüfungsaufgaben (25-Punkte-Handlungsschritt: DDL, DML, Multi-Table Joins, Aggregationen) souverän lösen.
 - [x] **Single Source of Truth (SoT):** Konsequente Einhaltung des relationalen `ProjektDB`-Schemas.
 
 ---
@@ -430,6 +431,179 @@ LEFT JOIN Projekt AS p ON arb.pro_id = p.id;
 
 ---
 
+## 🎓 Prüfungs-Spezial: IHK-Abschlussprüfung (5. Handlungsschritt - 25 Punkte)
+
+* **Prüfungsdokument (PDF):** [`assets/sqljoins_20260825-1118.pdf`](./assets/sqljoins_20260825-1118.pdf)
+* **Lösungsskript:** [`src/02_ihk_abschlusspruefung_filmarchiv_loesung.sql`](./src/02_ihk_abschlusspruefung_filmarchiv_loesung.sql)
+* **Prüfungskontext:** Datenbank zur Filmverwaltung der *SteamQueen GmbH*.
+
+```mermaid
+erDiagram
+    PERSON ||--o{ PERSON_EIGENSCHAFT_FILM : "hat Rolle in"
+    FILM ||--o{ PERSON_EIGENSCHAFT_FILM : "beinhaltet"
+    EIGENSCHAFT ||--o{ PERSON_EIGENSCHAFT_FILM : "definiert Rolle"
+
+    FILM {
+        int FilmID PK
+        varchar Titel
+        int Erscheinungsjahr
+        int SpieldauerMinuten
+        decimal Preis
+    }
+
+    PERSON {
+        int PersonID PK
+        varchar Name
+        varchar Vorname
+    }
+
+    EIGENSCHAFT {
+        int EigenschaftID PK
+        varchar Bezeichnung "z. B. Schauspieler, Regisseur, Produzent"
+    }
+
+    PERSON_EIGENSCHAFT_FILM {
+        int LaufendeNr PK
+        int PersonID FK
+        int FilmID FK
+        int EigenschaftID FK
+    }
+```
+
+---
+
+### 📂 IHK Teilaufgabe a) DDL: Tabelle `Filmarchiv` anlegen (4 Punkte)
+
+* **Aufgabe:** Erstellen Sie die Tabelle `Filmarchiv`, die bis auf das Attribut `Preis` alle übrigen Attribute der Tabelle `Film` enthält.
+
+```sql
+CREATE TABLE Filmarchiv (
+    FilmID INT PRIMARY KEY,
+    Titel VARCHAR(255) NOT NULL,
+    Erscheinungsjahr INT,
+    SpieldauerMinuten INT
+);
+```
+
+> [!NOTE]
+> **IHK-Korrekturpunkte (4 Punkte):**
+> * Tabellenname und `PRIMARY KEY` auf `FilmID` korrekt gesetzt (1 Punkt).
+> * Spalten `Titel`, `Erscheinungsjahr`, `SpieldauerMinuten` enthalten, Spalte `Preis` weggelassen (2 Punkte).
+> * Passende relationale Datentypen gewählt (1 Punkt).
+
+---
+
+### 📂 IHK Teilaufgabe b) DML: Datenübertrag ins Archiv (4 Punkte)
+
+* **Aufgabe:** Übertragen Sie alle Filme, die vor 1950 erschienen sind, aus der Tabelle `Film` in die Tabelle `Filmarchiv`.
+
+```sql
+INSERT INTO Filmarchiv (FilmID, Titel, Erscheinungsjahr, SpieldauerMinuten)
+SELECT FilmID,
+       Titel,
+       Erscheinungsjahr,
+       SpieldauerMinuten
+FROM Film
+WHERE Erscheinungsjahr < 1950;
+```
+
+> [!TIP]
+> **IHK-Korrekturpunkte (4 Punkte):**
+> * Korrekter Einsatz von `INSERT INTO Filmarchiv (...)` (2 Punkte).
+> * Korrekte Selektion aus `Film` mit Filter `WHERE Erscheinungsjahr < 1950` (2 Punkte).
+
+---
+
+### 📂 IHK Teilaufgabe c) DML: Übertragene Filme löschen (4 Punkte)
+
+* **Aufgabe:** Löschen Sie aus der Tabelle `Film` alle Daten der Filme, die in die Tabelle `Filmarchiv` übertragen wurden.
+
+#### 🔹 Variante 1 (⭐ Offizielle IHK-Musterlösung mit Subquery)
+```sql
+DELETE FROM Film
+WHERE FilmID IN (SELECT FilmID FROM Filmarchiv);
+```
+
+#### 🔄 Variante 2 (Direkt über Kriterium)
+```sql
+DELETE FROM Film
+WHERE Erscheinungsjahr < 1950;
+```
+
+#### 🔄 Variante 3 (Mit `EXISTS`)
+```sql
+DELETE FROM Film
+WHERE EXISTS (
+    SELECT 1 FROM Filmarchiv 
+    WHERE Filmarchiv.FilmID = Film.FilmID
+);
+```
+
+---
+
+### 📂 IHK Teilaufgabe d) DQL: Schauspieler und Film-Anzahl (6 Punkte)
+
+* **Aufgabe:** Geben Sie alle Personen aus, die in mindestens einem Film als *'Schauspieler'* mitgewirkt haben, inklusive der Anzahl der gespielten Filme.
+* **Erwartete Ausgabe:**
+  ```text
+  PersonID  Name    Vorname  AnzahlFilme
+  1         Kelly   Grace    4
+  2         Reeves  Keanu    1
+  ```
+
+```sql
+SELECT p.PersonID,
+       p.Name,
+       p.Vorname,
+       COUNT(pef.FilmID) AS AnzahlFilme
+FROM Person AS p
+INNER JOIN Person_Eigenschaft_Film AS pef ON p.PersonID = pef.PersonID
+INNER JOIN Eigenschaft AS e ON pef.EigenschaftID = e.EigenschaftID
+WHERE e.Bezeichnung = 'Schauspieler'
+GROUP BY p.PersonID, p.Name, p.Vorname;
+```
+
+> [!IMPORTANT]
+> **IHK-Korrekturpunkte (6 Punkte):**
+> * 2 Joins zur Verbindung der 3 Tabellen (`Person` $\rightarrow$ `Brücke` $\rightarrow$ `Eigenschaft`) (2 Punkte).
+> * Filterung auf `e.Bezeichnung = 'Schauspieler'` (1 Punkt).
+> * Vollständiges `GROUP BY` über alle nicht aggregierten SELECT-Spalten (`PersonID, Name, Vorname`) (2 Punkte).
+> * Aggregatfunktion `COUNT(pef.FilmID)` (1 Punkt).
+
+---
+
+### 📂 IHK Teilaufgabe e) DQL: Filme von Grace Kelly vor 1960 (7 Punkte)
+
+* **Aufgabe:** Liste aller Filme, an denen *Grace Kelly* beteiligt war und die vor 1960 erschienen sind, absteigend sortiert nach Erscheinungsjahr.
+* **Erwartete Ausgabe:**
+  ```text
+  Titel                       Erscheinungsjahr
+  Über den Dächern von Nizza  1955
+  Das Fenster zum Hof         1954
+  High Noon                   1952
+  ```
+
+```sql
+SELECT DISTINCT f.Titel,
+       f.Erscheinungsjahr
+FROM Film AS f
+INNER JOIN Person_Eigenschaft_Film AS pef ON f.FilmID = pef.FilmID
+INNER JOIN Person AS p ON pef.PersonID = p.PersonID
+WHERE p.Name = 'Kelly'
+  AND p.Vorname = 'Grace'
+  AND f.Erscheinungsjahr < 1960
+ORDER BY f.Erscheinungsjahr DESC;
+```
+
+> [!NOTE]
+> **IHK-Korrekturpunkte (7 Punkte):**
+> * Verknüpfung `Film` $\rightarrow$ `Person_Eigenschaft_Film` $\rightarrow$ `Person` (2 Punkte).
+> * Filter auf Vor- und Nachname (`p.Name = 'Kelly' AND p.Vorname = 'Grace'`) (2 Punkte).
+> * Filter auf `f.Erscheinungsjahr < 1960` (1 Punkt).
+> * Sortierung `ORDER BY f.Erscheinungsjahr DESC` (2 Punkte).
+
+---
+
 ## 🧭 Zusammenfassung & Best-Practice-Leitfaden
 
 ```mermaid
@@ -453,3 +627,5 @@ flowchart TD
 | **Sichere Aggregation bei Outer Join** | `ISNULL(SUM(b.betrag), 0.00)` |
 | **Sicheres HAVING bei Outer Join** | `HAVING ISNULL(SUM(b.betrag), 0.00) < 1000` |
 | **Bedingter Multi-Table Left Join** | `FROM M LEFT JOIN A ON M.id = A.m_id AND A.typ = 'Chef' LEFT JOIN P ON A.p_id = P.id` |
+| **Datenübertrag (DML)** | `INSERT INTO Archiv SELECT ... FROM Quelle WHERE ...` |
+| **Gezieltes Löschen nach Übertrag (DML)** | `DELETE FROM Quelle WHERE ID IN (SELECT ID FROM Archiv)` |
