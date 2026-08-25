@@ -17,7 +17,7 @@
 - [x] **Anti-Joins für Geschäftsberichte einsetzen:** Verwaiste Entitäten (z. B. Mitarbeiter ohne jegliche Umsätze) via `LEFT JOIN ... WHERE B.id IS NULL` isolieren.
 - [x] **Multi-Table OUTER JOINs mit Rollenfiltern strukturieren:** Präzise Steuerung von Bedingungen in der `ON`-Klausel (z. B. `AND arb.aufgabe = 'Projektleiter'`), um alle Basisdatensätze zu erhalten.
 - [x] **Filterplatzierung verinnerlichen:** Filter auf die *linke Basistabelle* (`WHERE m.abt_id = 2`) sauber von Verknüpfungsfiltern auf die *rechte Tabelle* (`ON`) abgrenzen.
-- [x] **IHK-Abschlussprüfung meistern:** Reale Prüfungsaufgaben (25-Punkte-Handlungsschritt: DDL, DML, Multi-Table Joins, Aggregationen) souverän lösen.
+- [x] **IHK-Abschlussprüfungen meistern:** Reale 25-Punkte-Handlungsschritte zu DDL, DML, Multi-Table Joins, Datumsfiltern und Aggregationen lösen.
 - [x] **Single Source of Truth (SoT):** Konsequente Einhaltung des relationalen `ProjektDB`-Schemas.
 
 ---
@@ -431,11 +431,14 @@ LEFT JOIN Projekt AS p ON arb.pro_id = p.id;
 
 ---
 
-## 🎓 Prüfungs-Spezial: IHK-Abschlussprüfung (5. Handlungsschritt - 25 Punkte)
+## 🎓 Prüfungs-Spezial: IHK-Abschlussprüfungen (25-Punkte-Handlungsschritte)
+
+---
+
+### 🎬 Teil 1: IHK-Prüfung SteamQueen GmbH (Filmverwaltung & Filmarchiv)
 
 * **Prüfungsdokument (PDF):** [`assets/sqljoins_20260825-1118.pdf`](./assets/sqljoins_20260825-1118.pdf)
 * **Lösungsskript:** [`src/02_ihk_abschlusspruefung_filmarchiv_loesung.sql`](./src/02_ihk_abschlusspruefung_filmarchiv_loesung.sql)
-* **Prüfungskontext:** Datenbank zur Filmverwaltung der *SteamQueen GmbH*.
 
 ```mermaid
 erDiagram
@@ -470,11 +473,7 @@ erDiagram
     }
 ```
 
----
-
-### 📂 IHK Teilaufgabe a) DDL: Tabelle `Filmarchiv` anlegen (4 Punkte)
-
-* **Aufgabe:** Erstellen Sie die Tabelle `Filmarchiv`, die bis auf das Attribut `Preis` alle übrigen Attribute der Tabelle `Film` enthält.
+#### 📂 Teilaufgabe 1.a) DDL: Tabelle `Filmarchiv` anlegen (4 Punkte)
 
 ```sql
 CREATE TABLE Filmarchiv (
@@ -485,17 +484,7 @@ CREATE TABLE Filmarchiv (
 );
 ```
 
-> [!NOTE]
-> **IHK-Korrekturpunkte (4 Punkte):**
-> * Tabellenname und `PRIMARY KEY` auf `FilmID` korrekt gesetzt (1 Punkt).
-> * Spalten `Titel`, `Erscheinungsjahr`, `SpieldauerMinuten` enthalten, Spalte `Preis` weggelassen (2 Punkte).
-> * Passende relationale Datentypen gewählt (1 Punkt).
-
----
-
-### 📂 IHK Teilaufgabe b) DML: Datenübertrag ins Archiv (4 Punkte)
-
-* **Aufgabe:** Übertragen Sie alle Filme, die vor 1950 erschienen sind, aus der Tabelle `Film` in die Tabelle `Filmarchiv`.
+#### 📂 Teilaufgabe 1.b) DML: Datenübertrag ins Archiv (4 Punkte)
 
 ```sql
 INSERT INTO Filmarchiv (FilmID, Titel, Erscheinungsjahr, SpieldauerMinuten)
@@ -507,49 +496,14 @@ FROM Film
 WHERE Erscheinungsjahr < 1950;
 ```
 
-> [!TIP]
-> **IHK-Korrekturpunkte (4 Punkte):**
-> * Korrekter Einsatz von `INSERT INTO Filmarchiv (...)` (2 Punkte).
-> * Korrekte Selektion aus `Film` mit Filter `WHERE Erscheinungsjahr < 1950` (2 Punkte).
+#### 📂 Teilaufgabe 1.c) DML: Übertragene Filme löschen (4 Punkte)
 
----
-
-### 📂 IHK Teilaufgabe c) DML: Übertragene Filme löschen (4 Punkte)
-
-* **Aufgabe:** Löschen Sie aus der Tabelle `Film` alle Daten der Filme, die in die Tabelle `Filmarchiv` übertragen wurden.
-
-#### 🔹 Variante 1 (⭐ Offizielle IHK-Musterlösung mit Subquery)
 ```sql
 DELETE FROM Film
 WHERE FilmID IN (SELECT FilmID FROM Filmarchiv);
 ```
 
-#### 🔄 Variante 2 (Direkt über Kriterium)
-```sql
-DELETE FROM Film
-WHERE Erscheinungsjahr < 1950;
-```
-
-#### 🔄 Variante 3 (Mit `EXISTS`)
-```sql
-DELETE FROM Film
-WHERE EXISTS (
-    SELECT 1 FROM Filmarchiv 
-    WHERE Filmarchiv.FilmID = Film.FilmID
-);
-```
-
----
-
-### 📂 IHK Teilaufgabe d) DQL: Schauspieler und Film-Anzahl (6 Punkte)
-
-* **Aufgabe:** Geben Sie alle Personen aus, die in mindestens einem Film als *'Schauspieler'* mitgewirkt haben, inklusive der Anzahl der gespielten Filme.
-* **Erwartete Ausgabe:**
-  ```text
-  PersonID  Name    Vorname  AnzahlFilme
-  1         Kelly   Grace    4
-  2         Reeves  Keanu    1
-  ```
+#### 📂 Teilaufgabe 1.d) DQL: Schauspieler und Film-Anzahl (6 Punkte)
 
 ```sql
 SELECT p.PersonID,
@@ -563,25 +517,7 @@ WHERE e.Bezeichnung = 'Schauspieler'
 GROUP BY p.PersonID, p.Name, p.Vorname;
 ```
 
-> [!IMPORTANT]
-> **IHK-Korrekturpunkte (6 Punkte):**
-> * 2 Joins zur Verbindung der 3 Tabellen (`Person` $\rightarrow$ `Brücke` $\rightarrow$ `Eigenschaft`) (2 Punkte).
-> * Filterung auf `e.Bezeichnung = 'Schauspieler'` (1 Punkt).
-> * Vollständiges `GROUP BY` über alle nicht aggregierten SELECT-Spalten (`PersonID, Name, Vorname`) (2 Punkte).
-> * Aggregatfunktion `COUNT(pef.FilmID)` (1 Punkt).
-
----
-
-### 📂 IHK Teilaufgabe e) DQL: Filme von Grace Kelly vor 1960 (7 Punkte)
-
-* **Aufgabe:** Liste aller Filme, an denen *Grace Kelly* beteiligt war und die vor 1960 erschienen sind, absteigend sortiert nach Erscheinungsjahr.
-* **Erwartete Ausgabe:**
-  ```text
-  Titel                       Erscheinungsjahr
-  Über den Dächern von Nizza  1955
-  Das Fenster zum Hof         1954
-  High Noon                   1952
-  ```
+#### 📂 Teilaufgabe 1.e) DQL: Filme von Grace Kelly vor 1960 (7 Punkte)
 
 ```sql
 SELECT DISTINCT f.Titel,
@@ -595,12 +531,191 @@ WHERE p.Name = 'Kelly'
 ORDER BY f.Erscheinungsjahr DESC;
 ```
 
+---
+
+### 🍷 Teil 2: IHK-Prüfung Fakturierungsdatenbank (Weinhandel & Fakturierung)
+
+* **Prüfungsdokument (PDF):** [`assets/joins_20260825-1404.pdf`](./assets/joins_20260825-1404.pdf)
+* **Lösungsskript:** [`src/03_ihk_abschlusspruefung_fakturierung_loesung.sql`](./src/03_ihk_abschlusspruefung_fakturierung_loesung.sql)
+
+```mermaid
+erDiagram
+    ARTIKEL_TYP ||--o{ ARTIKEL : "klassifiziert"
+    WEIN_TYP ||--o{ ARTIKEL : "spezifiziert"
+    GESCHMACK_TYP ||--o{ ARTIKEL : "beschreibt"
+    ARTIKEL ||--o{ RECHNUNG_POSITION : "enthalten in"
+    RECHNUNG ||--o{ RECHNUNG_POSITION : "beinhaltet"
+    KUNDE ||--o{ RECHNUNG : "erhaelt"
+
+    ARTIKEL {
+        int Art_ID PK
+        string Art_Nr
+        string Art_Bezeichnung
+        decimal Art_Preis
+        int Art_ArtTypID FK
+        int Art_WeinTypID FK
+        int Art_GeschmackTypID FK
+    }
+
+    RECHNUNG_POSITION {
+        int RgPos_ID PK
+        int RgPos_RgID FK
+        int RgPos_PosNr
+        int RgPos_ArtId FK
+        int RgPos_Menge
+        decimal RgPos_Preis
+    }
+
+    RECHNUNG {
+        int Rg_ID PK
+        int Rg_KdID FK
+        string Rg_RgNr
+        date Rg_RgDatum
+    }
+
+    KUNDE {
+        int Kd_ID PK
+        string Kd_Firma
+        string Kd_Ort
+    }
+```
+
+#### 📂 Teilaufgabe 2.a) DML: Artikelpreise um 15 % erhöhen (3 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Artikelpreise um 15 % erhöhen.
+
+```sql
+UPDATE ARTIKEL
+SET Art_Preis = Art_Preis * 1.15;
+```
+
 > [!NOTE]
-> **IHK-Korrekturpunkte (7 Punkte):**
-> * Verknüpfung `Film` $\rightarrow$ `Person_Eigenschaft_Film` $\rightarrow$ `Person` (2 Punkte).
-> * Filter auf Vor- und Nachname (`p.Name = 'Kelly' AND p.Vorname = 'Grace'`) (2 Punkte).
-> * Filter auf `f.Erscheinungsjahr < 1960` (1 Punkt).
-> * Sortierung `ORDER BY f.Erscheinungsjahr DESC` (2 Punkte).
+> **IHK-Korrekturpunkte (3 Punkte):**
+> * `UPDATE ARTIKEL` korrekt formuliert (1 Punkt).
+> * `SET Art_Preis = Art_Preis * 1.15` (oder `Art_Preis + (Art_Preis * 0.15)`) (2 Punkte).
+
+---
+
+#### 📂 Teilaufgabe 2.b) DML: Artikel zwischen 10 und 15 EUR löschen (2 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Artikel löschen, die einen Artikelpreis besitzen, der zwischen 10 EUR und 15 EUR liegt.
+
+```sql
+DELETE FROM ARTIKEL
+WHERE Art_Preis BETWEEN 10.00 AND 15.00;
+```
+
+> [!TIP]
+> **IHK-Korrekturpunkte (2 Punkte):**
+> * `DELETE FROM ARTIKEL` (1 Punkt).
+> * `WHERE Art_Preis BETWEEN 10.00 AND 15.00` (oder `>= 10.00 AND <= 15.00`) (1 Punkt).
+
+---
+
+#### 📂 Teilaufgabe 2.c) DQL: Alle Kunden und Gesamtumsatz (5 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Abfrage, mit der Sie für alle Kunden den Firmennamen sowie den Gesamtumsatz erhalten. Die Ergebniszeilen sollen aufsteigend nach Umsatz sortiert sein.
+* **Erwartete Ausgabe:**
+  ```text
+  Kd_Firma               Umsatz
+  Weinfabrik Sumpp       NULL
+  Weinhandel Peters      17,94 EUR
+  Weinschnecke           88,56 EUR
+  Weingut am Weinberg    153,36 EUR
+  Weinhandel Predisto    766,37 EUR
+  ```
+
+```sql
+SELECT k.Kd_Firma,
+       SUM(rp.RgPos_Menge * rp.RgPos_Preis) AS Umsatz
+FROM KUNDE AS k
+LEFT JOIN RECHNUNG AS rg ON k.Kd_ID = rg.Rg_KdID
+LEFT JOIN RECHNUNG_POSITION AS rp ON rg.Rg_ID = rp.RgPos_RgID
+GROUP BY k.Kd_ID, k.Kd_Firma
+ORDER BY Umsatz ASC;
+```
+
+> [!IMPORTANT]
+> **IHK-Korrekturpunkte (5 Punkte):**
+> * `LEFT JOIN` über `KUNDE` $\rightarrow$ `RECHNUNG` $\rightarrow$ `RECHNUNG_POSITION`, damit auch Kunden ohne Rechnungen (*Weinfabrik Sumpp* mit `NULL`) erhalten bleiben (2 Punkte).
+> * Berechnung `SUM(rp.RgPos_Menge * rp.RgPos_Preis)` (1 Punkt).
+> * `GROUP BY` nach Kunden-Identifikatoren (1 Punkt).
+> * `ORDER BY Umsatz ASC` (1 Punkt).
+
+---
+
+#### 📂 Teilaufgabe 2.d) DQL: Artikelumsatz März 2020 für spezifische Weine (10 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Abfrage, mit der Sie für alle Artikel die Artikelnummer und die Artikelbezeichnung sowie den Umsatz für den März 2020 erhalten. Es sollen alle Weine ausgegeben werden, die mit dem Artikel-Typ *„Wein“*, dem Geschmackstyp *„Trocken“* oder *„Halbtrocken“* und mit Weintyp *„Weißwein“* gekennzeichnet sind.
+* **Erwartete Ausgabe:**
+  ```text
+  Art_Nr  Art_Bezeichnung  ArtikelUmsatz
+  00102   Voliar           206,64 EUR
+  00112   Mendazie         120,00 EUR
+  00115   Tinto Templa     60,00 EUR
+  ```
+
+```sql
+SELECT a.Art_Nr,
+       a.Art_Bezeichnung,
+       SUM(rp.RgPos_Menge * rp.RgPos_Preis) AS ArtikelUmsatz
+FROM ARTIKEL AS a
+INNER JOIN ARTIKEL_TYP AS at ON a.Art_ArtTypID = at.ArtTyp_ID
+INNER JOIN GESCHMACK_TYP AS gt ON a.Art_GeschmackTypID = gt.Geschmack_ID
+INNER JOIN WEIN_TYP AS wt ON a.Art_WeinTypID = wt.WeinTyp_ID
+INNER JOIN RECHNUNG_POSITION AS rp ON a.Art_ID = rp.RgPos_ArtId
+INNER JOIN RECHNUNG AS rg ON rp.RgPos_RgID = rg.Rg_ID
+WHERE at.ArtTyp_Bezeichnung = 'Wein'
+  AND gt.Geschmack_Name IN ('Trocken', 'Halbtrocken')
+  AND wt.WeinTyp_Bezeichnung = 'Weißwein'
+  AND rg.Rg_RgDatum BETWEEN '2020-03-01' AND '2020-03-31'
+GROUP BY a.Art_ID, a.Art_Nr, a.Art_Bezeichnung;
+```
+
+> [!NOTE]
+> **IHK-Korrekturpunkte (10 Punkte):**
+> * 5 INNER JOINs zur vollständigen Verbindung aller 6 Tabellen (4 Punkte).
+> * Filterung auf Artikeltyp, Geschmackstyp und Weintyp (3 Punkte).
+> * Datumsfilter auf März 2020 (`BETWEEN '2020-03-01' AND '2020-03-31'`) (1 Punkt).
+> * Aggregation mit `SUM(Menge * Preis)` und vollständiges `GROUP BY` (2 Punkte).
+
+---
+
+#### 📂 Teilaufgabe 2.e) DQL: Alle Artikel mit durchschnittlichem Verkaufspreis (5 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Abfrage, mit der Sie alle Artikel mit dem durchschnittlichen Verkaufspreis anzeigen.
+* **Erwartete Ausgabe:**
+  ```text
+  Art_ID  Art_Nr  Art_Bezeichnung  Art_Preis  Durchschnitt
+  1       00102   Voliar           7,38       7,38 EUR
+  2       00105   Piladar          5,98       5,98 EUR
+  3       00106   Dos Pantas       7,95       7,95 EUR
+  4       00112   Mendazie         24,95      20,00 EUR
+  5       00115   Tinto Templa     22,90      20,00 EUR
+  6       00128   La Grandala      15,37      15,37 EUR
+  7       00131   Lay Blanco       16,38      15,69 EUR
+  8       00132   Mese Rosade      17,37      17,37 EUR
+  9       00133   Rosato Ron       12,99      NULL
+  ```
+
+```sql
+SELECT a.Art_ID,
+       a.Art_Nr,
+       a.Art_Bezeichnung,
+       a.Art_Preis,
+       AVG(rp.RgPos_Preis) AS Durchschnitt
+FROM ARTIKEL AS a
+LEFT JOIN RECHNUNG_POSITION AS rp ON a.Art_ID = rp.RgPos_ArtId
+GROUP BY a.Art_ID, a.Art_Nr, a.Art_Bezeichnung, a.Art_Preis
+ORDER BY a.Art_ID ASC;
+```
+
+> [!WARNING]
+> **IHK-Korrekturpunkte & Stolperfalle (5 Punkte):**
+> * **`LEFT JOIN` ist zwingend erforderlich:** Artikel 9 (*Rosato Ron*) wurde noch nie verkauft. Ein `INNER JOIN` würde Artikel 9 abschneiden! Durch `LEFT JOIN` erhält der Durchschnitt korrekt den Wert `NULL` (2 Punkte).
+> * `AVG(rp.RgPos_Preis)` zur Durchschnittspreis-Berechnung (1 Punkt).
+> * Vollständige Spalten im `SELECT` und `GROUP BY` (1 Punkt).
+> * Sortierung `ORDER BY a.Art_ID ASC` (1 Punkt).
 
 ---
 
@@ -627,5 +742,7 @@ flowchart TD
 | **Sichere Aggregation bei Outer Join** | `ISNULL(SUM(b.betrag), 0.00)` |
 | **Sicheres HAVING bei Outer Join** | `HAVING ISNULL(SUM(b.betrag), 0.00) < 1000` |
 | **Bedingter Multi-Table Left Join** | `FROM M LEFT JOIN A ON M.id = A.m_id AND A.typ = 'Chef' LEFT JOIN P ON A.p_id = P.id` |
+| **Preise prozentual anpassen (DML)** | `UPDATE Tabelle SET Preis = Preis * 1.15` |
+| **Bereichslöschung (DML)** | `DELETE FROM Tabelle WHERE Preis BETWEEN 10 AND 15` |
 | **Datenübertrag (DML)** | `INSERT INTO Archiv SELECT ... FROM Quelle WHERE ...` |
 | **Gezieltes Löschen nach Übertrag (DML)** | `DELETE FROM Quelle WHERE ID IN (SELECT ID FROM Archiv)` |
