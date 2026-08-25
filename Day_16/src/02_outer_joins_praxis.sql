@@ -35,7 +35,7 @@ GO
 -- (Aus didaktischer Sicht entspricht 'A LEFT JOIN B' exakt 'B RIGHT JOIN A')
 SELECT k.firma, p.bezeichnung AS projekt
 FROM Projekt AS p
-RIGHT JOIN Kunde AS k ON p.kunde_id = k.id;
+RIGHT JOIN Kunde AS k ON p.kunde_id = k.id; -- noqa: CV08
 GO
 
 -- 2.2 FULL OUTER JOIN: Die vollständige Vereinigung.

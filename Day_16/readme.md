@@ -141,7 +141,6 @@ flowchart TD
     AV -->|"leitet (chef_id = 22222)"| UR["Ursula Richter (12121)"]
 ```
 
-
 ---
 
 ### 🔑 Die 4 goldenen Regeln & Operatoren für Self-Joins
@@ -152,6 +151,7 @@ flowchart TD
 | **`=`** | Equi-Join | Verbindet Chef mit Mitarbeiter (`m.chef_id = c.id`) oder sucht identische Merkmale (`a1.ort = a2.ort`). |
 | **`<>` bzw. `!=`** | Anti-Selbstpaarung | Verhindert, dass ein Datensatz mit sich selbst gepaart wird ($id \neq id$). |
 | **`>` oder `<`** | Eindeutige Paarung | Verhindert Selbstpaarung **und** Spiegelpaare ($A-B$ und $B-A$) in einem einzigen Schritt. |
+
 ---
 
 ## 🌐 Vertiefungsthema: OUTER JOINs (LEFT, RIGHT, FULL OUTER JOIN)
@@ -185,7 +185,6 @@ flowchart LR
         A_F["Tabelle A (Alle)"] ---|"Verbindung"| B_F["Tabelle B (Alle)"]
     end
 ```
-
 
 * **LEFT OUTER JOIN:** Behält **alle** Zeilen der linken Tabelle. Gibt es in der rechten Tabelle keinen Treffer, werden deren Spalten mit `NULL` befüllt.
   * *Praxisbeispiel:* Alle Kunden ausgeben – auch Kunden wie *100% Sonderzeichen AG*, die noch kein Projekt beauftragt haben.
@@ -226,7 +225,7 @@ flowchart TD
     P2 --> P3["Schritt 3: WHERE-Klausel filtert das Gesamtergebnis (Nach dem Join!)"]
 ```
 
-#### Der entscheidende Unterschied:
+#### Der entscheidende Unterschied
 
 1. **Bedingung im `ON` (Verknüpfungsfilter):**
    * Entscheidet: *„Welche Zeilen der rechten Tabelle werden an die linke Tabelle angehängt?“*
@@ -238,7 +237,7 @@ flowchart TD
 
 ---
 
-#### ⚖️ Praxis-Vergleich an der `ProjektDB`:
+#### ⚖️ Praxis-Vergleich an der `ProjektDB`
 
 > **Szenario:** Wir möchten eine Liste **aller Kunden** und dazu ihre Großprojekte mit Budget $\ge 100.000\text{ €}$ sehen. Kunden mit kleineren Projekten oder ohne Projekte sollen **trotzdem** aufgeführt werden.
 
@@ -709,7 +708,7 @@ ORDER BY m.id ASC;
   4   EK       Einkauf      München
   ```
 
-#### 🔹 Lösung über SELF JOIN (Standard in Join-Modulen):
+#### 🔹 Lösung über SELF JOIN (Standard in Join-Modulen)
 ```sql
 SELECT DISTINCT a.id, a.kuerzel, a.bezeichnung, a.ort
 FROM Abteilung AS a
@@ -718,7 +717,7 @@ INNER JOIN Mitarbeiter AS mit ON mit.chef_id = chef.id
 ORDER BY a.id ASC;
 ```
 
-#### 🔄 Alternative Lösung über Subquery (`WHERE IN`):
+#### 🔄 Alternative Lösung über Subquery (`WHERE IN`)
 ```sql
 SELECT a.id, a.kuerzel, a.bezeichnung, a.ort
 FROM Abteilung AS a
