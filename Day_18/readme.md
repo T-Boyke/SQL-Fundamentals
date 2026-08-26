@@ -12,20 +12,24 @@
 ## 🎯 Lernziele des Tages
 
 - [x] **CRUD-Matrix & SQL-Subsprachen beherrschen:** Die 4 CRUD-Operationen (*Create, Read, Update, Delete*) den entsprechenden SQL-Kategorien (**DDL**, **DML**, **DQL**, **DCL**, **TCL**) zuordnen.
-- [x] **Multi-Table OUTER JOINs mit Aggregationen vertiefen:** Komplexe Abfragen über 3 verknüpfte Tabellen mit Aggregatfunktionen (`COUNT(DISTINCT)`, `MAX`, `AVG`, `MIN`) fehlerfrei konstruieren.
+- [x] **Multi-Table OUTER JOINs mit Aggregationen vertiefen:** Komplexe Abfragen über 3 verknüpfte Tabellen mit Aggregatfunktionen (`COUNT(DISTINCT)`, `MAX`, `AVG`, `MIN`, `SUM`) fehlerfrei konstruieren.
 - [x] **Die Join-Multiplikationsfalle verstehen & vermeiden:** Erkennen, warum 1:n-Joins zu Detailtabellen vor der Aggregation Duplikate erzeugen, und warum `COUNT(DISTINCT spalte)` Pflicht ist.
 - [x] **Filterplatzierung bei Outer Joins:** Bedingungen auf die rechte Tabelle (`tb.TB_SchlachtDat IS NULL`) in die `ON`-Klausel setzen, um unvollständige Basis-Kategorien (z. B. Hühner mit 0 Tieren) nicht zu verlieren.
 - [x] **Datums- & Altersberechnungen in SQL:** Alter aus Geburtsdaten dynamisch mit `DATEDIFF(YEAR, GebDat, GETDATE())` bzw. `YEAR()` berechnen.
 - [x] **Datenarchivierungs-Pipelines strukturieren (ETL-Muster):** Historische Datensätze aggregiert und transformiert mittels `INSERT INTO ... SELECT ... GROUP BY` in Archivtabellen überführen.
-- [x] **Referentielle Integrität bei Löschoperationen:** Abhängige Kind-Tabellen (`TierZusatzInfo`) vor den Eltern-Tabellen (`Tierbestand`) bereinigen, um Fremdschlüssel-Konflikte zu vermeiden.
-- [x] **IHK-Abschlussprüfung (25 Punkte) meistern:** Die vollständige Originalprüfung zur Nutztierdatenbank und Archivierung lösen.
+- [x] **Referentielle Integrität bei DML-Löschoperationen:** Abhängige Kind-Tabellen vor den Eltern-Tabellen bereinigen, um Fremdschlüssel-Konflikte zu vermeiden.
+- [x] **DDL-Strukturierung & Zusammengesetzte Schlüssel:** Neue Tabellen mit Fremdschlüssel-Beziehungen und mehrteiligen Primärschlüsseln (`PRIMARY KEY (KdID, VRadID, Datum)`) definieren.
+- [x] **Skalare Subqueries & Prozentanteile:** Subqueries für dynamische Preisvergleiche (`WHERE Preis > (SELECT ...)`) und Verhältnisberechnungen im `SELECT` einsetzen.
+- [x] **Zwei vollständige 25-Punkte IHK-Abschlussprüfungen meistern:**
+  1. *Handlungsschritt 4:* Nutztierdatenbank & Datenarchivierung (ZPA FIA II).
+  2. *Handlungsschritt 5:* Fahrradverleih „Die Speiche GmbH“ (ZPA FI Ganz I Anw).
 - [x] **Single Source of Truth (SoT):** Transfer der Archivierungs- und Aggregationsmuster auf das kanonische Schema der `ProjektDB`.
 
 ---
 
 ## 🗺️ Relationale Kompasse: Wie hängen die Tabellen zusammen?
 
-### 1. Das relationale Schema der IHK-Abschlussprüfung (Nutztierverwaltung)
+### 1. Das relationale Schema der IHK-Prüfung 1 (Nutztierverwaltung & Archivierung)
 
 ```mermaid
 erDiagram
@@ -66,9 +70,69 @@ erDiagram
 
 ---
 
-### 2. Das kanonische Single Source of Truth (SoT) Schema: `ProjektDB`
+### 2. Das relationale Schema der IHK-Prüfung 2 (Fahrradverleih „Die Speiche GmbH“)
 
-Für alle Abfragen im Unternehmenskontext gilt das etablierte `ProjektDB`-Schema:
+```mermaid
+erDiagram
+    KUNDE ||--o{ BUCHUNG : "bucht (KdID)"
+    VERLEIHRAD ||--o{ BUCHUNG : "wird gebucht (VRadID)"
+    RADTYP ||--o{ VERLEIHRAD : "definiert Typ (RadTypID)"
+    STANDORT ||--o{ VERLEIHRAD : "stationiert an (StdID)"
+    BUCHUNG ||--o{ DEFEKTBUCHUNG : "protokolliert Defekt"
+    DEFEKT ||--o{ DEFEKTBUCHUNG : "beschreibt Schaden (DefektID)"
+
+    KUNDE {
+        int KdID PK "Kunden-ID"
+        string KdName "Kundenname"
+        string KdStrNr "Straße & Hausnummer"
+        string KdPLZ "Postleitzahl"
+        string KdOrt "Wohnort"
+    }
+
+    STANDORT {
+        int StdID PK "Standort-ID"
+        string StdName "Stationsname"
+        string StdStrNr "Straße & Hausnummer"
+        string StdPLZ "Postleitzahl"
+        string StdOrt "Standort-Stadt"
+    }
+
+    RADTYP {
+        int RadTypID PK "Radtyp-ID"
+        string RadTypBez "Bezeichnung (z. B. Mountainbike)"
+        decimal RadTypPreis "Mietpreis pro Tag in EUR"
+    }
+
+    VERLEIHRAD {
+        int VRadID PK "Fahrrad-ID"
+        string VRadFarbe "Farbe des Rads"
+        int RadTypID FK "RadTyp -> RadTyp(RadTypID)"
+        int StdID FK "Standort -> Standort(StdID)"
+    }
+
+    BUCHUNG {
+        int KdID PK, FK "Kunde -> Kunde(KdID)"
+        int VRadID PK, FK "Fahrrad -> VerleihRad(VRadID)"
+        date Datum PK "Buchungsdatum"
+        int Tage "Mietdauer in Tagen"
+    }
+
+    DEFEKT {
+        int DefektID PK "Defekt-ID"
+        string Beschreibung "Schadensbeschreibung"
+    }
+
+    DEFEKTBUCHUNG {
+        int KdID PK, FK "Kunde -> Buchung(KdID)"
+        int VRadID PK, FK "Fahrrad -> Buchung(VRadID)"
+        date Datum PK, FK "Buchungsdatum -> Buchung(Datum)"
+        int DefektID FK "Defekt -> Defekt(DefektID)"
+    }
+```
+
+---
+
+### 3. Das kanonische Single Source of Truth (SoT) Schema: `ProjektDB`
 
 ```mermaid
 erDiagram
@@ -222,28 +286,31 @@ flowchart TD
 
 ---
 
-### 4. Datums- & Altersberechnung in SQL
+### 4. Skalare Subqueries & Prozentberechnungen
 
-Um das Alter eines Tieres in Jahren zu berechnen, stehen verschiedene Funktionen zur Verfügung:
+In SQL-Prüfungen werden häufig zwei Arten von Unterabfragen (Subqueries) gefordert:
 
 ```mermaid
-flowchart LR
-    GB["Geburtsdatum: '2022-01-03'"] --> F{"Berechnung"}
-    F -->|"DATEDIFF(YEAR, GebDat, GETDATE())"| R1["2026 - 2022 = 4 Jahre (T-SQL)"]
-    F -->|"YEAR(CURRENT_DATE) - YEAR(GebDat)"| R2["2026 - 2022 = 4 Jahre (ANSI)"]
+flowchart TD
+    subgraph Typ1["1. Subquery im WHERE (Schwellenwertvergleich)"]
+        W1["Hauptabfrage: SELECT ... FROM RadTyp"] --> W2["WHERE RadTypPreis > (SELECT RadTypPreis FROM RadTyp WHERE ...)"]
+        W2 --> W3["Liefert alle Datensätze, die teurer sind als der dynamisch ermittelte Referenzpreis"]
+    end
+
+    subgraph Typ2["2. Subquery im SELECT (Prozentberechnung)"]
+        S1["Hauptabfrage: SELECT MONTH(Datum), COUNT(*)"] --> S2["Berechnung: (COUNT(*) * 100.0) / (SELECT COUNT(*) FROM Buchung WHERE ...)"]
+        S2 --> S3["Teilt monatliche Teilsumme durch fixe Jahressumme"]
+    end
 ```
 
-```sql
--- T-SQL (Microsoft SQL Server):
-DATEDIFF(YEAR, tb.TB_GebDat, GETDATE())
-
--- ANSI-SQL / Plattformunabhängig:
-YEAR(CURRENT_DATE) - YEAR(tb.TB_GebDat)
-```
+> [!TIP]
+> **💡 Wichtig bei Prozentrechnung in SQL Server / T-SQL:**
+> Eine Division zweier Ganzzahlen (`COUNT(*) / COUNT(*)`) führt zu einer **Integer-Division** (z. B. $5 / 100 = 0$).  
+> Durch die Multiplikation mit `100.0` (Dezimalzahl) wird das Zwischenergebnis implizit in einen Gleitkommatyp konvertiert $\rightarrow$ das Ergebnis liefert korrekte Prozentwerte (z. B. `5.25%`).
 
 ---
 
-## 🎓 Prüfungs-Spezial: IHK-Abschlussprüfung (Handlungsschritt 4: Tierbestandsverwaltung)
+## 🎓 Prüfungs-Spezial 1: IHK-Abschlussprüfung (Handlungsschritt 4: Tierbestandsverwaltung)
 
 * **Prüfungsdokument (PDF):** [`assets/irgendwasmitsql_20260826-0836.pdf`](./assets/irgendwasmitsql_20260826-0836.pdf)
 * **Lösungsskript:** [`src/01_ihk_abschlusspruefung_tierbestand_loesung.sql`](./src/01_ihk_abschlusspruefung_tierbestand_loesung.sql)
@@ -303,21 +370,6 @@ GROUP BY tk.TK_ID, tk.TK_Kategorie
 ORDER BY tk.TK_Kategorie ASC;
 ```
 
-#### 🔄 Alternative Berechnung mit ANSI-SQL Datumsfunktionen
-```sql
-SELECT tk.TK_Kategorie,
-       COUNT(DISTINCT tb.TB_ID) AS AnzahlTiere,
-       MAX(tzi.TZI_Gewicht) AS SchwerstesTier,
-       MAX(YEAR(CURRENT_DATE) - YEAR(tb.TB_GebDat)) AS ÄltestesTier,
-       AVG(YEAR(CURRENT_DATE) - YEAR(tb.TB_GebDat)) AS DurchschnittAlter
-FROM Tierkategorie AS tk
-LEFT JOIN Tierbestand AS tb ON tk.TK_ID = tb.TB_TKID 
-                            AND tb.TB_SchlachtDat IS NULL
-LEFT JOIN TierZusatzInfo AS tzi ON tb.TB_ID = tzi.TZI_TBID
-GROUP BY tk.TK_ID, tk.TK_Kategorie
-ORDER BY tk.TK_Kategorie ASC;
-```
-
 > [!WARNING]
 > **🚨 Die 3 klassischen IHK-Stolperfallen bei Aufgabe 4.b:**
 > 1. **Warum `LEFT JOIN`?**  
@@ -326,15 +378,6 @@ ORDER BY tk.TK_Kategorie ASC;
 >    Wird der Filter ins `WHERE` geschrieben, filtert er Zeilen aus, bei denen `tb.TB_SchlachtDat` nicht `NULL` ist. Für Hühner sind alle rechten Spalten `NULL` (was zwar zufällig `IS NULL` ist), aber jede Kategorie mit ausschließlich geschlachteten Tieren würde durch einen `WHERE`-Filter unbemerkt verschwinden. Filter auf rechte Tabellen im Outer Join gehören immer ins `ON`!
 > 3. **Warum `COUNT(DISTINCT tb.TB_ID)`?**  
 >    Kuh 1003 hat 3 Einträge in `TierZusatzInfo`. Ein einfaches `COUNT(tb.TB_ID)` oder `COUNT(*)` würde die Kuh 3-mal zählen und eine falsche Bestandszahl von 5 statt 3 Kühen liefern!
-
-> [!TIP]
-> **IHK-Korrekturschlüssel (8 Punkte):**
-> * `SELECT tk.TK_Kategorie` (1 Punkt).
-> * `COUNT(DISTINCT tb.TB_ID)` für Tieranzahl (2 Punkte).
-> * `MAX(tzi.TZI_Gewicht)` für Höchstgewicht (1 Punkt).
-> * `MAX(DATEDIFF(...))` und `AVG(DATEDIFF(...))` für Alter & Durchschnitt (2 Punkte).
-> * 2 `LEFT JOIN`s mit Bedingung `TB_SchlachtDat IS NULL` (1 Punkt).
-> * `GROUP BY tk.TK_ID, tk.TK_Kategorie` (1 Punkt).
 
 ---
 
@@ -360,14 +403,6 @@ WHERE tb.TB_SchlachtDat IS NOT NULL
 GROUP BY tb.TB_ID, tk.TK_Kategorie, tb.TB_ChipNr, tb.TB_GebDat, tb.TB_SchlachtDat;
 ```
 
-> [!IMPORTANT]
-> **IHK-Korrekturschlüssel (10 Punkte):**
-> * `INSERT INTO Archiv_Tierbestand (Spaltenliste)` (2 Punkte).
-> * `SELECT` mit korrekter Spaltenzuordnung (2 Punkte).
-> * `JOIN` zwischen `Tierbestand`, `Tierkategorie` und `TierZusatzInfo` (2 Punkte).
-> * Filterung auf geschlachtete Tiere: `WHERE tb.TB_SchlachtDat IS NOT NULL` (2 Punkte).
-> * Aggregation mit `MAX(tzi.TZI_Gewicht)` und vollständiges `GROUP BY` über alle Nicht-Aggregatspalten (2 Punkte).
-
 ---
 
 ### 📂 Aufgabe 4.cb) DML: Archivierte Datensätze aus Tabellen löschen (4 Punkte)
@@ -386,21 +421,6 @@ DELETE FROM Tierbestand
 WHERE TB_ID IN (SELECT A_TBID FROM Archiv_Tierbestand);
 ```
 
-#### 🔄 Alternative Variante mit direktem Datumsfilter
-```sql
--- Schritt 1: Zusatzinfos aller geschlachteten Tiere löschen
-DELETE FROM TierZusatzInfo
-WHERE TZI_TBID IN (
-    SELECT TB_ID 
-    FROM Tierbestand 
-    WHERE TB_SchlachtDat IS NOT NULL
-);
-
--- Schritt 2: Geschlachtete Tiere aus Tierbestand löschen
-DELETE FROM Tierbestand
-WHERE TB_SchlachtDat IS NOT NULL;
-```
-
 > [!CAUTION]
 > **🚨 Die Foreign Key Trap (Referentielle Integrität):**
 > Würde man versuchen, zuerst `DELETE FROM Tierbestand` auszuführen, wirft das DBMS sofort einen Fehler:  
@@ -409,59 +429,219 @@ WHERE TB_SchlachtDat IS NOT NULL;
 
 ---
 
-## 🏢 Transfer auf die Single Source of Truth (`ProjektDB`)
+## 🎓 Prüfungs-Spezial 2: IHK-Abschlussprüfung (Handlungsschritt 5: Die Speiche GmbH)
 
-Wie lässt sich das heute erlernte Archivierungs- und Aggregationsmuster auf unsere Unternehmensdatenbank (`ProjektDB`) übertragen?
+* **Prüfungsdokument (PDF):** [`assets/Gescannt_20260826-1034.pdf`](./assets/Gescannt_20260826-1034.pdf)
+* **Lösungsskript:** [`src/02_ihk_abschlusspruefung_fahrradverleih_loesung.sql`](./src/02_ihk_abschlusspruefung_fahrradverleih_loesung.sql)
+* **Gesamtpunktzahl:** 25 Punkte
 
-### Praxisbeispiel: Archivierung abgeschlossener Projekte mit Projektleiter & Gesamtbudget
+---
 
-> **Szenario:** Projekte, die abgeschlossen sind (z. B. Budget komplett ausgeschöpft oder historisches Datum), sollen in eine Tabelle `Archiv_Projekt` überführt und anschließend aus dem operativen System entfernt werden.
+### 📂 Aufgabe 5.aa) DDL: Tabelle `Defekt` erstellen (2 Punkte)
 
-```mermaid
-flowchart LR
-    P["Projekt (Operativ)"] -->|"INSERT ... SELECT"| AP[("Archiv_Projekt")]
-    K["Kunde"] --> AP
-    A["Arbeit (Projektleiter)"] --> AP
-    M["Mitarbeiter"] --> AP
-```
+* **Aufgabenstellung:** Erstellen Sie die Tabelle `Defekt`, welche als Attribut eine `DefektID` und eine `Beschreibung` enthält.
 
-#### 1. DDL: Archivtabelle für Projekte erstellen
 ```sql
-CREATE TABLE Archiv_Projekt (
-    A_ProID INT PRIMARY KEY,
-    A_Bezeichnung VARCHAR(100) NOT NULL,
-    A_KundeFirma VARCHAR(100) NOT NULL,
-    A_Projektleiter VARCHAR(100) NULL,
-    A_Mittel DECIMAL(12, 2) NOT NULL,
-    A_ArchiviertAm DATE NOT NULL
+CREATE TABLE Defekt (
+    DefektID INT PRIMARY KEY,
+    Beschreibung VARCHAR(255) NOT NULL
 );
 ```
 
-#### 2. DML: Archivierung durchführen (INSERT SELECT mit Joins)
+> [!NOTE]
+> **IHK-Korrekturschlüssel (2 Punkte):**
+> * `CREATE TABLE Defekt` (1 Punkt).
+> * Attribute `DefektID` (Primärschlüssel) und `Beschreibung` korrekt deklariert (1 Punkt).
+
+---
+
+### 📂 Aufgabe 5.ab) DDL: Tabelle `DefektBuchung` erstellen (3 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie die Tabelle `DefektBuchung`, welche bis auf das Attribut `Tage` alle Attribute der Tabelle `Buchung` und eine `DefektID` aus der Tabelle `Defekt` enthält.
+
 ```sql
-INSERT INTO Archiv_Projekt (A_ProID, A_Bezeichnung, A_KundeFirma, A_Projektleiter, A_Mittel, A_ArchiviertAm)
-SELECT p.id,
-       p.bezeichnung,
-       k.firma,
-       CONCAT(m.vorname, ' ', m.nachname) AS projektleiter,
-       p.mittel,
-       CAST(GETDATE() AS DATE)
-FROM Projekt AS p
-INNER JOIN Kunde AS k ON p.kunde_id = k.id
-LEFT JOIN Arbeit AS arb ON p.id = arb.pro_id AND arb.aufgabe = 'Projektleiter'
-LEFT JOIN Mitarbeiter AS m ON arb.mit_id = m.id
-WHERE p.mittel < 100000; -- Beispielkriterium für abgeschlossene/kleine Projekte
+CREATE TABLE DefektBuchung (
+    KdID INT NOT NULL,
+    VRadID INT NOT NULL,
+    Datum DATE NOT NULL,
+    DefektID INT NOT NULL,
+    PRIMARY KEY (KdID, VRadID, Datum),
+    FOREIGN KEY (KdID) REFERENCES Kunde(KdID),
+    FOREIGN KEY (VRadID) REFERENCES VerleihRad(VRadID),
+    FOREIGN KEY (DefektID) REFERENCES Defekt(DefektID)
+);
 ```
 
-#### 3. DML: Bereinigung in richtiger Fremdschlüssel-Reihenfolge
-```sql
--- 1. Zuerst Einsätze aus der Brückentabelle 'Arbeit' entfernen (Kind)
-DELETE FROM Arbeit
-WHERE pro_id IN (SELECT A_ProID FROM Archiv_Projekt);
+> [!IMPORTANT]
+> **IHK-Korrekturschlüssel (3 Punkte):**
+> * Tabellenname und korrekte Spaltenauswahl (`KdID`, `VRadID`, `Datum`, `DefektID` ohne `Tage`) (1 Punkt).
+> * Primärschlüssel (zusammengesetzter PK aus `KdID, VRadID, Datum`) (1 Punkt).
+> * Fremdschlüssel-Beziehungen zu `Kunde`, `VerleihRad` und `Defekt` (1 Punkt).
 
--- 2. Danach das Projekt aus der Tabelle 'Projekt' entfernen (Eltern)
-DELETE FROM Projekt
-WHERE id IN (SELECT A_ProID FROM Archiv_Projekt);
+---
+
+### 📂 Aufgabe 5.b) DQL: Buchungen pro RadTyp mit Mindestanzahl (5 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine Liste aller Buchungen pro RadTyp für alle Radtypen, zu denen mindestens zehn Buchungen vorliegen.
+* **Erwartete Ausgabe:**
+  ```text
+  RadTypID  Anzahl
+  1000      23
+  1001      12
+  ```
+
+#### 🔹 Musterlösung
+
+```sql
+SELECT vr.RadTypID,
+       COUNT(*) AS Anzahl
+FROM VerleihRad AS vr
+INNER JOIN Buchung AS b ON vr.VRadID = b.VRadID
+GROUP BY vr.RadTypID
+HAVING COUNT(*) >= 10;
+```
+
+#### 🔄 Alternative Variante mit Join auf `RadTyp`
+```sql
+SELECT rt.RadTypID,
+       COUNT(b.KdID) AS Anzahl
+FROM RadTyp AS rt
+INNER JOIN VerleihRad AS vr ON rt.RadTypID = vr.RadTypID
+INNER JOIN Buchung AS b ON vr.VRadID = b.VRadID
+GROUP BY rt.RadTypID
+HAVING COUNT(b.KdID) >= 10;
+```
+
+> [!TIP]
+> **IHK-Korrekturschlüssel (5 Punkte):**
+> * `SELECT RadTypID, COUNT(...)` (1 Punkt).
+> * `JOIN` zwischen `VerleihRad` und `Buchung` (2 Punkte).
+> * `GROUP BY RadTypID` (1 Punkt).
+> * `HAVING COUNT(*) >= 10` (1 Punkt).
+
+---
+
+### 📂 Aufgabe 5.c) DQL: Gesamtumsatz pro Kunde (5 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine Liste, in der für jeden Kunden der Gesamtumsatz seiner Buchungen (jeweils `Tage * RadTypPreis`) aufgelistet ist. Die Liste soll die Datensätze absteigend sortiert nach dem Umsatz enthalten.
+* **Erwartete Ausgabe:**
+  ```text
+  KdID  Umsatz
+  2002  1400.00
+  2001  800.00
+  ```
+
+#### 🔹 Musterlösung
+
+```sql
+SELECT b.KdID,
+       SUM(b.Tage * rt.RadTypPreis) AS Umsatz
+FROM Buchung AS b
+INNER JOIN VerleihRad AS vr ON b.VRadID = vr.VRadID
+INNER JOIN RadTyp AS rt ON vr.RadTypID = rt.RadTypID
+GROUP BY b.KdID
+ORDER BY Umsatz DESC;
+```
+
+> [!NOTE]
+> **IHK-Korrekturschlüssel (5 Punkte):**
+> * `SELECT b.KdID` (1 Punkt).
+> * Formel `SUM(b.Tage * rt.RadTypPreis)` (1 Punkt).
+> * Vollständige Joins (`Buchung` $\rightarrow$ `VerleihRad` $\rightarrow$ `RadTyp`) (1 Punkt).
+> * `GROUP BY b.KdID` (1 Punkt).
+> * `ORDER BY Umsatz DESC` (1 Punkt).
+
+---
+
+### 📂 Aufgabe 5.d) DQL: Subquery - Räder teurer als Mountainbike (5 Punkte)
+
+* **Aufgabenstellung:** Geben Sie alle Radtyp-IDs, deren Radtypbezeichnung und Preis an, die einen höheren Preis als der Radtyp *‚Mountainbike‘* haben (`RadTypID = 1001`).
+* **Erwartete Ausgabe:**
+  ```text
+  RadTypID  RadTypBez   RadTypPreis
+  1002      Tandem 500  30.00
+  1003      E-Bike      35.00
+  ```
+
+#### 🔹 Musterlösung mit Subquery
+
+```sql
+SELECT RadTypID,
+       RadTypBez,
+       RadTypPreis
+FROM RadTyp
+WHERE RadTypPreis > (
+    SELECT RadTypPreis 
+    FROM RadTyp 
+    WHERE RadTypBez = 'Mountainbike' 
+       OR RadTypID = 1001
+);
+```
+
+> [!TIP]
+> **IHK-Korrekturschlüssel (5 Punkte):**
+> * Hauptabfrage `SELECT RadTypID, RadTypBez, RadTypPreis FROM RadTyp` (2 Punkte).
+> * Vergleichsoperator `>` (1 Punkt).
+> * Subquery `(SELECT RadTypPreis FROM RadTyp WHERE ...)` (2 Punkte).
+
+---
+
+### 📂 Aufgabe 5.e) DQL: Prozentualer Buchungsanteil pro Monat im Jahr 2019 (5 Punkte)
+
+* **Aufgabenstellung:** Geben Sie für jeden Monat den prozentualen Anteil der Anzahl der Buchungen an der Gesamtanzahl der Buchungen für das Jahr 2019 an.
+* **Erwartete Ausgabe:**
+  ```text
+  Monat  Anteil
+  1      5
+  2      7
+  ...
+  ```
+
+#### 🔹 Musterlösung
+
+```sql
+SELECT MONTH(Datum) AS Monat,
+       ROUND((COUNT(*) * 100.0) / (SELECT COUNT(*) FROM Buchung WHERE YEAR(Datum) = 2019), 0) AS Anteil
+FROM Buchung
+WHERE YEAR(Datum) = 2019
+GROUP BY MONTH(Datum)
+ORDER BY Monat ASC;
+```
+
+> [!IMPORTANT]
+> **IHK-Korrekturschlüssel (5 Punkte):**
+> * Extraktion des Monats: `MONTH(Datum)` (1 Punkt).
+> * Zählung und Prozentberechnung: `(COUNT(*) * 100.0) / (SELECT ...)` (2 Punkte).
+> * Filter auf Jahr 2019: `WHERE YEAR(Datum) = 2019` in Haupt- und Subquery (1 Punkt).
+> * `GROUP BY MONTH(Datum)` und Sortierung (1 Punkt).
+
+---
+
+## 🏢 Transfer auf die Single Source of Truth (`ProjektDB`)
+
+Wie lassen sich die Prüfungsmuster (Archivierung, zusammengesetzte Schlüssel, prozentuale Subqueries) auf die `ProjektDB` anwenden?
+
+### 1. Praxis-Transfer: Prozentualer Umsatzanteil pro Quartal 2019
+```sql
+SELECT DATEPART(QUARTER, datum) AS Quartal,
+       ROUND((SUM(umsatz) * 100.0) / (SELECT SUM(umsatz) FROM Umsatz WHERE YEAR(datum) = 2019), 2) AS ProzentAnteil
+FROM Umsatz
+WHERE YEAR(datum) = 2019
+GROUP BY DATEPART(QUARTER, datum)
+ORDER BY Quartal ASC;
+```
+
+### 2. Praxis-Transfer: Mitarbeiter mit höherem Gehalt als Durchschnitt ihrer Abteilung
+```sql
+SELECT m.id, m.vorname, m.nachname, g.gehalt, m.abt_id
+FROM Mitarbeiter AS m
+INNER JOIN Gehalt AS g ON m.id = g.mit_id
+WHERE g.gehalt > (
+    SELECT AVG(g2.gehalt)
+    FROM Mitarbeiter AS m2
+    INNER JOIN Gehalt AS g2 ON m2.id = g2.mit_id
+    WHERE m2.abt_id = m.abt_id
+);
 ```
 
 ---
@@ -470,12 +650,13 @@ WHERE id IN (SELECT A_ProID FROM Archiv_Projekt);
 
 ```mermaid
 flowchart TD
-    subgraph GoldenRules["Die goldenen Regeln des Tages"]
-        R1["1. CRUD-Verständnis: DDL für Tabellenbau, DML für Datenpflege, DQL für Auswertungen"]
-        R2["2. Outer Joins absichern: Bedingungen auf rechte Tabellen immer in die ON-Klausel"]
-        R3["3. Join-Multiplikation stoppen: Immer COUNT(DISTINCT PK) bei 1:n:m Pfaden"]
-        R4["4. Archivieren vor Löschen: Erst INSERT SELECT, danach DELETE"]
-        R5["5. Lösch-Reihenfolge einhalten: Erst Kind-Tabellen (FK), dann Eltern-Tabellen (PK)"]
+    subgraph GoldenRules["Die goldenen Prüfungs- und Praxisregeln"]
+        R1["1. CRUD: DDL baut Struktur, DML pflegt Zeilen, DQL liest Daten"]
+        R2["2. Outer Joins: Rechte Filter ins ON, niemals ins WHERE"]
+        R3["3. Zählen bei Joins: Immer COUNT(DISTINCT PK) bei 1:n Pfaden"]
+        R4["4. ETL-Archivierung: Erst INSERT SELECT mit GROUP BY, dann DELETE"]
+        R5["5. Lösch-Reihenfolge: Erst Kind (FK), dann Eltern (PK)"]
+        R6["6. Prozentrechnung: (COUNT(*) * 100.0) / (SELECT COUNT(*)...)"]
     end
 ```
 
@@ -483,20 +664,20 @@ flowchart TD
 
 | Anforderung | SQL-Muster |
 | :--- | :--- |
-| **Tabellen erstellen (DDL)** | `CREATE TABLE Name (Spalte Datentyp Constraints);` |
-| **Spalten anpassen (DDL)** | `ALTER TABLE Name ADD Spalte Datentyp;` |
-| **Tabelle vernichten (DDL)** | `DROP TABLE Name;` |
-| **Zeilen einfügen (DML)** | `INSERT INTO Tabelle (Spalten) VALUES (...);` |
-| **Massenübertrag / Archiv (DML)** | `INSERT INTO Ziel (Spalten) SELECT ... FROM Quelle WHERE ... GROUP BY ...;` |
-| **Zeilen ändern (DML)** | `UPDATE Tabelle SET Spalte = NeuerWert WHERE Bedingung;` |
-| **Zeilen löschen (DML)** | `DELETE FROM Tabelle WHERE ID IN (SELECT ID FROM Archiv);` |
-| **Duplikatsfreie Zählung (DQL)** | `COUNT(DISTINCT t.ID)` |
-| **Alter in Jahren berechnen (T-SQL)** | `DATEDIFF(YEAR, Geburtsdatum, GETDATE())` |
-| **Alter in Jahren berechnen (ANSI)** | `YEAR(CURRENT_DATE) - YEAR(Geburtsdatum)` |
+| **Tabellen erstellen (DDL)** | `CREATE TABLE Name (Spalte Datentyp, PRIMARY KEY (Spalte1, Spalte2));` |
+| **Tabelle mit Fremdschlüssel (DDL)** | `FOREIGN KEY (FK_Spalte) REFERENCES ZielTabelle(PK_Spalte)` |
+| **Archivierung per Abfrage (DML)** | `INSERT INTO Archiv SELECT ... FROM Quelle GROUP BY ...;` |
+| **Referenzsicheres Löschen (DML)** | `DELETE FROM Kind WHERE ID IN (SELECT ID FROM Archiv);` |
+| **Gruppierungsfilter (DQL)** | `GROUP BY spalte HAVING COUNT(*) >= 10;` |
+| **Dynamischer Schwellenwert (DQL)** | `WHERE preis > (SELECT preis FROM ... WHERE bez = 'X')` |
+| **Prozentualer Anteil (DQL)** | `(COUNT(*) * 100.0) / (SELECT COUNT(*) FROM ...)` |
+| **Monat & Jahr extrahieren** | `MONTH(datum)`, `YEAR(datum)`, `DATEPART(QUARTER, datum)` |
 
 ---
 
 ## 💻 Praktische Skripte im Projekt
 
-* 📜 **IHK-Lösungsskript:** [`src/01_ihk_abschlusspruefung_tierbestand_loesung.sql`](./src/01_ihk_abschlusspruefung_tierbestand_loesung.sql)
-* 📄 **Prüfungsunterlage (PDF):** [`assets/irgendwasmitsql_20260826-0836.pdf`](./assets/irgendwasmitsql_20260826-0836.pdf)
+* 📜 **IHK 1 Lösungsskript (Tierbestand):** [`src/01_ihk_abschlusspruefung_tierbestand_loesung.sql`](./src/01_ihk_abschlusspruefung_tierbestand_loesung.sql)
+* 📄 **IHK 1 Prüfungsunterlage (PDF):** [`assets/irgendwasmitsql_20260826-0836.pdf`](./assets/irgendwasmitsql_20260826-0836.pdf)
+* 📜 **IHK 2 Lösungsskript (Die Speiche GmbH):** [`src/02_ihk_abschlusspruefung_fahrradverleih_loesung.sql`](./src/02_ihk_abschlusspruefung_fahrradverleih_loesung.sql)
+* 📄 **IHK 2 Prüfungsunterlage (PDF):** [`assets/Gescannt_20260826-1034.pdf`](./assets/Gescannt_20260826-1034.pdf)
