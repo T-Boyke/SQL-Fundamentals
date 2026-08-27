@@ -1,9 +1,12 @@
 -- ============================================================================
 -- 🎓 IHK Abschlussprüfung: 4. Handlungsschritt (25 Punkte)
 -- Szenario: Datenbank der Tierbestandsverwaltung & Archivierung (ZPA FIA II)
+-- Prüfungsdokumente:
+--   - Aufgabe: Day_18/assets/AP2 2026 S FIAE2 A4 SQL Tiere - Aufgaben.pdf
+--   - Lösung:  Day_18/assets/AP2 2026 S FIAE2 A4 SQL Tiere - Lösung.pdf
 -- Datei: Day_18/src/01_ihk_abschlusspruefung_tierbestand_loesung.sql
 -- Autor: Tobias Boyke
--- Datum: 26.08.2026
+-- Datum: 26.08.2026 / Update 27.08.2026
 -- ============================================================================
 
 -- ============================================================================

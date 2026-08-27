@@ -1,9 +1,12 @@
 -- ============================================================================
 -- 🎓 IHK Abschlussprüfung: 5. Handlungsschritt (25 Punkte)
 -- Szenario: Datenbank der Fahrradvermietung "Die Speiche GmbH" (ZPA FI Ganz I Anw)
+-- Prüfungsdokumente:
+--   - Aufgabe: Day_18/assets/AP 2019 W GA1 HS5 SQL Fahrradverleih - Aufgabe.pdf
+--   - Lösung:  Day_18/assets/AP 2019 W GA1 HS5 SQL Fahrradverleih - Lösung.pdf
 -- Datei: Day_18/src/02_ihk_abschlusspruefung_fahrradverleih_loesung.sql
 -- Autor: Tobias Boyke
--- Datum: 26.08.2026
+-- Datum: 26.08.2026 / Update 27.08.2026
 -- ============================================================================
 
 -- ============================================================================
