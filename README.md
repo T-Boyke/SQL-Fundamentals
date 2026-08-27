@@ -207,7 +207,7 @@ In Woche 4 stehen Multi-Table-Verknüpfungen, komplexe Outer Joins, reale 25-Pun
 | **Tag 16** | ✅ | Multi-Table INNER JOINs & SELF JOINs | Hierarchische/horizontale Selbstverknüpfungen, Verknüpfungspfade über 4 Tabellen, Einstieg OUTER JOINs. | [📖 Day_16](./Day_16/readme.md) |
 | **Tag 17** | ✅ | Fortgeschrittene OUTER JOINs & NULL-Werte | Multi-Table LEFT/RIGHT/FULL JOINs, Anti-Joins (`IS NULL`), Aggregationen mit Nullwerten, `ISNULL`/`COALESCE`. | [📖 Day_17](./Day_17/readme.md) |
 | **Tag 18** | ✅ | IHK-Training, Archivierung & Transaktionen | 3 vollständige 25-Punkte IHK-Prüfungen (Tiere, Fahrradverleih, Arzttermine), ETL-Archivierung, ACID/TCL. | [📖 Day_18](./Day_18/readme.md) |
-| **Tag 19** | ✅ | Mengenoperatoren (UNION, INTERSECT, EXCEPT) | Vertikale Datenfusion, Mengen-Vierklang, Performance (`UNION` vs. `UNION ALL`), Operator-Präzedenz, Delta-Detektion. | [📖 Day_19](./Day_19/readme.md) |
+| **Tag 19** | ✅ | Mengenoperatoren & IHK-Prüfung | `UNION`, `UNION ALL`, `INTERSECT`, `EXCEPT`, „Punkt vor Strich“-Präzedenz & 30-Punkte IHK-Prüfung (Aktienkurs-Archivierung). | [📖 Day_19](./Day_19/readme.md) |
 | **Tag 20** | ⏳ | XML & JSON Verarbeitung | Speichern und Parsen von semistrukturierten XML- und JSON-Dokumenten in relationalen Tabellen. | [📖 Day_20](./Day_20/readme.md) |
 
 ---

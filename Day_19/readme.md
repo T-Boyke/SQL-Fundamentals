@@ -1,4 +1,4 @@
-# 📅 Day_19: Mengenoperatoren (Set Operators: UNION, INTERSECT, EXCEPT)
+# 📅 Day_19: Mengenoperatoren (Set Operators: UNION, INTERSECT, EXCEPT) & IHK-Prüfungstraining
 
 ## ℹ️ Kurs-Informationen
 
@@ -23,14 +23,17 @@
   - Das `ORDER BY`-Statement steht **ausschließlich am Ende** des gesamten Statements.
 - [x] **Performance-Unterschiede verstehen:** Erkennen, warum `UNION ALL` ein speicher- und CPU-schonender Streaming-Operator (Concatenation) ist, während `UNION`, `INTERSECT` und `EXCEPT` teure Sortier- und Hash-Operationen zur Deduplizierung erfordern.
 - [x] **Sonderfall NULL-Werte in Mengenoperatoren:** Verstehen, dass in Mengenoperatoren im Gegensatz zu `WHERE`-Bedingungen `NULL = NULL` gilt und NULL-Werte dedupliziert werden.
-- [x] **Operator-Präzedenz & Klammerung:** `INTERSECT` bindet stärker als `UNION` und `EXCEPT`. Beherrschen von expliziter Klammerung `(...)` zur Steuerung komplexer Mengenketten.
+- [x] **Operator-Präzedenz & Ausführungsreihenfolge („Punkt vor Strich“):** `INTERSECT` bindet wie die Multiplikation stärker als `UNION` und `EXCEPT`. Beherrschen von expliziter Klammerung `(...)` zur Steuerung komplexer Mengenketten.
 - [x] **Mengenoperatoren vs. Joins & Subqueries:** Vergleichende Analyse von Äquivalenzmustern (`EXCEPT` vs. `NOT EXISTS` vs. `LEFT JOIN ... WHERE IS NULL`).
 - [x] **Praxislösungen der Aufgabenreihe 10.1 bis 10.10:** Sämtliche Aufgaben aus [`assets/ProjektDB 10 - Mengenoperatoren - Aufgaben.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/assets/ProjektDB%2010%20-%20Mengenoperatoren%20-%20Aufgaben.sql) fehlerfrei gelöst und verifiziert.
+- [x] **IHK-Abschlussprüfung meistern (AP2 Sommer 2024 FIAE2 A4 - 30 Punkte):** Vollständige Ausarbeitung des Prüfungsszenarios zu Börsentransaktionen, Datenarchivierung und `UNION ALL`-Live-/Archiv-Fusion.
 - [x] **Single Source of Truth (SoT):** Vollständige Ausrichtung auf das relationale kanonische Schema der `ProjektDB`.
 
 ---
 
-## 🗺️ Relationaler Kompass: Der `ProjektDB` Überblick
+## 🗺️ Relationale Kompasse: Wie hängen die Tabellen zusammen?
+
+### 1. Das relationale Schema der `ProjektDB` (Single Source of Truth)
 
 ```mermaid
 erDiagram
@@ -89,6 +92,48 @@ erDiagram
         int mit_id FK "Mitarbeiter-ID -> Mitarbeiter(id)"
         date datum "Umsatzdatum"
         decimal umsatz "Umsatzbetrag in EUR"
+    }
+```
+
+---
+
+### 2. Das relationale Schema der IHK-Abschlussprüfung (Aktienkurse & Archivierung)
+
+```mermaid
+erDiagram
+    AKTIE ||--o{ AKTIENKURS : "wird_gehandelt (AK_AktieID)"
+    BOERSE ||--o{ AKTIENKURS : "notiert_an (AK_BoerseID)"
+    AKTIE ||--o{ AKTIENKURSARCHIV : "wird_archiviert (AK_AktieID)"
+    BOERSE ||--o{ AKTIENKURSARCHIV : "notiert_an (AK_BoerseID)"
+
+    AKTIE {
+        int A_ID PK "Aktien-ID"
+        string A_AktienName "Name der Aktie (z.B. AMAG, MTU)"
+        string A_WKN "Wertpapierkennnummer"
+    }
+
+    BOERSE {
+        int B_ID PK "Börsen-ID"
+        string B_BoersenName "Name des Handelsplatzes"
+        string B_BoerseKng "Kürzel (FWB, EUWAX, BÖAG, BD)"
+    }
+
+    AKTIENKURS {
+        int AK_ID PK "Transaktions-ID"
+        datetime AK_DatumZeit "Zeitstempel der Kursfeststellung"
+        decimal AK_Kurs "Aktienkurs"
+        int AK_BoerseID FK "Börse -> Boerse(B_ID)"
+        int AK_AktieID FK "Aktie -> Aktie(A_ID)"
+        int AK_Anzahl "Gehandelte Stückzahl"
+    }
+
+    AKTIENKURSARCHIV {
+        int AK_ID PK "Archivierte Transaktions-ID"
+        datetime AK_DatumZeit "Historischer Zeitstempel"
+        decimal AK_Kurs "Historischer Kurs"
+        int AK_BoerseID FK "Börse -> Boerse(B_ID)"
+        int AK_AktieID FK "Aktie -> Aktie(A_ID)"
+        int AK_Anzahl "Gehandelte Stückzahl"
     }
 ```
 
@@ -526,6 +571,152 @@ FROM Abteilung;
 
 ---
 
+## 🎓 Prüfungs-Spezial: IHK-Abschlussprüfung (Aktienkursanalyse & Datenarchivierung)
+
+* **Prüfungsdokument (Aufgabe):** [📄 AP2 2024 S FIAE2 A4 SQL Aktien - Aufgaben.pdf](./assets/AP2%202024%20S%20FIAE2%20A4%20SQL%20Aktien%20-%20Aufgaben.pdf)
+* **Lösungsskript:** [`src/03_ihk_abschlusspruefung_aktien_loesung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/src/03_ihk_abschlusspruefung_aktien_loesung.sql)
+* **Gesamtpunktzahl:** 30 Punkte (Handlungsschritt 4, ZPA FIA II - Sommer 2024)
+
+---
+
+### 📂 Aufgabe 4.a) DML: Nicht mehr gehandelte Aktie löschen (2 Punkte)
+
+* **Aufgabenstellung:** Die Aktie mit dem Namen *„MTU Aero Engines“* wird nicht mehr gehandelt. Erstellen Sie eine SQL-Anweisung, welche alle Einträge der Aktie (`AK_AktieID: 4`) aus der Tabelle `AktienKurs` entfernt.
+
+#### 🔹 Musterlösung (Aufgabe 4.a: DML Löschung)
+```sql
+DELETE FROM AktienKurs
+WHERE AK_AktieID = 4;
+```
+
+> [!NOTE]
+> **IHK-Korrekturschlüssel (2 Punkte):**
+> * `DELETE FROM AktienKurs` (1 Punkt).
+> * `WHERE AK_AktieID = 4` (1 Punkt).
+
+---
+
+### 📂 Aufgabe 4.b) DQL: Kursstatistiken der AMAG-Aktie je Börse (8 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, welche den Minimal-, den Maximal-, den Durchschnittskurs sowie die Anzahl der Transaktionen der AMAG-Aktie (`AK_AktieID: 6`) an den verschiedenen Börsen entsprechend der folgenden Ergebnistabelle ausgibt.
+* **Erwartete Ausgabe:**
+  ```text
+  B_ID  B_BoersenName                   KursMin  KursMax  KursDurchschnitt  AnzahlTransaktionen
+  1     Börse Frankfurt                 53.55    54.19    53.870000         2434
+  2     Stuttgarter Wertpapierbörse    54.00    54.21    54.076666         3234
+  3     Niedersächsische Börse Hannov.  53.98    54.06    54.020000         2334
+  4     Börse Düsseldorf               53.99    53.99    53.990000         1223
+  ```
+
+#### 🔹 Musterlösung (Aufgabe 4.b: Börsen-Aggregation)
+```sql
+SELECT b.B_ID,
+       b.B_BoersenName,
+       MIN(ak.AK_Kurs) AS KursMin,
+       MAX(ak.AK_Kurs) AS KursMax,
+       AVG(ak.AK_Kurs) AS KursDurchschnitt,
+       COUNT(*) AS AnzahlTransaktionen
+FROM Boerse AS b
+INNER JOIN AktienKurs AS ak ON b.B_ID = ak.AK_BoerseID
+WHERE ak.AK_AktieID = 6
+GROUP BY b.B_ID, b.B_BoersenName;
+```
+
+> [!TIP]
+> **IHK-Korrekturschlüssel (8 Punkte):**
+> * Spaltenauswahl & Aggregatfunktionen (`MIN`, `MAX`, `AVG`, `COUNT(*)`) (4 Punkte).
+> * `INNER JOIN` zwischen `Boerse` und `AktienKurs` (2 Punkte).
+> * Filter auf AMAG-Aktie `WHERE AK_AktieID = 6` (1 Punkt).
+> * `GROUP BY b.B_ID, b.B_BoersenName` (1 Punkt).
+
+---
+
+### 📂 Aufgabe 4.c) DML: Jahreswechsel-Archivierung (8 Punkte)
+
+* **Aufgabenstellung:** Am Anfang eines neuen Jahres werden alle Daten der Vorjahre aus der Tabelle `AktienKurs` in die Tabelle `AktienKursArchiv` verschoben. Die Tabelle `AktienKursArchiv` ist gleich der Tabelle `AktienKurs` aufgebaut. Erstellen Sie SQL-Anweisungen, welche die Daten entsprechend der Beschreibung verschieben.
+
+#### 🔹 Musterlösung (Aufgabe 4.c: ETL-Archivierung & Bereinigung)
+```sql
+-- Schritt 1: Vorjahresdaten in das Archiv kopieren
+INSERT INTO AktienKursArchiv (AK_ID, AK_DatumZeit, AK_Kurs, AK_BoerseID, AK_AktieID, AK_Anzahl)
+SELECT AK_ID,
+       AK_DatumZeit,
+       AK_Kurs,
+       AK_BoerseID,
+       AK_AktieID,
+       AK_Anzahl
+FROM AktienKurs
+WHERE YEAR(AK_DatumZeit) < YEAR(GETDATE());
+
+-- Schritt 2: Archivierte Datensätze aus operativer Tabelle entfernen
+DELETE FROM AktienKurs
+WHERE YEAR(AK_DatumZeit) < YEAR(GETDATE());
+```
+
+> [!IMPORTANT]
+> **IHK-Korrekturschlüssel (8 Punkte):**
+> * `INSERT INTO AktienKursArchiv SELECT ... FROM AktienKurs` (3 Punkte).
+> * Datumsfilter auf Vorjahre `WHERE YEAR(AK_DatumZeit) < YEAR(GETDATE())` (2 Punkte).
+> * `DELETE FROM AktienKurs WHERE ...` mit identischem Vorjahresfilter (3 Punkte).
+
+---
+
+### 📂 Aufgabe 4.d) DQL & MENGENOPERATOR: Fusion von Live- & Archivdaten (12 Punkte)
+
+* **Aufgabenstellung:** Sie möchten für alle Jahre über alle Börsen den Minimal- und den Maximalkurs sowie die Anzahl der Transaktionen im Jahr von der AMAG-Aktie (`AK_AktieID: 6`) entsprechend der nachfolgenden Ergebnistabelle erhalten. Die Tabelle soll absteigend nach Jahren sortiert werden.  
+*Denken Sie daran, dass die Daten der Vorjahre in der Tabelle `AktienKursArchiv` archiviert wurden.*
+* **Erwartete Ausgabe:**
+  ```text
+  Boersenjahr  KursMin  KursMax  AnzahlTransaktionen
+  2024         53.55    54.21    8343
+  2023         48.33    52.09    9987
+  2022         48.32    51.44    6554
+  ```
+
+#### 🔹 Musterlösung mit `UNION ALL` in Derived Table (Empfohlen)
+```sql
+SELECT YEAR(ges.AK_DatumZeit) AS Boersenjahr,
+       MIN(ges.AK_Kurs) AS KursMin,
+       MAX(ges.AK_Kurs) AS KursMax,
+       COUNT(*) AS AnzahlTransaktionen
+FROM (
+    SELECT AK_DatumZeit, AK_Kurs, AK_AktieID
+    FROM AktienKurs
+    WHERE AK_AktieID = 6
+    UNION ALL
+    SELECT AK_DatumZeit, AK_Kurs, AK_AktieID
+    FROM AktienKursArchiv
+    WHERE AK_AktieID = 6
+) AS ges
+GROUP BY YEAR(ges.AK_DatumZeit)
+ORDER BY Boersenjahr DESC;
+```
+
+#### 🔄 Alternative Variante mit CTE
+```sql
+WITH AlleKurse AS (
+    SELECT AK_DatumZeit, AK_Kurs, AK_AktieID FROM AktienKurs WHERE AK_AktieID = 6
+    UNION ALL
+    SELECT AK_DatumZeit, AK_Kurs, AK_AktieID FROM AktienKursArchiv WHERE AK_AktieID = 6
+)
+SELECT YEAR(AK_DatumZeit) AS Boersenjahr,
+       MIN(AK_Kurs) AS KursMin,
+       MAX(AK_Kurs) AS KursMax,
+       COUNT(*) AS AnzahlTransaktionen
+FROM AlleKurse
+GROUP BY YEAR(AK_DatumZeit)
+ORDER BY Boersenjahr DESC;
+```
+
+> [!TIP]
+> **IHK-Korrekturschlüssel (12 Punkte):**
+> * Zusammenführen beider Tabellen mittels `UNION ALL` (4 Punkte).
+> * Filter auf AMAG-Aktie `AK_AktieID = 6` in beiden Teilabfragen (2 Punkte).
+> * Extraktion des Börsenjahres `YEAR(AK_DatumZeit)` und Aggregation (`MIN`, `MAX`, `COUNT(*)`) (4 Punkte).
+> * `GROUP BY YEAR(...)` und `ORDER BY Boersenjahr DESC` (2 Punkte).
+
+---
+
 ## 🏢 Single Source of Truth (`ProjektDB`) Business-Transfer
 
 In modernen Unternehmensdatenbanken werden Mengenoperatoren vor allem für Audit-Trails, 360-Grad-Finanzberichte und Delta-Analysen eingesetzt.
@@ -579,7 +770,7 @@ flowchart TD
         M4["4. ORDER BY steht ausschließlich am Ende"]
         M5["5. Standardmäßig UNION ALL für maximale Performance"]
         M6["6. NULL = NULL bei Mengenoperatoren (Deduplizierung)"]
-        M7["7. INTERSECT hat höhere Priorität als UNION / EXCEPT"]
+        M7["7. INTERSECT bindet stärker als UNION / EXCEPT ('Punkt vor Strich')"]
     end
 ```
 
@@ -601,6 +792,8 @@ flowchart TD
 ### 📜 SQL-Lösungsskripte (`Day_19/src/`)
 * 📜 **Grundlagen & Aufgaben 10.1 - 10.10:** [`src/01_mengenoperatoren_grundlagen_und_aufgaben.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/src/01_mengenoperatoren_grundlagen_und_aufgaben.sql)
 * 📜 **Vertiefung, Performance & Praxistransfer:** [`src/02_mengenoperatoren_vertiefung_und_praxistransfer.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/src/02_mengenoperatoren_vertiefung_und_praxistransfer.sql)
+* 📜 **IHK-Abschlussprüfung (Aktienkurse & Archivierung - 30 Punkte):** [`src/03_ihk_abschlusspruefung_aktien_loesung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/src/03_ihk_abschlusspruefung_aktien_loesung.sql)
 
-### 📄 Aufgabenblätter (`Day_19/assets/`)
+### 📄 Aufgabenblätter & IHK-Prüfungen (`Day_19/assets/`)
 * 📄 **Aufgabenblatt 10 (Mengenoperatoren):** [`assets/ProjektDB 10 - Mengenoperatoren - Aufgaben.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/assets/ProjektDB%2010%20-%20Mengenoperatoren%20-%20Aufgaben.sql)
+* 📄 **IHK-Abschlussprüfung Aufgabenblatt (Aktien):** [`assets/AP2 2024 S FIAE2 A4 SQL Aktien - Aufgaben.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_19/assets/AP2%202024%20S%20FIAE2%20A4%20SQL%20Aktien%20-%20Aufgaben.pdf)
