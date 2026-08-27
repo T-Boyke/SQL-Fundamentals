@@ -125,12 +125,12 @@ flowchart TD
 
 #### 📊 Gegenüberstellung der Mengenoperatoren
 
-| Operator | Mathematische Entsprechung | Duplikatbehandlung | Performance-Charakteristik | Typischer Einsatzzweck |
-| :--- | :---: | :--- | :--- | :--- |
-| **`UNION`** | $A \cup B$ | Entfernt Duplikate automatisch | Benötigt Sortierung / Hash Deduplication (aufwendiger) | Konsolidierte eindeutige Listen (z. B. alle Firmenstandorte) |
-| **`UNION ALL`** | $A \uplus B$ | Behält alle Duplikate bei | Sehr schnell (reiner Stream-Concatenation Operator) | Zusammenführen historischer Tabellen, Protokolle, Adresslisten |
-| **`INTERSECT`** | $A \cap B$ | Entfernt Duplikate | Benötigt Hash/Merge Join oder Sortierung | Identifikation von Schnittmengen (z. B. Mitarbeiter in mehreren Projekten) |
-| **`EXCEPT`** | $A \setminus B$ | Entfernt Duplikate | Benötigt Anti-Semi-Join oder Distinct Hash | Differenzsuche, Delta-Erkennung, verwaiste Datensätze |
+| Operator | Mengenlehre | Logisches Äquivalent | Ausführungspriorität („Punkt vor Strich“) | Duplikatbehandlung | Performance | Typischer Einsatzzweck |
+| :--- | :---: | :---: | :---: | :--- | :--- | :--- |
+| **`INTERSECT`** | $A \cap B$ | **`AND`** (Konjunktion) | 🥇 **Höchste Priorität** (wie **Punktrechnung** $\times$) | Entfernt Duplikate | Benötigt Hash/Sort | Schnittmengen / Gemeinsamkeiten finden |
+| **`UNION`** | $A \cup B$ | **`OR`** (Disjunktion) | 🥈 Niedrigere Priorität (wie **Strichrechnung** $+$) | Entfernt Duplikate | Benötigt Sort/Hash | Eindeutige Gesamtmengen konsolidieren |
+| **`EXCEPT`** | $A \setminus B$ | **`AND NOT`** (Negation) | 🥈 Niedrigere Priorität (wie **Strichrechnung** $-$) | Entfernt Duplikate | Anti-Semi-Join | Differenzmengen / Deltas ermitteln |
+| **`UNION ALL`** | $A \uplus B$ | **`OR`** (mit Duplikaten) | 🥈 Niedrigere Priorität (wie **Strichrechnung** $+$) | Behält alle Duplikate | ⚡ Sehr schnell (Stream) | Protokolle, Summen & Adresslisten fusionieren |
 
 ---
 
@@ -198,23 +198,38 @@ Im SQL-Standard gilt bei Vergleichen in `WHERE`-Klauseln die dreiwertige Logik (
 
 ---
 
-### 5. Operator-Präzedenz & Klammerung
+### 5. Operator-Präzedenz & Ausführungsreihenfolge („Punkt vor Strich“)
 
-Wenn mehrere unterschiedliche Mengenoperatoren in einem Statement verkettet werden, gilt folgende Prioritätsregel:
+Werden in einem komplexen SQL-Statement mehrere Mengenoperatoren ohne Klammern miteinander verkettet, gilt eine feste mathematische Ausführungsreihenfolge:
+
+```mermaid
+flowchart TD
+    subgraph Precedence["Ausführungs-Rangfolge (Präzedenz)"]
+        P1["🥇 1. Rang: INTERSECT<br/>(Entspricht logischem AND / Multiplikation 'Punkt')"]
+        P2["🥈 2. Rang: UNION / UNION ALL / EXCEPT<br/>(Entspricht logischem OR & AND NOT / Addition 'Strich')"]
+        P1 -->|Bindet stärker als| P2
+    end
+```
 
 $$\mathbf{INTERSECT} \succ \mathbf{UNION} = \mathbf{EXCEPT}$$
 
-`INTERSECT` bindet stärker als `UNION` und `EXCEPT`.
+> [!IMPORTANT]
+> **💡 Die „Punkt vor Strich“-Analogie:**
+> * In der Arithmetik gilt: $2 + 3 \times 4 = 2 + 12 = 14$ *(Multiplikation/Punkt vor Addition/Strich)*.
+> * In der Mengenlehre & in SQL gilt: `A UNION B INTERSECT C` wird **immer** ausgewertet als:
+>   $$\mathbf{A} \cup (\mathbf{B} \cap \mathbf{C})$$
+> * `INTERSECT` (`AND` / Schnittmenge) wird **vor** `UNION` (`OR` / Vereinigung) und `EXCEPT` (`AND NOT` / Differenz) ausgeführt.
+> * Wenn zuerst die Vereinigung gebildet werden soll, **muss zwingend geklammert werden**: `(A UNION B) INTERSECT C`.
 
 ```sql
--- Ohne Klammern: Wird ausgewertet als A UNION (B INTERSECT C)
+-- 1. Ohne Klammern: INTERSECT bindet zuerst -> A UNION (B INTERSECT C)
 SELECT id FROM TabA
 UNION
 SELECT id FROM TabB
 INTERSECT
 SELECT id FROM TabC;
 
--- Mit expliziten Klammern: (A UNION B) INTERSECT C
+-- 2. Mit expliziter Klammerung: Erzwingt zuerst UNION -> (A UNION B) INTERSECT C
 (
     SELECT id FROM TabA
     UNION
@@ -570,14 +585,14 @@ flowchart TD
 
 ### 📋 Schnellübersicht der SQL-Mengenbefehle
 
-| Anforderung | SQL-Syntax | Besonderheit |
-| :--- | :--- | :--- |
-| **Vereinigung ohne Duplikate** | `SELECT a FROM T1 UNION SELECT b FROM T2;` | Sortiert / Dedupliziert automatisch |
-| **Vereinigung mit Duplikaten** | `SELECT a FROM T1 UNION ALL SELECT b FROM T2;` | Maximal schnell (Streaming) |
-| **Schnittmenge (Gemeinsamkeiten)** | `SELECT a FROM T1 INTERSECT SELECT b FROM T2;` | Bindet stärker bei Verkettung |
-| **Differenzmenge (Nur in 1, nicht in 2)** | `SELECT a FROM T1 EXCEPT SELECT b FROM T2;` | Reihenfolge der Queries ist entscheidend |
-| **Klammerung bei Verkettung** | `(SELECT ... UNION SELECT ...) INTERSECT SELECT ...;` | Erzwingt Auswertungsreihenfolge |
-| **Sortierung der Gesamtergebnismenge** | `SELECT ... UNION ALL SELECT ... ORDER BY Spalte ASC;` | Nur 1x am Ende erlaubt |
+| Anforderung | SQL-Syntax | Logik & Präzedenz („Punkt vor Strich“) | Besonderheit |
+| :--- | :--- | :--- | :--- |
+| **Schnittmenge (Gemeinsamkeiten)** | `SELECT a FROM T1 INTERSECT SELECT b FROM T2;` | `AND` (🥇 **Punktrechnung $\times$ / Höchste Priorität**) | Bindet am stärksten bei Verkettung |
+| **Vereinigung ohne Duplikate** | `SELECT a FROM T1 UNION SELECT b FROM T2;` | `OR` (🥈 Strichrechnung $+$) | Sortiert / Dedupliziert automatisch |
+| **Vereinigung mit Duplikaten** | `SELECT a FROM T1 UNION ALL SELECT b FROM T2;` | `OR` (🥈 Strichrechnung $+$) | Maximal schnell (Streaming) |
+| **Differenzmenge (Nur in 1, nicht in 2)** | `SELECT a FROM T1 EXCEPT SELECT b FROM T2;` | `AND NOT` (🥈 Strichrechnung $-$) | Reihenfolge der Queries ist entscheidend |
+| **Klammerung bei Verkettung** | `(SELECT ... UNION SELECT ...) INTERSECT SELECT ...;` | `(...)` (Erzwingt Vorrang) | Überschreibt Standard-Präzedenz |
+| **Sortierung der Gesamtergebnismenge** | `SELECT ... UNION ALL SELECT ... ORDER BY Spalte ASC;` | Global am Ende | Nur 1x am Ende erlaubt |
 
 ---
 
