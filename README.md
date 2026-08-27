@@ -7,15 +7,15 @@ Willkommen im zentralen Hub für die SQL-Fundamentals-Serie. Dieses Repository d
 ---
 
 ## 👥 Kurs-Metadaten
-*   **Autor/Bearbeiter:** Tobias Boyke
-*   **Dozent:** Tom S.
-*   **Modulzeitraum:** 03.08.2026 - 04.09.2026
-*   **Arbeitszeiten:** Montag bis Freitag, 08:15 Uhr - 16:00 Uhr
-*   **Lizenz:** [AGPL-3.0](./LICENSE)
+* **Autor/Bearbeiter:** Tobias Boyke
+* **Dozent:** Tom S.
+* **Modulzeitraum:** 03.08.2026 - 04.09.2026
+* **Arbeitszeiten:** Montag bis Freitag, 08:15 Uhr - 16:00 Uhr
+* **Lizenz:** [AGPL-3.0](./LICENSE)
 
 ---
 
-## 🗺 Kurs-Roadmap & Lernpfad
+## 🗺️ Kurs-Roadmap & Lernpfad
 
 ```mermaid
 flowchart TD
@@ -37,17 +37,17 @@ flowchart TD
         D11["Tag 11: ProjektDB DQL, WHERE & LIKE"] --> D12["Tag 12: ORDER BY & Aggregationen"]
         D12 --> D13["Tag 13: SQL-Wiederholung & IHK-Training"]
         D13 --> D14["Tag 14: Subqueries & Subselects"]
-        D14 --> D15["Tag 15: Joins & Verknüpfungen"]
+        D14 --> D15["Tag 15: Joins & Tabellenverknüpfungen"]
     end
 
-    subgraph W4["📅 Woche 4: Advanced SQL & Optimization"]
-        D16["Tag 16: Dynamisches SQL"] --> D17["Tag 17: Temp Tables & CTEs"]
-        D18["Tag 18: Query Optimization"] --> D19["Tag 19: Backup & Restore"]
-        D17 --> D18
+    subgraph W4["📅 Woche 4: Advanced SQL, Joins, IHK-Training & Mengenoperatoren"]
+        D16["Tag 16: Multi-Table & SELF JOINs"] --> D17["Tag 17: Fortgeschrittene OUTER JOINs"]
+        D17 --> D18["Tag 18: IHK-Training & Transaktionen"]
+        D18 --> D19["Tag 19: Mengenoperatoren (UNION, INTERSECT, EXCEPT)"]
         D19 --> D20["Tag 20: XML & JSON"]
     end
 
-    subgraph W5["📅 Woche 5: Datenbank-Design & Projekt"]
+    subgraph W5["📅 Woche 5: Datenbank-Design & Modulprojekt"]
         D21["Tag 21: Design & Normalisierung"] --> D22["Tag 22: Projekt DDL"]
         D22 --> D23["Tag 23: Projekt Abfragen"]
         D23 --> D24["Tag 24: Präsentationen"]
@@ -65,9 +65,9 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15 completed;
-    class D16 current;
-    class D17,D18,D19,D20,D21,D22,D23,D24,D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18 completed;
+    class D19 current;
+    class D20,D21,D22,D23,D24,D25 pending;
     class D10 exam;
 
     %% Subgraph Styles
@@ -187,7 +187,7 @@ Die zweite Woche vertiefte das 3NF-Refactoring, physische Speicherarchitektur (P
 ---
 
 ### 📅 Woche 3: DQL Masterclass & ProjektDB (SoT)
-In Woche 3 steht die Beherrschung komplexer Datenabfragen auf der kanonischen Übungsdatenbank `ProjektDB` im Mittelpunkt.
+In Woche 3 stand die Beherrschung komplexer Datenabfragen auf der kanonischen Übungsdatenbank `ProjektDB` im Mittelpunkt.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
@@ -195,19 +195,19 @@ In Woche 3 steht die Beherrschung komplexer Datenabfragen auf der kanonischen Ü
 | **Tag 12** | ✅ | Sortierung & Aggregationen | `ORDER BY`, `NULL`-Handling, `TOP / WITH TIES`, `SUM()`, `AVG()`, `COUNT()` und `GROUP BY / HAVING`. | [📖 Day_12](./Day_12/readme.md) |
 | **Tag 13** | ✅ | SQL-Wiederholung & IHK-Training | Große SQL-Wiederholung (Aufgaben 20 & 21) sowie 6 reale IHK-Abschlussprüfungen. | [📖 Day_13](./Day_13/readme.md) |
 | **Tag 14** | ✅ | Unterabfragen (Subqueries) | Skalare, Listen- und Tabellen-Unterabfragen (`IN`), `INSERT...SELECT`, korrelierte Subqueries. | [📖 Day_14](./Day_14/readme.md) |
-| **Tag 15** | ✅ | Joins & Tabellenverknüpfungen (Heute) | `INNER JOIN`, `LEFT/RIGHT JOIN`, `FULL OUTER JOIN`, `CROSS JOIN` und Selbstreferenz-Joins. | [📖 Day_15](./Day_15/readme.md) |
+| **Tag 15** | ✅ | Joins & Tabellenverknüpfungen | `INNER JOIN`, `LEFT/RIGHT JOIN`, `FULL OUTER JOIN`, `CROSS JOIN` und Selbstreferenz-Joins. | [📖 Day_15](./Day_15/readme.md) |
 
 ---
 
-### 📅 Woche 4: Advanced SQL & Optimization
-In dieser Woche geht es um komplexe Verarbeitungsmuster, Performance-Diagnostik und administrative Grundlagen wie Datensicherungsstrategien.
+### 📅 Woche 4: Advanced Joins, IHK-Abschlussprüfungen & Mengenoperatoren
+In Woche 4 stehen Multi-Table-Verknüpfungen, komplexe Outer Joins, reale 25-Punkte IHK-Abschlussprüfungen sowie mathematische Mengenoperatoren im Fokus.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
-| **Tag 16** | ⏳ | Dynamisches SQL & Injection-Schutz | Dynamisches Erzeugen und Ausführen von SQL-Strings mit `sp_executesql` und Absicherung. | [📖 Day_16](./Day_16/readme.md) |
-| **Tag 17** | ⏳ | Temporärer Speicher & Tabellenspeicher | Vergleich: Lokale/Globale Temp-Tabellen (`#`/`##`), Tabellenvariablen (`@`) und CTEs. | [📖 Day_17](./Day_17/readme.md) |
-| **Tag 18** | ⏳ | Query Optimization | Lesen von Ausführungsplänen, Identifikation von Flaschenhälsen (Scans, Spills in Tempdb). | [📖 Day_18](./Day_18/readme.md) |
-| **Tag 19** | ⏳ | Mengenoperatoren (Set Operators) | Schnittmengen, Vereinigungen und Differenzen mit `UNION`, `UNION ALL`, `INTERSECT` und `EXCEPT`. | [📖 Day_19](./Day_19/readme.md) |
+| **Tag 16** | ✅ | Multi-Table INNER JOINs & SELF JOINs | Hierarchische/horizontale Selbstverknüpfungen, Verknüpfungspfade über 4 Tabellen, Einstieg OUTER JOINs. | [📖 Day_16](./Day_16/readme.md) |
+| **Tag 17** | ✅ | Fortgeschrittene OUTER JOINs & NULL-Werte | Multi-Table LEFT/RIGHT/FULL JOINs, Anti-Joins (`IS NULL`), Aggregationen mit Nullwerten, `ISNULL`/`COALESCE`. | [📖 Day_17](./Day_17/readme.md) |
+| **Tag 18** | ✅ | IHK-Training, Archivierung & Transaktionen | 3 vollständige 25-Punkte IHK-Prüfungen (Tiere, Fahrradverleih, Arzttermine), ETL-Archivierung, ACID/TCL. | [📖 Day_18](./Day_18/readme.md) |
+| **Tag 19** | ✅ | Mengenoperatoren (UNION, INTERSECT, EXCEPT) | Vertikale Datenfusion, Mengen-Vierklang, Performance (`UNION` vs. `UNION ALL`), Operator-Präzedenz, Delta-Detektion. | [📖 Day_19](./Day_19/readme.md) |
 | **Tag 20** | ⏳ | XML & JSON Verarbeitung | Speichern und Parsen von semistrukturierten XML- und JSON-Dokumenten in relationalen Tabellen. | [📖 Day_20](./Day_20/readme.md) |
 
 ---
@@ -229,14 +229,14 @@ Die letzte Woche widmet sich der praktischen Anwendung. In einem kooperativen Ab
 
 Dieses Repository verwendet professionelle Features zur Qualitätssicherung und Strukturierung:
 
-1.  **CI/CD GitHub Actions:**
-    *   [Markdown Linter (markdown-lint.yml)](./.github/workflows/markdown-lint.yml): Validiert automatisch jede Dokumentation auf Formatierungsregeln.
-    *   [SQL Linter (sql-lint.yml)](./.github/workflows/sql-lint.yml): Nutzt `sqlfluff` zur Prüfung von SQL-Befehlen und Einhaltungen des T-SQL-Dialekts.
-2.  **Repository-Templates:**
-    *   [Bug Report Template](./.github/ISSUE_TEMPLATE/bug_report.md) & [Feature Request Template](./.github/ISSUE_TEMPLATE/feature_request.md): Für standardisierte Issues.
-    *   [PR-Template](./.github/pull_request_template.md): Für strukturierte Code-Reviews und Prüflisten vor dem Merge.
-3.  **Code-Ownership:**
-    *   [CODEOWNERS](./.github/CODEOWNERS) setzt Tobias Boyke als Hauptverantwortlichen für alle Skripte und Lektionen.
+1. **CI/CD GitHub Actions:**
+   * [Markdown Linter (markdown-lint.yml)](./.github/workflows/markdown-lint.yml): Validiert automatisch jede Dokumentation auf Formatierungsregeln.
+   * [SQL Linter (sql-lint.yml)](./.github/workflows/sql-lint.yml): Nutzt `sqlfluff` zur Prüfung von SQL-Befehlen und Einhaltungen des T-SQL-Dialekts.
+2. **Repository-Templates:**
+   * [Bug Report Template](./.github/ISSUE_TEMPLATE/bug_report.md) & [Feature Request Template](./.github/ISSUE_TEMPLATE/feature_request.md): Für standardisierte Issues.
+   * [PR-Template](./.github/pull_request_template.md): Für strukturierte Code-Reviews und Prüflisten vor dem Merge.
+3. **Code-Ownership:**
+   * [CODEOWNERS](./.github/CODEOWNERS) setzt Tobias Boyke als Hauptverantwortlichen für alle Skripte und Lektionen.
 
 ---
 
@@ -245,17 +245,17 @@ Dieses Repository verwendet professionelle Features zur Qualitätssicherung und 
 Um direkt mit den Skripten arbeiten zu können, stellen wir ein automatisches Setup-Skript bereit. Dieses Skript lädt SQL Server Express herunter, installiert es im Hintergrund und konfiguriert die JetBrains DataGrip-Verbindung automatisch für das Repository.
 
 ### 🚀 Ausführung
-1.  Öffne PowerShell als **Administrator**.
-2.  Navigiere in den Projektordner.
-3.  Führe das Skript aus:
-    ```powershell
-    Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup_environment.ps1
-    ```
+1. Öffne PowerShell als **Administrator**.
+2. Navigiere in den Projektordner.
+3. Führe das Skript aus:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup_environment.ps1
+   ```
 
 ### 💻 JetBrains DataGrip Integration
 Dieses Repository enthält eine vorkonfigurierte Datenquelle in [.idea/dataSources.xml](./.idea/dataSources.xml).
-*   **Vorgehen:** Öffne den Projektordner einfach als Projekt in **DataGrip** (oder Rider).
-*   Die Verbindung `SQL-Fundamentals (SQLEXPRESS)` wird **automatisch geladen**. Du musst lediglich den JDBC-Treiber per Knopfdruck herunterladen und bist sofort startklar, um Abfragen auf den `Day_XX`-Dateien auszuführen.
+* **Vorgehen:** Öffne den Projektordner einfach als Projekt in **DataGrip** (oder Rider).
+* Die Verbindung `SQL-Fundamentals (SQLEXPRESS)` wird **automatisch geladen**. Du musst lediglich den JDBC-Treiber per Knopfdruck herunterladen und bist sofort startklar, um Abfragen auf den `Day_XX`-Dateien auszuführen.
 
 ---
 
