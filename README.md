@@ -207,7 +207,7 @@ In dieser Woche geht es um komplexe Verarbeitungsmuster, Performance-Diagnostik 
 | **Tag 16** | ⏳ | Dynamisches SQL & Injection-Schutz | Dynamisches Erzeugen und Ausführen von SQL-Strings mit `sp_executesql` und Absicherung. | [📖 Day_16](./Day_16/readme.md) |
 | **Tag 17** | ⏳ | Temporärer Speicher & Tabellenspeicher | Vergleich: Lokale/Globale Temp-Tabellen (`#`/`##`), Tabellenvariablen (`@`) und CTEs. | [📖 Day_17](./Day_17/readme.md) |
 | **Tag 18** | ⏳ | Query Optimization | Lesen von Ausführungsplänen, Identifikation von Flaschenhälsen (Scans, Spills in Tempdb). | [📖 Day_18](./Day_18/readme.md) |
-| **Tag 19** | ⏳ | Backup & Restore Strategien | Administrative Durchführung von Vollsicherungen, differentiellen Backups und Log-Backups. | [📖 Day_19](./Day_19/readme.md) |
+| **Tag 19** | ⏳ | Mengenoperatoren (Set Operators) | Schnittmengen, Vereinigungen und Differenzen mit `UNION`, `UNION ALL`, `INTERSECT` und `EXCEPT`. | [📖 Day_19](./Day_19/readme.md) |
 | **Tag 20** | ⏳ | XML & JSON Verarbeitung | Speichern und Parsen von semistrukturierten XML- und JSON-Dokumenten in relationalen Tabellen. | [📖 Day_20](./Day_20/readme.md) |
 
 ---
