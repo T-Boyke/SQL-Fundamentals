@@ -20,7 +20,7 @@ Willkommen im zentralen Hub für die SQL-Fundamentals-Serie. Dieses Repository d
 Das folgende Diagramm überführt die handgezeichnete [T-SQL Mindmap](./TSQL%20MINDMAP.jpg) in ein interaktives, farbcodiertes Mermaid-Modell. Es fasst alle Kernbereiche der Transact-SQL-Sprachfamilie, analytische Funktionen, Datenkontrolle und Transaktionssteuerung kompakt zusammen:
 
 ```mermaid
-flowchart TB
+flowchart LR
     %% =========================================================
     %% ZENTRALER KNOTEN
     %% =========================================================
