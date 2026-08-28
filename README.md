@@ -15,6 +15,127 @@ Willkommen im zentralen Hub für die SQL-Fundamentals-Serie. Dieses Repository d
 
 ---
 
+## 🧠 T-SQL Master Mindmap & Architektur-Kompass
+
+Das folgende Diagramm überführt die handgezeichnete [T-SQL Mindmap](./TSQL%20MINDMAP.jpg) in ein interaktives, farbcodiertes Mermaid-Modell. Es fasst alle Kernbereiche der Transact-SQL-Sprachfamilie, analytische Funktionen, Datenkontrolle und Transaktionssteuerung kompakt zusammen:
+
+```mermaid
+flowchart TB
+    %% =========================================================
+    %% ZENTRALER KNOTEN
+    %% =========================================================
+    TSQL(["⚡ <b>T-SQL</b><br/><i>Transact-SQL Mindmap</i>"]):::rootNode
+
+    %% =========================================================
+    %% RECHTE SEITE: SPRACHFAMILIEN (DDL, DML, DCL, TCL)
+    %% =========================================================
+
+    %% 1. DDL (Data Definition Language)
+    TSQL --> DDL["🏗️ <b>DDL</b><br/>(Data Definition Language)"]:::ddlNode
+
+    DDL --> VIEW_BRANCH["👁️ <b>VIEW</b>"]:::viewNode
+    VIEW_BRANCH --- V_CR["• CREATE"]:::leafNode
+    VIEW_BRANCH --- V_AL["• ALTER"]:::leafNode
+    VIEW_BRANCH --- V_DR["• DROP"]:::leafNode
+
+    DDL --> DDL_CR["✨ <b>CREATE</b>"]:::ddlSub
+    DDL_CR --- DC_T["• TABLE"]:::leafNode
+    DDL_CR --- DC_D["• DATABASE"]:::leafNode
+    DDL_CR --- DC_I["• INDEX"]:::leafNode
+    DDL_CR --- DC_V["• VIEW"]:::leafNode
+    DDL_CR --- DC_P["• PROCEDURE"]:::leafNode
+    DDL_CR --- DC_E["• ETC."]:::leafNode
+
+    DDL --> DDL_ALT["🔧 <b>ALTER TABLE</b>"]:::ddlSub
+    DDL_ALT --> ALT_ADD["➕ <b>ADD</b> ➔ COLUMN<br/><i>(TABLE, DB, INDEX, VIEW, PROC, ETC.)</i>"]:::leafNode
+    DDL_ALT --> ALT_DRP["➖ <b>DROP</b> ➔ COLUMN, CONSTRAINT"]:::leafNode
+    DDL_ALT --> ALT_MOD["✏️ <b>MODIFY</b> ➔ ALTER COLUMN<br/><i>(Data Type, Length)</i>"]:::leafNode
+
+    DDL --> DDL_DRP["🗑️ <b>DROP</b>"]:::ddlSub
+    DDL_DRP --- D_TAB["• TABLE"]:::leafNode
+    DDL_DRP --- D_DB["• DATABASE"]:::leafNode
+
+    %% 2. DML (Data Manipulation Language)
+    TSQL --> DML["✏️ <b>DML</b><br/>(Data Manipulation Language)"]:::dmlNode
+    DML --- DML_SEL["🔍 <b>SELECT</b> ➔ COLUMN(S), ALL TABLE (*)"]:::leafNode
+    DML --- DML_INS["📥 <b>INSERT</b> ➔ DATA INTO TABLE"]:::leafNode
+    DML --- DML_UPD["🔄 <b>UPDATE</b> ➔ SET FIELD VALUES"]:::leafNode
+    DML --- DML_DEL["❌ <b>DELETE</b> ➔ REMOVE ROWS FROM TABLE"]:::leafNode
+    DML --- DML_TRU["⚡ <b>TRUNCATE</b> ➔ TABLE"]:::leafNode
+
+    %% 3. DCL (Data Control Language)
+    TSQL --> DCL["🛡️ <b>DCL</b><br/>(Data Control Language)"]:::dclNode
+    DCL --- DCL_G["🔑 <b>GRANT</b> (Rechte vergeben)"]:::leafNode
+    DCL --- DCL_R["🚫 <b>REVOKE</b> (Rechte entziehen)"]:::leafNode
+    DCL --- DCL_D["⛔ <b>DENY</b> (Rechte explizit verweigern)"]:::leafNode
+
+    %% 4. TCL (Transaction Control Language)
+    TSQL --> TCL["💼 <b>TCL</b><br/>(Transaction Control Language)"]:::tclNode
+    TCL --- TCL_B["🎬 <b>BEGIN TRANSACTION</b>"]:::leafNode
+    TCL --- TCL_C["✅ <b>COMMIT</b>"]:::leafNode
+    TCL --- TCL_R["↩️ <b>ROLLBACK</b>"]:::leafNode
+    TCL --- TCL_S["📌 <b>SAVEPOINT</b>"]:::leafNode
+
+    %% =========================================================
+    %% LINKE SEITE: ABFRAGELOGIK, FILTER & ANALYTIK
+    %% =========================================================
+
+    %% 5. GROUP BY & HAVING
+    TSQL --> GRP_NODE["📦 <b>GROUP BY</b>"]:::grpNode
+    GRP_NODE --- G_COL["• GROUP BY COLUMN(S)"]:::leafNode
+    GRP_NODE --- G_HAV["• HAVING (Aggregatfilter)"]:::leafNode
+
+    %% 6. ORDER BY
+    TSQL --> ORD_NODE["🔃 <b>ORDER BY</b>"]:::ordNode
+    ORD_NODE --- O_ASC["• ORDER BY ASC (Aufsteigend)"]:::leafNode
+    ORD_NODE --- O_DESC["• ORDER BY DESC (Absteigend)"]:::leafNode
+
+    %% 7. AGGREGATE FUNCTIONS
+    TSQL --> AGG_NODE["📊 <b>AGGREGATE FUNCTIONS</b>"]:::aggNode
+    AGG_NODE --- A_AVG["• AVG()"]:::leafNode
+    AGG_NODE --- A_SUM["• SUM()"]:::leafNode
+    AGG_NODE --- A_CNT["• COUNT()"]:::leafNode
+    AGG_NODE --- A_MIN["• MIN()"]:::leafNode
+    AGG_NODE --- A_MAX["• MAX()"]:::leafNode
+
+    %% 8. FILTERING & PREDICATES
+    TSQL --> FILT_NODE["🔎 <b>FILTERING & PREDICATES</b>"]:::filtNode
+    FILT_NODE --- F_PO["• Predicates & Operators"]:::leafNode
+    FILT_NODE --- F_IN["• IN"]:::leafNode
+    FILT_NODE --- F_EX["• EXISTS"]:::leafNode
+
+    %% 9. WINDOW FUNCTIONS
+    TSQL --> WIN_NODE["🪟 <b>WINDOW FUNCTIONS</b><br/><i>(Requires OVER() Clause)</i>"]:::winNode
+    WIN_NODE --> WIN_RNK["<b>Ranking:</b><br/>• ROW_NUMBER()<br/>• RANK()<br/>• DENSE_RANK()<br/>• NTILE()"]:::leafNode
+    WIN_NODE --> WIN_OFF["<b>Offset:</b><br/>• LEAD()<br/>• LAG()"]:::leafNode
+
+    %% 10. WHERE & OPERATORS
+    TSQL --> WHERE_NODE["🎯 <b>WHERE</b><br/>(Prädikate & Filteroperatoren)"]:::whereNode
+    WHERE_NODE --- W_COMP["<b>Vergleichsoperatoren:</b><br/>• <, >, <=, >=, <>, !="]:::leafNode
+    WHERE_NODE --- W_LOG["<b>Logische Operatoren:</b><br/>• AND, OR, NOT"]:::leafNode
+    WHERE_NODE --- W_BET["<b>Muster & Mengen:</b><br/>• BETWEEN<br/>• LIKE<br/>• IN<br/>• ANY, ALL<br/>• EXISTS"]:::leafNode
+
+    %% =========================================================
+    %% FARB- & STYLING-KLASSEN (KORRESPONDIEREND ZUM MINDMAP-JPEG)
+    %% =========================================================
+    classDef rootNode fill:#ea580c,stroke:#ffedd5,stroke-width:3px,color:#ffffff,font-weight:bold,font-size:15px;
+    classDef ddlNode fill:#dc2626,stroke:#fecaca,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef viewNode fill:#16a34a,stroke:#dcfce7,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef ddlSub fill:#991b1b,stroke:#fca5a5,stroke-width:1.5px,color:#ffffff;
+    classDef dmlNode fill:#d97706,stroke:#fef3c7,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef dclNode fill:#ca8a04,stroke:#fef9c3,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef tclNode fill:#0891b2,stroke:#cffafe,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef grpNode fill:#65a30d,stroke:#ecfccb,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef ordNode fill:#eab308,stroke:#fef08a,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef aggNode fill:#e11d48,stroke:#ffe4e6,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef filtNode fill:#0d9488,stroke:#ccfbf1,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef winNode fill:#9333ea,stroke:#f3e8ff,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef whereNode fill:#2563eb,stroke:#dbeafe,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef leafNode fill:#1e293b,stroke:#475569,stroke-width:1px,color:#f8fafc;
+```
+
+---
+
 ## 🗺️ Kurs-Roadmap & Lernpfad
 
 ```mermaid
@@ -40,11 +161,11 @@ flowchart TD
         D14 --> D15["Tag 15: Joins & Tabellenverknüpfungen"]
     end
 
-    subgraph W4["📅 Woche 4: Advanced SQL, Joins, IHK-Training & Mengenoperatoren"]
+    subgraph W4["📅 Woche 4: Advanced SQL, Joins, Mengenoperatoren & Skalare Funktionen"]
         D16["Tag 16: Multi-Table & SELF JOINs"] --> D17["Tag 17: Fortgeschrittene OUTER JOINs"]
         D17 --> D18["Tag 18: IHK-Training & Transaktionen"]
         D18 --> D19["Tag 19: Mengenoperatoren (UNION, INTERSECT, EXCEPT)"]
-        D19 --> D20["Tag 20: XML & JSON"]
+        D19 --> D20["Tag 20: T-SQL Funktionen & CASE-Ausdrücke"]
     end
 
     subgraph W5["📅 Woche 5: Datenbank-Design & Modulprojekt"]
@@ -65,9 +186,9 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18 completed;
-    class D19 current;
-    class D20,D21,D22,D23,D24,D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20 completed;
+    class D21 current;
+    class D22,D23,D24,D25 pending;
     class D10 exam;
 
     %% Subgraph Styles
@@ -199,8 +320,8 @@ In Woche 3 stand die Beherrschung komplexer Datenabfragen auf der kanonischen Ü
 
 ---
 
-### 📅 Woche 4: Advanced Joins, IHK-Abschlussprüfungen & Mengenoperatoren
-In Woche 4 stehen Multi-Table-Verknüpfungen, komplexe Outer Joins, reale 25-Punkte IHK-Abschlussprüfungen sowie mathematische Mengenoperatoren im Fokus.
+### 📅 Woche 4: Advanced Joins, IHK-Abschlussprüfungen, Mengenoperatoren & Skalare Funktionen
+In Woche 4 stehen Multi-Table-Verknüpfungen, komplexe Outer Joins, reale IHK-Abschlussprüfungen, Mengenoperatoren sowie Skalare Funktionen und CASE-Logik im Fokus.
 
 | Modul | Status | Fokus-Themen | Ausführliche Details | Link |
 | :--- | :---: | :--- | :--- | :--- |
@@ -208,7 +329,7 @@ In Woche 4 stehen Multi-Table-Verknüpfungen, komplexe Outer Joins, reale 25-Pun
 | **Tag 17** | ✅ | Fortgeschrittene OUTER JOINs & NULL-Werte | Multi-Table LEFT/RIGHT/FULL JOINs, Anti-Joins (`IS NULL`), Aggregationen mit Nullwerten, `ISNULL`/`COALESCE`. | [📖 Day_17](./Day_17/readme.md) |
 | **Tag 18** | ✅ | IHK-Training, Archivierung & Transaktionen | 3 vollständige 25-Punkte IHK-Prüfungen (Tiere, Fahrradverleih, Arzttermine), ETL-Archivierung, ACID/TCL. | [📖 Day_18](./Day_18/readme.md) |
 | **Tag 19** | ✅ | Mengenoperatoren & IHK-Prüfung | `UNION`, `UNION ALL`, `INTERSECT`, `EXCEPT`, „Punkt vor Strich“-Präzedenz & 30-Punkte IHK-Prüfung (Aktienkurs-Archivierung). | [📖 Day_19](./Day_19/readme.md) |
-| **Tag 20** | ⏳ | XML & JSON Verarbeitung | Speichern und Parsen von semistrukturierten XML- und JSON-Dokumenten in relationalen Tabellen. | [📖 Day_20](./Day_20/readme.md) |
+| **Tag 20** | ✅ | T-SQL Skalare Funktionen & CASE-Ausdrücke | `IIF`, `COALESCE`, `CASE` (einfach/komplex), Datums-/Uhrzeit-Arithmetik, String Cleansing, Mathe & `CAST`/`CONVERT`/`FORMAT`. | [📖 Day_20](./Day_20/readme.md) |
 
 ---
 
