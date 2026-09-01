@@ -131,7 +131,7 @@ flowchart LR
     Inputs --> Engine --> Output
 ```
 
-#### Einsatzorte in SQL-Anweisungen:
+#### Einsatzorte in SQL-Anweisungen
 * **`SELECT`**: Formatierung, Datenbereinigung, abgeleitete Spalten und Klassifizierungen.
 * **`WHERE`**: Filterkriterien (Vorsicht bei Indexnutzung / SARGability!).
 * **`GROUP BY` & `HAVING`**: Gruppierung nach aggregierten Zeitintervallen (z. B. `YEAR(datum)`).

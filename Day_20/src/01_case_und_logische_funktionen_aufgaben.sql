@@ -116,7 +116,7 @@ FROM Mitarbeiter AS m
 INNER JOIN Abteilung AS a ON m.abt_id = a.id;
 GO
 
--- Alternative Variante 9.3: Verschachtelter CASE-Ausdruck
+-- Alternative Variante 9.3: Flacher CASE-Ausdruck
 SELECT m.id,
        m.nachname,
        m.ort,
@@ -124,16 +124,13 @@ SELECT m.id,
        CASE
            WHEN m.ort IN ('Landshut', 'Rosenheim') THEN 'F'
            WHEN a.bezeichnung = 'Einkauf' THEN 'A'
-           ELSE 
-               CASE 
-                   WHEN EXISTS (
-                       SELECT 1
-                       FROM Arbeit AS ar
-                       INNER JOIN Projekt AS p ON ar.pro_id = p.id
-                       WHERE ar.mit_id = m.id AND p.mittel > 100000.00
-                   ) THEN 'B1'
-                   ELSE 'B2'
-               END
+           WHEN EXISTS (
+               SELECT 1
+               FROM Arbeit AS ar
+               INNER JOIN Projekt AS p ON ar.pro_id = p.id
+               WHERE ar.mit_id = m.id AND p.mittel > 100000.00
+           ) THEN 'B1'
+           ELSE 'B2'
        END AS kategorie
 FROM Mitarbeiter AS m
 INNER JOIN Abteilung AS a ON m.abt_id = a.id;
