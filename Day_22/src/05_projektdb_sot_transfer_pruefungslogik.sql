@@ -1,8 +1,8 @@
 -- ============================================================================
 -- SQL-Fundamentals: Day 22 - IHK-Prüfungstraining
--- Datei: 04_projektdb_sot_transfer_pruefungslogik.sql
+-- Datei: 05_projektdb_sot_transfer_pruefungslogik.sql
 -- Dozent: Tom S. | Autor: Tobias Boyke | Datum: 01.09.2026
--- Fokus: Transfer der IHK-Prüfungsmuster (AP 2021 S & AP 2022 W) auf die ProjektDB (SoT)
+-- Fokus: Transfer aller IHK-Prüfungsmuster (2021S, 2022W, 2019S) auf die ProjektDB (SoT)
 -- ============================================================================
 
 USE master;
@@ -200,7 +200,6 @@ GO
 -- ----------------------------------------------------------------------------
 PRINT '--- Transfer 8: 5% Bonus-Erhöhung auf alle Umsätze im Jahr 2023 ---';
 
--- Simulierte DML-Aktualisierung mit Transaktionsschutz
 BEGIN TRANSACTION;
 
 UPDATE u
@@ -213,7 +212,86 @@ WHERE u.datum >= '2023-01-01'
 
 PRINT CONCAT('Betroffene Umsatzzeilen aktualisiert: ', @@ROWCOUNT);
 
--- Rollback zur Wahrung der Konsistenz der ProjektDB
 ROLLBACK TRANSACTION;
 PRINT '>>> Test-Update sicher gerollbackt (ProjektDB bleibt unverändert). <<<';
+GO
+
+
+-- ============================================================================
+-- TEIL 3: TRANSFER AP 2019 S (Maschinenwartung & Nullwert-Joins)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- Transfer 9 (zu 2019S Aufgabe a): Alle Abteilungen mit Mitarbeiteranzahl
+-- IHK-Analogon: "Liste aller Maschinentypen mit Anzahl der Maschinen (LEFT JOIN)."
+-- ----------------------------------------------------------------------------
+PRINT '--- Transfer 9: Alle Abteilungen mit Mitarbeiteranzahl (inkl. 0) ---';
+
+SELECT a.id AS abt_id,
+       a.kuerzel,
+       a.bezeichnung AS abteilungsname,
+       COUNT(m.id) AS anzahl_mitarbeiter
+FROM Abteilung AS a
+LEFT JOIN Mitarbeiter AS m 
+    ON a.id = m.abt_id
+GROUP BY a.id, a.kuerzel, a.bezeichnung
+ORDER BY anzahl_mitarbeiter DESC, a.kuerzel ASC;
+GO
+
+-- ----------------------------------------------------------------------------
+-- Transfer 10 (zu 2019S Aufgabe b): HAVING-Filter auf akkumulierte Schwellenwerte
+-- IHK-Analogon: "Mitarbeiter, deren Gesamtumsatz 10.000 € übersteigt."
+-- ----------------------------------------------------------------------------
+PRINT '--- Transfer 10: Mitarbeiter mit Gesamtumsatz >= 10.000 € (HAVING) ---';
+
+SELECT m.id AS mitarbeiter_id,
+       CONCAT(m.vorname, ' ', m.nachname) AS mitarbeiter_name,
+       a.bezeichnung AS abteilung,
+       SUM(u.umsatz) AS gesamtumsatz
+FROM Mitarbeiter AS m
+INNER JOIN Abteilung AS a 
+    ON m.abt_id = a.id
+INNER JOIN Umsatz AS u 
+    ON m.id = u.mit_id
+GROUP BY m.id, m.vorname, m.nachname, a.bezeichnung
+HAVING SUM(u.umsatz) >= 10000.00
+ORDER BY gesamtumsatz DESC;
+GO
+
+-- ----------------------------------------------------------------------------
+-- Transfer 11 (zu 2019S Aufgabe c): Multi-Table LEFT JOIN Kette über 4 Tabellen
+-- IHK-Analogon: "Vollständige Hierarchie ohne Zeilenverlust (Abteilung -> Mitarbeiter -> Arbeit -> Projekt)."
+-- ----------------------------------------------------------------------------
+PRINT '--- Transfer 11: Multi-Table Hierarchie (Abteilung -> Mitarbeiter -> Projekt) ---';
+
+SELECT a.bezeichnung AS abteilung,
+       CONCAT(m.vorname, ' ', m.nachname) AS mitarbeiter,
+       p.bezeichnung AS projekt,
+       ar.aufgabe
+FROM Abteilung AS a
+LEFT JOIN Mitarbeiter AS m 
+    ON a.id = m.abt_id
+LEFT JOIN Arbeit AS ar 
+    ON m.id = ar.mit_id
+LEFT JOIN Projekt AS p 
+    ON ar.pro_id = p.id
+ORDER BY a.bezeichnung ASC, m.nachname ASC;
+GO
+
+-- ----------------------------------------------------------------------------
+-- Transfer 12 (zu 2019S Aufgabe d): Projektbudget-Reduktion um 10%
+-- IHK-Analogon: "UPDATE mit prozentualer Reduktion auf bestimmte Kategorie."
+-- ----------------------------------------------------------------------------
+PRINT '--- Transfer 12: 10% Budget-Reduktion auf ausgewählte Projekte ---';
+
+BEGIN TRANSACTION;
+
+UPDATE Projekt
+SET mittel = mittel * 0.90
+WHERE kuerzel = 'AP'; -- Apollo Projekt
+
+PRINT CONCAT('Aktualisierte Projekte: ', @@ROWCOUNT);
+
+ROLLBACK TRANSACTION;
+PRINT '>>> Budget-Reduktion sicher gerollbackt (ProjektDB bleibt unverändert). <<<';
 GO

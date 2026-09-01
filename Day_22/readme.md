@@ -1,4 +1,4 @@
-# 📅 Day_22: IHK-Prüfungstraining – Mitgliederbewertung & Rechnungserstellung
+# 📅 Day_22: IHK-Prüfungstraining – Mitgliederbewertung, Rechnungserstellung & Maschinenwartung
 
 ## ℹ️ Kurs-Informationen
 
@@ -11,22 +11,28 @@
 
 ## 🎯 Lernziele des Tages
 
-- [x] **IHK-Abschlussprüfung 1: Sommer 2021 (GA1, Handlungsschritt 5 – 25 Punkte) meistern:**
-  - **Teilaufgabe a (4 Punkte):** Extremwertsuche mit skalarer Subquery (`MAX(gebDat)`) und dem T-SQL Konstrukt `TOP (1) WITH TIES`.
-  - **Teilaufgabe b (6 Punkte):** Berechnung von Bewertungsdurchschnitten mittels `AVG()`, Multi-Table-Joins über 3 Relationen (`Mitglied` $\rightarrow$ `Bewertung` $\rightarrow$ `LeistungArt`), Filterung und aufsteigender Sortierung.
-  - **Teilaufgabe c (7 Punkte):** Ermittlung verfügbarer Dienstleistungsangebote über Zeitfenster-Filter (`wochentag = 'Donnerstag'`, `vonZeit <= '14:00'`, `bisZeit >= '16:00'`).
-  - **Teilaufgabe d (8 Punkte):** Vollständige ETL-Archivierungspipeline (DDL `CREATE TABLE MitgliedArchiv`, DML `INSERT INTO ... SELECT` und bereinigendes `DELETE` inaktiver Datensätze).
-- [x] **IHK-Abschlussprüfung 2: Winter 2022/2023 (GA1, Handlungsschritt 5 – 25 Punkte) meistern:**
-  - **Teilaufgabe a (3 Punkte):** Mathematische Berechnungen im `SELECT` (Bruttopreis aus Nettopreis und Mehrwertsteuersatz $\text{Art\_Preis} \cdot (1 + \text{MwSt} / 100)$).
-  - **Teilaufgabe b (10 Punkte):** Komplexe Umsatzaggregation je Kunde und Rechnung (`SUM(Menge * Einzelpreis * (1 - Rabatt/100))`), Positionszählung (`COUNT`), Durchschnitt (`AVG`) und `LEFT JOIN`-Verkettung.
-  - **Teilaufgabe c (8 Punkte):** Abweichungsanalyse zwischen Stammdatenpreis und tatsächlichem Rechnungspositionspreis (`WHERE rp.RgPos_EinzelPreis <> a.Art_Preis`) mit Differenzberechnung.
-  - **Teilaufgabe d (4 Punkte):** Gezielte Massendatenaktualisierung (`UPDATE`) über Tabellen-Joins bzw. Subqueries mit kombinierten Artikel- und Jahresfiltern (`YEAR(Rg_Datum) = 2022`).
-- [x] **Anti-Join-Muster & Null-Wert-Fallen in Prüfungen:**
-  - `NOT EXISTS` vs. `NOT IN` vs. `LEFT JOIN ... WHERE ... IS NULL`: Verstehen, warum `NOT IN` bei vorhandenen `NULL`-Werten in der Unterabfrage fehlschlägt.
+- [x] **Drei vollständige 25-Punkte IHK-Abschlussprüfungen (75 Punkte Gesamtvolumen) meistern:**
+  - **Prüfung 1: Sommer 2021 (GA1 HS5 – Mitgliederbewertung & Vermittlung):**
+    - `1.a` (4 P): Extremwertsuche mit skalarer Subquery (`MAX(gebDat)`) und `TOP (1) WITH TIES`.
+    - `1.b` (6 P): Bewertungsdurchschnitte (`AVG`), 3-Tabellen-Join und `GROUP BY`.
+    - `1.c` (7 P): Angebotsverfügbarkeit mit Zeitfenster-Filterung (`vonZeit <= '14:00' AND bisZeit >= '16:00'`).
+    - `1.d` (8 P): ETL-Archivierung inaktiver Mitglieder (DDL `CREATE TABLE`, DML `INSERT INTO ... SELECT` und `DELETE` via `NOT EXISTS`).
+  - **Prüfung 2: Winter 2022/2023 (GA1 HS5 – Rechnungserstellung & Rabatte):**
+    - `2.a` (3 P): Bruttopreisberechnung mit Mehrwertsteuerformel $\text{Art\_Preis} \cdot (1 + \text{MwSt}/100)$.
+    - `2.b` (10 P): Rechnungs-Umsatz aggregation (`SUM(Menge * Einzelpreis * (1 - Rabatt/100))`), Positionszählung (`COUNT`), Durchschnitt (`AVG`) und `LEFT JOIN` für Null-Umsätze.
+    - `2.c` (8 P): Preisabweichungsanalyse zwischen Stammdaten und Rechnungspositionen (`rp.EinzelPreis <> a.Art_Preis`) mit Differenz.
+    - `2.d` (4 P): Massendatenaktualisierung (`UPDATE ... FROM ... JOIN`) mit kombinierten Artikel- und Jahresfiltern (`YEAR(Rg_Datum) = 2022`).
+  - **Prüfung 3: Sommer 2019 (GA1 HS5 – Maschinenwartung bei rapidPack GmbH):**
+    - `3.a` (5 P): Liste aller Maschinentypen mit aggregierter Maschinenanzahl (`LEFT JOIN` & `COUNT(m.MaschineID)` für Null-Werte).
+    - `3.b` (8 P): Wartungsintervall-Warnung in den nächsten 100 Stunden via `HAVING SUM(Stunden) + 100 >= Intervall`.
+    - `3.c` (8 P): 4-stufige `LEFT JOIN`-Kette über Maschinentyp, Maschine, Kunde und aggregierte Laufzeiten seit letzter Wartung.
+    - `3.d` (4 P): Prozentuale Intervallreduktion um 10% mittels `UPDATE Maschinentyp SET Intervall = Intervall * 0.9`.
+- [x] **Anti-Join-Muster & Null-Wert-Fallen:**
+  - `NOT EXISTS` vs. `NOT IN` vs. `LEFT JOIN + IS NULL`: Gefahren von Dreiwertiger Logik (`UNKNOWN`) bei `NULL`-Werten in Subqueries verstehen.
 - [x] **Transaktionsmanagement (ACID / TCL):**
   - Kapselung von mehrstufigen Archivierungs- und Updateoperationen in atomare Transaktionen (`BEGIN TRANSACTION`, `COMMIT`, `ROLLBACK` und `TRY...CATCH`).
 - [x] **Single Source of Truth (`ProjektDB`):**
-  - 1:1-Transfer aller 8 IHK-Aufgabentypen auf die kanonische Übungsdatenbank `ProjektDB`.
+  - 12-stufiger Transfer aller Prüfungsmuster auf das relationale Unternehmensschema der `ProjektDB`.
 
 ---
 
@@ -130,7 +136,45 @@ erDiagram
 
 ---
 
-### 3. Single Source of Truth (`ProjektDB`)
+### 3. Schema Prüfung 3: Maschinenwartung (AP 2019 S GA1 HS5)
+
+```mermaid
+erDiagram
+    MASCHINENTYP ||--o{ MASCHINE : "definiert Typ (MaschineTypID)"
+    KUNDE ||--o{ MASCHINE : "betreibt (KundeID)"
+    MASCHINE ||--o{ LAUFZEIT : "erfasst Stunden (MaschineID)"
+
+    MASCHINENTYP {
+        int MaschineTypID PK "Maschinentyp-ID"
+        string Beschreibung "Typenbezeichnung (Füll, Verpackung, Etikettierung)"
+        int WartungsintervallInStunden "Intervallgrenze in Betriebsstunden"
+    }
+
+    KUNDE {
+        int KundeID PK "Kunden-ID"
+        string KundeFirma "Kundenname (z.B. LikeLimo)"
+        string KundeAdresse "Standortadresse"
+    }
+
+    MASCHINE {
+        int MaschineID PK "Maschinen-ID"
+        int MaschineTypID FK "Typ -> Maschinentyp(MaschineTypID)"
+        date ProduktionsDatum "Herstellungsdatum"
+        int KundeID FK "Kunde -> Kunde(KundeID)"
+        date DatumLetzteWartung "Datum des letzten Kundendiensts"
+    }
+
+    LAUFZEIT {
+        int LfdNrID PK "Messungs-ID"
+        int MaschineID FK "Maschine -> Maschine(MaschineID)"
+        date Datum "Betriebstag"
+        decimal Stunden "Geleistete Betriebsstunden"
+    }
+```
+
+---
+
+### 4. Single Source of Truth (`ProjektDB`)
 
 Als verbindliche Referenzdatenbank für alle Enterprise-Transfers gilt das kanonische Schema der **`ProjektDB`**:
 
@@ -240,10 +284,6 @@ FROM Mitglied
 ORDER BY gebDat DESC;
 ```
 
-> [!CAUTION]
-> **Typische Prüfungsfalle:**  
-> Verwenden Sie bei `ORDER BY gebDat DESC` im Standard-SQL **nicht** einfach `LIMIT 1` bzw. `TOP 1` ohne `WITH TIES`, falls am selben Tag mehrere Mitglieder geboren wurden. Die Subquery-Lösung mit `WHERE gebDat = (SELECT MAX(gebDat)...)` ist prüfungstechnisch am sichersten.
-
 #### 📊 IHK-Bewertungsmatrix (Aufgabe 1.a – 4 Punkte)
 
 | Prüfungskriterium | Vergebene Punkte |
@@ -263,16 +303,6 @@ ORDER BY gebDat DESC;
   2          | Maier        | 3.0
   25         | Spielmann    | 4.5
   ```
-
-```mermaid
-flowchart TD
-    M["Tabelle: Mitglied (m)"] --> J1["INNER JOIN Bewertung (b)<br/>ON m.idmitglied = b.mitgliedlid"]
-    J1 --> J2["INNER JOIN LeistungArt (la)<br/>ON b.leistungArtId = la.idleistungArt"]
-    J2 --> F["WHERE la.artBezeichnung = 'Kinderbetreuung'"]
-    F --> G["GROUP BY m.idmitglied, m.mitgliedName"]
-    G --> A["AVG(b.bewertungZahl) AS Durchschnitt"]
-    G --> S["ORDER BY Durchschnitt ASC"]
-```
 
 #### 🔹 IHK-Musterlösung (Aufgabe 1.b)
 
@@ -304,13 +334,6 @@ ORDER BY Durchschnitt ASC;
 ### 📂 Aufgabe 1.c) Verfügbare Angebote donnerstags (7 Punkte)
 
 * **Aufgabenstellung:** Erstellen Sie eine Angebotsliste, die alle Mitglieder und die entsprechende Leistungsart des Angebots ausgibt, welche donnerstags von 14:00 Uhr bis 16:00 Uhr zur Verfügung stehen.
-* **Erwartete Beispielausgabe:**
-  ```text
-  idMitglied | mitgliedName | artBezeichnung   | wochentag   | vonZeit | bisZeit
-  4          | Hauser       | Gartenarbeit     | Donnerstag  | 14:00   | 16:00
-  4          | Hauser       | Hausarbeit       | Donnerstag  | 14:00   | 16:00
-  2          | Maier        | Kinderbetreuung  | Donnerstag  | 14:00   | 16:00
-  ```
 
 #### 🔹 IHK-Musterlösung (Aufgabe 1.c)
 
@@ -344,15 +367,6 @@ WHERE a.wochentag = 'Donnerstag'
 ### 📂 Aufgabe 1.d) Datenarchivierung inaktiver Mitglieder (8 Punkte)
 
 * **Aufgabenstellung:** Erstellen Sie eine neue Tabelle `MitgliedArchiv`. Transferieren Sie alle Mitglieder, die kein Angebot eingestellt haben, in diese Tabelle. Löschen Sie diese inaktiven Mitglieder aus der Tabelle `Mitglied`.
-
-```mermaid
-flowchart TD
-    Step1["1. DDL: CREATE TABLE MitgliedArchiv<br/>Spalten & Datentypen aus Mitglied + PRIMARY KEY"]
-    Step2["2. DML INSERT INTO MitgliedArchiv ... SELECT<br/>Transfer aller Mitglieder WHERE NOT EXISTS (in Angebot)"]
-    Step3["3. DML DELETE FROM Mitglied<br/>Löschen inaktiver Mitglieder WHERE NOT EXISTS (in Angebot)"]
-
-    Step1 --> Step2 --> Step3
-```
 
 #### 🔹 IHK-Musterlösung (Aufgabe 1.d)
 
@@ -407,15 +421,6 @@ Quelle: [`assets/AP 2022 W GA1 HS5 SQL Rechnungserstellung - Aufgabe.pdf`](file:
 ### 📂 Aufgabe 2.a) Bruttopreis aller Artikel berechnen (3 Punkte)
 
 * **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Artikel mit dem entsprechenden Bruttopreis erhalten.
-* **Erwartete Beispielausgabe:**
-  ```text
-  Art_IdKey | Art_Nummer | Art_Bezeichnung | Art_Preis | Art_MwStSatz | BruttoPreis
-  1         | BK1221     | Unterhopf       | 14.30     | 19.00        | 17.017000
-  2         | BK1229     | Frühes          | 13.80     | 19.00        | 16.422000
-  3         | BK1233     | Pilschen        | 15.40     | 19.00        | 18.326000
-  4         | BB0088     | Birnenbrand     | 9.60      | 19.00        | 11.424000
-  ```
-* **Mathematische Formel:**
 
 $$\text{BruttoPreis} = \text{Art\_Preis} \cdot \left(1 + \frac{\text{Art\_MwStSatz}}{100}\right)$$
 
@@ -443,28 +448,6 @@ FROM Artikel;
 ### 📂 Aufgabe 2.b) Rechnungs-Umsatz, Positionen & Durchschnitt je Kunde (10 Punkte)
 
 * **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Kunden, die dazugehörigen Rechnungen, den Umsatz je Rechnung sowie die Anzahl der Rechnungspositionen und den durchschnittlichen Wert der Rechnung erhalten. Die Sortierung soll aufsteigend nach `Kd_Firma` vorgenommen werden.
-* **Erwartete Beispielausgabe:**
-  ```text
-  KdId | Firma             | Rechnungsnummer | Umsatz   | AnzahlPositionen | Durchschnitt
-  4    | Brauhaus Brömle   | RG-002256       | 57.60    | 1                | 57.600000
-  4    | Brauhaus Brömle   | RG-002257       | 1251.00  | 7                | 178.714285
-  2    | Gasthaus 'Die Perle' | RG-002249    | 383.60   | 4                | 95.900000
-  1    | LikeLimo          | RG-002252       | 261.00   | 3                | 87.000000
-  1    | LikeLimo          | RG-002255       | 442.20   | 2                | 221.100000
-  ```
-
-* **Berechnungslogik je Position:**
-
-$$\text{PosBetrag} = \text{Menge} \cdot \text{Einzelpreis} \cdot \left(1 - \frac{\text{RabattProzent}}{100}\right)$$
-
-```mermaid
-flowchart TD
-    K["Kunde (k)"] -->|LEFT JOIN| R["Rechnung (r)<br/>ON k.Kd_IdKey = r.Rg_KdIdKey"]
-    R -->|LEFT JOIN| RP["RechnungPosition (rp)<br/>ON r.Rg_IdKey = rp.RgPos_RgIdKey"]
-    RP --> Calc["Berechnungen:<br/>• SUM(Menge * Preis * (1 - Rabatt)) AS Umsatz<br/>• COUNT(rp.RgPos_IdKey) AS AnzahlPositionen<br/>• AVG(Menge * Preis * (1 - Rabatt)) AS Durchschnitt"]
-    Calc --> Grp["GROUP BY k.Kd_IdKey, k.Kd_Firma, r.Rg_IdKey, r.Rg_Nummer"]
-    Grp --> Ord["ORDER BY k.Kd_Firma ASC"]
-```
 
 #### 🔹 IHK-Musterlösung (Aufgabe 2.b)
 
@@ -499,12 +482,6 @@ ORDER BY k.Kd_Firma ASC;
 ### 📂 Aufgabe 2.c) Abweichende Verkaufspreise & Differenz (8 Punkte)
 
 * **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Artikel mit der zugehörigen Rechnungsnummer erhalten, welche nicht mit dem aktuellen Artikelpreis verkauft wurden. Die Differenz soll mit ausgegeben werden.
-* **Erwartete Beispielausgabe:**
-  ```text
-  Art_IdKey | Art_Nummer | Art_Bezeichnung | Art_Preis | Art_VkEinheit | Rg_Nummer | Differenz
-  2         | BK1229     | Frühes          | 13.80     | Kasten        | RG-002249 | -1.00
-  1         | BK1221     | Unterhopf       | 14.30     | Kasten        | RG-002249 | -1.00
-  ```
 
 #### 🔹 IHK-Musterlösung (Aufgabe 2.c)
 
@@ -539,18 +516,9 @@ WHERE rp.RgPos_EinzelPreis <> a.Art_Preis;
 
 * **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Rechnungspositionen des Artikels mit der `Art_IdKey = 6` aus dem Rechnungsjahr 2022 nachträglich mit einem Rabatt von 7,5 % versehen.
 
-```mermaid
-flowchart TD
-    Upd["UPDATE RechnungPosition (rp)"] --> Set["SET rp.RgPos_RabattProzent = 7.5"]
-    Set --> Join["INNER JOIN Rechnung (r)<br/>ON rp.RgPos_RgIdKey = r.Rg_IdKey"]
-    Join --> Cond1["WHERE rp.RgPos_ArtIdKey = 6"]
-    Cond1 --> Cond2["AND r.Rg_Datum >= '2022-01-01' AND r.Rg_Datum < '2023-01-01'"]
-```
-
 #### 🔹 IHK-Musterlösung (Aufgabe 2.d)
 
 ```sql
--- Variante 1: T-SQL UPDATE mit JOIN
 UPDATE rp
 SET rp.RgPos_RabattProzent = 7.5
 FROM RechnungPosition AS rp
@@ -559,17 +527,6 @@ INNER JOIN Rechnung AS r
 WHERE rp.RgPos_ArtIdKey = 6
   AND r.Rg_Datum >= '2022-01-01' 
   AND r.Rg_Datum < '2023-01-01';
-
--- Variante 2: ANSI SQL UPDATE mit Subquery
-UPDATE RechnungPosition
-SET RgPos_RabattProzent = 7.5
-WHERE RgPos_ArtIdKey = 6
-  AND RgPos_RgIdKey IN (
-      SELECT r.Rg_IdKey
-      FROM Rechnung AS r
-      WHERE r.Rg_Datum >= '2022-01-01' 
-        AND r.Rg_Datum < '2023-01-01'
-  );
 ```
 
 #### 📊 IHK-Bewertungsmatrix (Aufgabe 2.d – 4 Punkte)
@@ -578,6 +535,166 @@ WHERE RgPos_ArtIdKey = 6
 | :--- | :---: |
 | `UPDATE` auf Tabelle `RechnungPosition` mit Zuweisung `SET RgPos_RabattProzent = 7.5` | **2 Punkte** |
 | Korrekter Filter auf Artikel-ID `6` und Datumsfilter auf das Jahr `2022` | **2 Punkte** |
+
+---
+
+## 📝 Prüfung 3: AP 2019 S GA1 HS5 (Maschinenwartung – 25 Punkte)
+
+Quelle: [`assets/AP 2019 S GA1 HS5 SQL Maschinen - Aufgabe.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/assets/AP%202019%20S%20GA1%20HS5%20SQL%20Maschinen%20-%20Aufgabe.pdf)
+
+---
+
+### 📂 Aufgabe 3.a) Maschinentypen mit Anzahl Maschinen (5 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine Liste aller Maschinentypen mit Anzahl der Maschinen des Typs absteigend sortiert nach `AnzahlMaschinen`.
+* **Erwartete Beispielausgabe:**
+  ```text
+  MaschineTypID | Beschreibung | WartungsintervallInStunden | AnzahlMaschinen
+  1             | Füll         | 900                        | 3
+  2             | Verpackung   | 1.800                      | 1
+  3             | Etikettierung| 1.000                      | 0
+  ```
+
+```mermaid
+flowchart TD
+    MT["Maschinentyp (mt)"] -->|LEFT JOIN| M["Maschine (m)<br/>ON mt.MaschineTypID = m.MaschineTypID"]
+    M --> Grp["GROUP BY mt.MaschineTypID, mt.Beschreibung, mt.WartungsintervallInStunden"]
+    Grp --> Cnt["COUNT(m.MaschineID) AS AnzahlMaschinen"]
+    Cnt --> Ord["ORDER BY AnzahlMaschinen DESC"]
+```
+
+#### 🔹 IHK-Musterlösung (Aufgabe 3.a)
+
+```sql
+SELECT mt.MaschineTypID,
+       mt.Beschreibung,
+       mt.WartungsintervallInStunden,
+       COUNT(m.MaschineID) AS AnzahlMaschinen
+FROM Maschinentyp AS mt
+LEFT JOIN Maschine AS m 
+    ON mt.MaschineTypID = m.MaschineTypID
+GROUP BY mt.MaschineTypID, mt.Beschreibung, mt.WartungsintervallInStunden
+ORDER BY AnzahlMaschinen DESC;
+```
+
+> [!IMPORTANT]
+> **Nullwert-Zählung mit `COUNT(Spalte)`:**  
+> Bei einem `LEFT JOIN` liefert `COUNT(*)` für Maschinentyp 3 (Etikettierung) den falschen Wert `1`, da die generierte NULL-Zeile als Datensatz gezählt wird. `COUNT(m.MaschineID)` zählt hingegen nur echte (nicht-NULL) Schlüssel und liefert korrekt `0`.
+
+#### 📊 IHK-Bewertungsmatrix (Aufgabe 3.a – 5 Punkte)
+
+| Prüfungskriterium | Vergebene Punkte |
+| :--- | :---: |
+| `LEFT JOIN` zwischen `Maschinentyp` und `Maschine` | **2 Punkte** |
+| Aggregatfunktion `COUNT(m.MaschineID)` mit vollständigem `GROUP BY` | **2 Punkte** |
+| Absteigende Sortierung nach `AnzahlMaschinen` | **1 Punkt** |
+
+---
+
+### 📂 Aufgabe 3.b) Intervallwarnung in den nächsten 100 Stunden (8 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine Liste aller Kunden und ihrer hinterlegten Maschinen, deren Laufzeit nach der letzten Wartung das Wartungsintervall in den nächsten 100 Stunden überschreiten werden.
+* **Erwartete Beispielausgabe:**
+  ```text
+  KundeID | KundeFirma | KundeAdresse | MaschineID | Laufzeit
+  1       | LikeLimo   | Musteradresse| 1          | 2.500
+  ```
+
+* **Mathematische Intervallbedingung:**
+
+$$\sum \text{Stunden} + 100 \ge \text{WartungsintervallInStunden}$$
+
+#### 🔹 IHK-Musterlösung (Aufgabe 3.b)
+
+```sql
+SELECT k.KundeID,
+       k.KundeFirma,
+       k.KundeAdresse,
+       m.MaschineID,
+       SUM(l.Stunden) AS Laufzeit
+FROM Kunde AS k
+INNER JOIN Maschine AS m 
+    ON k.KundeID = m.KundeID
+INNER JOIN Maschinentyp AS mt 
+    ON m.MaschineTypID = mt.MaschineTypID
+INNER JOIN Laufzeit AS l 
+    ON m.MaschineID = l.MaschineID 
+    AND m.DatumLetzteWartung <= l.Datum
+GROUP BY k.KundeID, k.KundeFirma, k.KundeAdresse, m.MaschineID, mt.WartungsintervallInStunden
+HAVING SUM(l.Stunden) + 100 >= mt.WartungsintervallInStunden;
+```
+
+#### 📊 IHK-Bewertungsmatrix (Aufgabe 3.b – 8 Punkte)
+
+| Prüfungskriterium | Vergebene Punkte |
+| :--- | :---: |
+| Joins zwischen `Kunde`, `Maschine`, `Maschinentyp` und `Laufzeit` | **3 Punkte** |
+| Laufzeitfilter auf das Datum der letzten Wartung (`m.DatumLetzteWartung <= l.Datum`) | **2 Punkte** |
+| Aggregation `SUM(l.Stunden)` mit `GROUP BY` | **1 Punkt** |
+| `HAVING`-Klausel mit Bedingung `SUM(l.Stunden) + 100 >= mt.WartungsintervallInStunden` | **2 Punkte** |
+
+---
+
+### 📂 Aufgabe 3.c) Vollständige Maschinentypen- & Kundenliste (8 Punkte)
+
+* **Aufgabenstellung:** Erstellen Sie eine Liste aller Maschinentypen, der zugehörigen Kunden und Laufzeit der jeweiligen Maschine seit der letzten Wartung.
+* **Erwartete Beispielausgabe:**
+  ```text
+  MaschineTypID | Beschreibung | KundeFirma   | Laufzeit
+  1             | Füll         | LikeLimo     | 2.500
+  1             | Füll         | LikeLimo     | NULL
+  1             | Füll         | Musterfirma  | NULL
+  2             | Verpackung   | LikeLimo     | NULL
+  3             | Etikettierung| NULL         | NULL
+  ```
+
+#### 🔹 IHK-Musterlösung (Aufgabe 3.c)
+
+```sql
+SELECT mt.MaschineTypID,
+       mt.Beschreibung,
+       k.KundeFirma,
+       SUM(l.Stunden) AS Laufzeit
+FROM Maschinentyp AS mt
+LEFT JOIN Maschine AS m 
+    ON mt.MaschineTypID = m.MaschineTypID
+LEFT JOIN Kunde AS k 
+    ON m.KundeID = k.KundeID
+LEFT JOIN Laufzeit AS l 
+    ON m.MaschineID = l.MaschineID 
+    AND m.DatumLetzteWartung <= l.Datum
+GROUP BY mt.MaschineTypID, mt.Beschreibung, m.MaschineID, k.KundeFirma
+ORDER BY mt.MaschineTypID ASC, m.MaschineID ASC;
+```
+
+#### 📊 IHK-Bewertungsmatrix (Aufgabe 3.c – 8 Punkte)
+
+| Prüfungskriterium | Vergebene Punkte |
+| :--- | :---: |
+| Vollständige Kette aus 3 `LEFT JOIN`s zur Vermeidung von Datenverlust | **4 Punkte** |
+| Platzierung des Datumsfilters in der `ON`-Klausel des `Laufzeit`-Joins | **2 Punkte** |
+| Aggregation `SUM(l.Stunden)` mit vollständigem `GROUP BY` | **2 Punkte** |
+
+---
+
+### 📂 Aufgabe 3.d) Wartungsintervall um 10% reduzieren (4 Punkte)
+
+* **Aufgabenstellung:** Reduzieren Sie für alle Verpackungsmaschinen das Wartungsintervall um 10 %.
+
+#### 🔹 IHK-Musterlösung (Aufgabe 3.d)
+
+```sql
+UPDATE Maschinentyp
+SET WartungsintervallInStunden = CAST(WartungsintervallInStunden * 0.9 AS INT)
+WHERE Beschreibung = 'Verpackung';
+```
+
+#### 📊 IHK-Bewertungsmatrix (Aufgabe 3.d – 4 Punkte)
+
+| Prüfungskriterium | Vergebene Punkte |
+| :--- | :---: |
+| `UPDATE` auf Tabelle `Maschinentyp` mit Zuweisung `WartungsintervallInStunden * 0.9` | **2 Punkte** |
+| Filterbedingung `WHERE Beschreibung = 'Verpackung'` | **2 Punkte** |
 
 ---
 
@@ -631,7 +748,7 @@ END CATCH;
 
 ## 🏢 Single Source of Truth (`ProjektDB`) Praxistransfer
 
-Die Prüfungsmuster beider IHK-Klausuren übertragen auf das Unternehmens-Schema der **`ProjektDB`**:
+Die Prüfungsmuster aller drei IHK-Klausuren übertragen auf das Unternehmens-Schema der **`ProjektDB`**:
 
 ```mermaid
 flowchart LR
@@ -644,6 +761,10 @@ flowchart LR
         E6["2022W: Umsatz-Dashboard je Kunde/Rechnung"]
         E7["2022W: Preis- & Gehaltsabweichungsanalyse"]
         E8["2022W: Nachträgliche DML-Rabattierung"]
+        E9["2019S: Abteilungen mit Zählung inkl. 0"]
+        E10["2019S: Schwellenwertprüfung mit HAVING"]
+        E11["2019S: 4-stufige LEFT JOIN Hierarchie"]
+        E12["2019S: Prozentuale Budget-Reduktion"]
     end
 
     subgraph SoT["ProjektDB Single Source of Truth"]
@@ -655,6 +776,10 @@ flowchart LR
         S6["Transfer 6: Mitarbeiter-Umsatz-Dashboard mit Aggregation"]
         S7["Transfer 7: Gehaltsabweichung zum Abteilungsdurchschnitt"]
         S8["Transfer 8: Bonus-Erhöhung auf Jahresumsätze"]
+        S9["Transfer 9: Alle Abteilungen mit MA-Anzahl (LEFT JOIN)"]
+        S10["Transfer 10: Mitarbeiter mit Umsatz >= 10.000 € (HAVING)"]
+        S11["Transfer 11: Multi-Table Hierarchie (Abt -> MA -> Projekt)"]
+        S12["Transfer 12: 10% Budget-Reduktion auf Projekte"]
     end
 
     E1 -.-> S1
@@ -665,6 +790,10 @@ flowchart LR
     E6 -.-> S6
     E7 -.-> S7
     E8 -.-> S8
+    E9 -.-> S9
+    E10 -.-> S10
+    E11 -.-> S11
+    E12 -.-> S12
 ```
 
 ### 1. Transfer 1: Projekt mit maximalem Budget
@@ -789,6 +918,56 @@ WHERE u.datum >= '2023-01-01' AND u.datum < '2024-01-01';
 ROLLBACK TRANSACTION;
 ```
 
+### 9. Transfer 9: Alle Abteilungen mit Mitarbeiteranzahl (inkl. 0)
+```sql
+SELECT a.id AS abt_id,
+       a.kuerzel,
+       a.bezeichnung AS abteilungsname,
+       COUNT(m.id) AS anzahl_mitarbeiter
+FROM Abteilung AS a
+LEFT JOIN Mitarbeiter AS m ON a.id = m.abt_id
+GROUP BY a.id, a.kuerzel, a.bezeichnung
+ORDER BY anzahl_mitarbeiter DESC, a.kuerzel ASC;
+```
+
+### 10. Transfer 10: Schwellenwert-Prüfung mit HAVING
+```sql
+SELECT m.id AS mitarbeiter_id,
+       CONCAT(m.vorname, ' ', m.nachname) AS mitarbeiter_name,
+       a.bezeichnung AS abteilung,
+       SUM(u.umsatz) AS gesamtumsatz
+FROM Mitarbeiter AS m
+INNER JOIN Abteilung AS a ON m.abt_id = a.id
+INNER JOIN Umsatz AS u ON m.id = u.mit_id
+GROUP BY m.id, m.vorname, m.nachname, a.bezeichnung
+HAVING SUM(u.umsatz) >= 10000.00
+ORDER BY gesamtumsatz DESC;
+```
+
+### 11. Transfer 11: Multi-Table Hierarchie über 4 Relationen
+```sql
+SELECT a.bezeichnung AS abteilung,
+       CONCAT(m.vorname, ' ', m.nachname) AS mitarbeiter,
+       p.bezeichnung AS projekt,
+       ar.aufgabe
+FROM Abteilung AS a
+LEFT JOIN Mitarbeiter AS m ON a.id = m.abt_id
+LEFT JOIN Arbeit AS ar ON m.id = ar.mit_id
+LEFT JOIN Projekt AS p ON ar.pro_id = p.id
+ORDER BY a.bezeichnung ASC, m.nachname ASC;
+```
+
+### 12. Transfer 12: Prozentuale Budget-Reduktion
+```sql
+BEGIN TRANSACTION;
+
+UPDATE Projekt
+SET mittel = mittel * 0.90
+WHERE kuerzel = 'AP';
+
+ROLLBACK TRANSACTION;
+```
+
 ---
 
 ## 🧭 IHK-Prüfungs-Cheat Sheet & Lösungsmatrix
@@ -803,18 +982,22 @@ ROLLBACK TRANSACTION;
 | **Rechnungs-Umsatz & Rabatt**| *„...den Umsatz je Rechnung sowie die Anzahl der Positionen...“* | `SUM(menge * preis * (1 - rabatt/100))` mit `LEFT JOIN` | Rabatt in Abzug bringen, `COUNT(pos_id)` |
 | **Preisabweichungsanalyse** | *„...nicht mit dem aktuellen Artikelpreis verkauft wurden.“* | `WHERE rp.EinzelPreis <> a.StammPreis` | Differenz `(rp.EinzelPreis - a.StammPreis)` |
 | **Massen-Update mit Join** | *„...Positionen von Artikel X aus Jahr Y mit Rabatt Z versehen.“* | `UPDATE rp SET rp.Rabatt = Z FROM Tab rp INNER JOIN ...` | Vorsicht bei Datumsfiltern (`YEAR()` oder SARGable Bereich) |
+| **Zählung inkl. 0 Treffer** | *„...Liste aller Typen mit Anzahl der zugehörigen Elemente...“* | `LEFT JOIN` + `COUNT(fk_id)` | `COUNT(spalte)` statt `COUNT(*)` verwenden! |
+| **Intervallwarnung** | *„...deren Summe den Schwellenwert in N Einheiten überschreitet.“* | `GROUP BY` + `HAVING SUM(wert) + N >= Schwelle` | Filterung aggregierter Summen immer im `HAVING` |
 
 ---
 
 ## 💻 Praktische Skripte & Assets im Projekt
 
 ### 📜 SQL-Lösungsskripte (`Day_22/src/`)
-* 📜 **IHK AP 2021 S Musterlösung & DDL/DML:** [`src/01_ihk_ap2021_sommer_ga1_hs5_mitgliederbewertung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/01_ihk_ap2021_sommer_ga1_hs5_mitgliederbewertung.sql)
-* 📜 **IHK AP 2022 W Musterlösung & DDL/DML:** [`src/02_ihk_ap2022_winter_ga1_hs5_rechnungserstellung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/02_ihk_ap2022_winter_ga1_hs5_rechnungserstellung.sql)
-* 📜 **Vertiefung, Transaktionen (TCL) & Anti-Joins:** [`src/03_mitgliederbewertung_vertiefung_und_tuning.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/03_mitgliederbewertung_vertiefung_und_tuning.sql)
-* 📜 **Single Source of Truth (`ProjektDB`) Transfer:** [`src/04_projektdb_sot_transfer_pruefungslogik.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/04_projektdb_sot_transfer_pruefungslogik.sql)
+* 📜 **IHK AP 2021 S Musterlösung & DDL/DML (Mitgliederbewertung):** [`src/01_ihk_ap2021_sommer_ga1_hs5_mitgliederbewertung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/01_ihk_ap2021_sommer_ga1_hs5_mitgliederbewertung.sql)
+* 📜 **IHK AP 2022 W Musterlösung & DDL/DML (Rechnungserstellung):** [`src/02_ihk_ap2022_winter_ga1_hs5_rechnungserstellung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/02_ihk_ap2022_winter_ga1_hs5_rechnungserstellung.sql)
+* 📜 **IHK AP 2019 S Musterlösung & DDL/DML (Maschinenwartung):** [`src/03_ihk_ap2019_sommer_ga1_hs5_maschinenwartung.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/03_ihk_ap2019_sommer_ga1_hs5_maschinenwartung.sql)
+* 📜 **Vertiefung, Transaktionen (TCL) & Anti-Joins:** [`src/04_mitgliederbewertung_vertiefung_und_tuning.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/04_mitgliederbewertung_vertiefung_und_tuning.sql)
+* 📜 **Single Source of Truth (`ProjektDB`) Transfer:** [`src/05_projektdb_sot_transfer_pruefungslogik.sql`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/src/05_projektdb_sot_transfer_pruefungslogik.sql)
 
 ### 📄 Prüfungsunterlagen (`Day_22/assets/`)
 * 📄 **IHK AP 2021 S Aufgabe (PDF):** [`assets/AP 2021 S GA1 HS5 SQL Mitgliederbewertung - Aufgabe.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/assets/AP%202021%20S%20GA1%20HS5%20SQL%20Mitgliederbewertung%20-%20Aufgabe.pdf)
 * 📄 **IHK AP 2021 S Offizielle Lösung (PDF):** [`assets/AP 2021 S GA1 HS5 SQL Mitgliederbewertung - Lösung.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/assets/AP%202021%20S%20GA1%20HS5%20SQL%20Mitgliederbewertung%20-%20L%C3%B6sung.pdf)
 * 📄 **IHK AP 2022 W Aufgabe (PDF):** [`assets/AP 2022 W GA1 HS5 SQL Rechnungserstellung - Aufgabe.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/assets/AP%202022%20W%20GA1%20HS5%20SQL%20Rechnungserstellung%20-%20Aufgabe.pdf)
+* 📄 **IHK AP 2019 S Aufgabe (PDF):** [`assets/AP 2019 S GA1 HS5 SQL Maschinen - Aufgabe.pdf`](file:///c:/Users/Tobia/Desktop/cSharpRepo/SQL-Fundamentals/Day_22/assets/AP%202019%20S%20GA1%20HS5%20SQL%20Maschinen%20-%20Aufgabe.pdf)

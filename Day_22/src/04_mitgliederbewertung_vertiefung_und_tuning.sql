@@ -1,6 +1,6 @@
 -- ============================================================================
 -- SQL-Fundamentals: Day 22 - IHK-Prüfungstraining
--- Datei: 03_mitgliederbewertung_vertiefung_und_tuning.sql
+-- Datei: 04_mitgliederbewertung_vertiefung_und_tuning.sql
 -- Dozent: Tom S. | Autor: Tobias Boyke | Datum: 01.09.2026
 -- Fokus: Vertiefung, Transaktionssicherheit (TCL), Anti-Joins & Analytik
 -- Datenbank: IHK_Mitgliederbewertung_2021S
