@@ -396,16 +396,16 @@ flowchart LR
         P4["DENY ALL ON Gehalt (Spezifisch für Alice)"]
     end
 
-    U1 -->|Member of| R1
-    U2 -->|Member of| R2
-    U3 -->|Member of| R1
-    U3 -->|Member of| R2
-    U4 -->|Member of| R3
+    U1 -->|"Member of"| R1
+    U2 -->|"Member of"| R2
+    U3 -->|"Member of"| R1
+    U3 -->|"Member of"| R2
+    U4 -->|"Member of"| R3
 
     R1 --> P1
     R2 --> P2
     R3 --> P3
-    U1 -.->|Explizites Verbot| P4
+    U1 -.->|"Explizites Verbot"| P4
 ```
 
 #### 4.1 Die Beispielsrolle `MitarbeiterCRUD` (Slide 12 & 13)
@@ -513,9 +513,9 @@ flowchart LR
     View["👁️ View: dbo.v_AbteilungGehaltsstatistik<br/>Owner: dbo<br/><b>UserA hat GRANT SELECT</b>"]
     Table["🔒 Tabelle: dbo.Gehalt<br/>Owner: dbo<br/><b>UserA hat KEIN Recht</b>"]
 
-    User -->|1. SELECT auf View| View
-    View -->|2. Interner Zugriff (Gleicher Owner dbo)| Table
-    Table -.->|3. Aggregierte Daten zurück| User
+    User -->|"1. SELECT auf View"| View
+    View -->|"2. Interner Zugriff (Gleicher Owner dbo)"| Table
+    Table -.->|"3. Aggregierte Daten zurück"| User
 
     style View fill:#15803d,stroke:#22c55e,color:#ffffff
     style Table fill:#b91c1c,stroke:#ef4444,color:#ffffff
