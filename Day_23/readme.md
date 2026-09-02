@@ -4,27 +4,34 @@
 
 * **Datum:** Mittwoch, 02.09.2026
 * **Arbeitszeit:** 08:15 - 16:00 Uhr
-* **Dozent:** Tom S.
+* **Dozent:** Tom S. (BITLC)
 * **Autor:** Tobias Boyke
+* **Kursunterlagen:** [`SQL 07 - DCL Teil 1.pdf`](./assets/SQL%2007%20-%20DCL%20Teil%201.pdf) & [`ProjektDB 12 - Rollen und Rechte - Aufgaben.sql`](./assets/ProjektDB%2012%20-%20Rollen%20und%20Rechte%20-%20Aufgaben.sql)
 
 ---
 
 ## 🎯 Lernziele des Tages
 
-- [x] **Das 2-stufige Sicherheitsmodell von Microsoft SQL Server & moderne Authentifizierung:**
+- [x] **Aufgaben & Einordnung der DCL (Data Control Language):**
+  - DCL als eine der fünf Hauptsäulen von SQL (neben DQL, DML, DDL und TCL).
+  - Verwaltung von Server-Logins, Datenbank-Benutzern, Rollen und granularen Berechtigungen.
+  - Das fundamentale Sicherheitsprinzip: **Least Privilege** (*"Jeder Benutzer darf nur das können, was er auch wirklich braucht"*).
+- [x] **Das 2-stufige Sicherheitsmodell von Microsoft SQL Server:**
   - **Stufe 1 (Server-Ebene / Authentifizierung):** Server-Logins (`CREATE LOGIN`), Authentifizierungsmodi (*Windows Authentication*, *SQL Server Authentication*, Active Directory Groups, Microsoft Entra ID Cloud-Provider via `EXTERNAL PROVIDER` sowie Zertifikate).
   - **Stufe 2 (Datenbank-Ebene / Autorisierung):** Datenbank-Benutzer (`CREATE USER ... FOR LOGIN ...` bzw. `WITHOUT LOGIN`), Standard-Schemas (`dbo`), Datenbank-Rollen und Zuweisung von Rechten.
-- [x] **DCL (Data Control Language) – Die Kernbefehle:**
+  - **Grundregel:** *Jedes Login kann nur einen User in derselben Datenbank besitzen.*
+- [x] **DCL-Kernbefehle & Konfliktauflösung:**
   - `GRANT`: Explizites Erteilen von Berechtigungen auf Schemas, Tabellen, Views und Prozeduren.
   - `REVOKE`: Zurücknehmen von Rechten in den neutralen Standardzustand (weder erlaubt noch verboten).
   - `DENY`: Explizites Verbieten von Rechten mit absoluter Priorität (*"DENY schlägt immer GRANT"*).
+  - **Abhängigkeit:** *Für `UPDATE`- und `DELETE`-Rechte ist immer auch das `SELECT`-Recht erforderlich*, da Datensätze lesend selektiert werden.
 - [x] **Die relationale Berechtigungshierarchie (Securables Hierarchy):**
   - Kaskadierende Berechtigungsvererbung: $\text{Server} \rightarrow \text{Datenbank} \rightarrow \text{Schema} \rightarrow \text{Objekt (Tabelle/View)} \rightarrow \text{Spalte}$.
   - Berechtigungskapselung auf Schema-Ebene (`GRANT SELECT ON SCHEMA::dbo`) und deren automatische Vererbung auf alle enthaltenen Tabellen.
   - Granulare Spaltenberechtigungen (*Column-Level Permissions*) und deren Vor- und Nachteile gegenüber sicherheitskapselnden Sichten.
 - [x] **Role-Based Access Control (RBAC) & Rollenverwaltung:**
   - Das Best-Practice-Paradigma: Logins $\rightarrow$ Users $\rightarrow$ Rollen $\rightarrow$ Berechtigungen (Verbot direkter User-Berechtigungen).
-  - Erstellung und Pflege benutzerdefinierter Rollen (`DataReader`, `DataEditor`, `ProjektRO`, `ProjektRW`, `ProjektHR`) für die `ProjektDB`.
+  - Erstellung und Pflege benutzerdefinierter Rollen (`DataReader`, `DataEditor`, `MitarbeiterCRUD`, `ProjektRO`, `ProjektRW`, `ProjektHR`).
   - Rollenmitgliedschaften dynamisch verwalten mittels `ALTER ROLE ... ADD MEMBER` und `DROP MEMBER`.
 - [x] **Praxis-Workshop: ProjektDB 12 – Rollen & Rechte (Aufgaben 12.1 – 12.4):**
   - Vollständige Modellierung von `Alice` (Leserin ohne Gehaltseinsicht via `DENY`), `Bob` (Sachbearbeiter/Editor) und `Charlie` (Doppelrollen-Inhaber).
@@ -115,7 +122,7 @@ Die Architektur trennt strikt zwischen **Authentifizierung** (Instanz-Ebene) und
 flowchart TD
     subgraph Stufe1["🔐 STUFE 1: SERVER-EBENE (Authentifizierung - Wer bist du?)"]
         Client["💻 Client / Anwendung"] --> AuthMethod{"Authentifizierungs-Quelle"}
-        AuthMethod -- "SQL-Auth (Passwort)" --> SqlLogin["🔑 SQL Login<br/><code>[LoginA]</code>"]
+        AuthMethod -- "SQL-Auth (Passwort)" --> SqlLogin["🔑 SQL Login<br/><code>[ProjektDBRW]</code>"]
         AuthMethod -- "Windows AD User" --> WinLogin["👤 Windows AD User<br/><code>[FIRMA\\TobiaBoyke]</code>"]
         AuthMethod -- "Windows AD Gruppe" --> WinGroup["👥 Windows AD Gruppe<br/><code>[FIRMA\\Finance-Dept]</code>"]
         AuthMethod -- "Microsoft Entra ID (Cloud)" --> CloudGroup["☁️ Entra ID Security Group<br/><code>[sg-cloudtec-finance]</code>"]
@@ -133,15 +140,15 @@ flowchart TD
     ConnectionCheck -- "Nein" --> DenyConn["🚫 Verbindung abgelehnt"]
 
     subgraph Stufe2["🛡️ STUFE 2: DATENBANK-EBENE (Autorisierung - Was darfst du?)"]
-        DBUser["👤 DB-Benutzer (UserA / Alice / Bob)<br/><code>CREATE USER UserA FOR LOGIN ...</code>"]
+        DBUser["👤 DB-Benutzer (ProjektDBRW / Alice / Bob)<br/><code>CREATE USER ProDBRW FOR LOGIN ProjektDBRW</code>"]
         DBUser --> RoleMember{"Mitglied in Rollen?"}
         RoleMember -- "Read-Only Rolle" --> RoleRO["📖 DataReader / ProjektRO<br/>(GRANT SELECT dbo)"]
         RoleMember -- "Read-Write Rolle" --> RoleRW["✏️ DataEditor / ProjektRW<br/>(GRANT DML dbo)"]
-        RoleMember -- "HR Spezial-Rolle" --> RoleHR["💼 ProjektHR<br/>(GRANT Gehalt, Mitarbeiter)"]
+        RoleMember -- "Fachrolle CRUD" --> RoleCRUD["🛠️ MitarbeiterCRUD<br/>(GRANT DML Mitarbeiter, DENY DELETE)"]
 
         RoleRO --> SchemaLevel["📂 SCHEMA::dbo"]
         RoleRW --> SchemaLevel
-        RoleHR --> ObjectLevel["📄 Tabellen & Views"]
+        RoleCRUD --> ObjectLevel["📄 Tabellen & Views"]
 
         SchemaLevel --> Tables["📊 dbo.Mitarbeiter<br/>📊 dbo.Abteilung<br/>📊 dbo.Projekt<br/>📊 dbo.Kunde"]
         ObjectLevel --> SecureTables["🔒 dbo.Gehalt<br/>🔒 dbo.Umsatz"]
@@ -177,23 +184,30 @@ flowchart TD
 
 ---
 
-### 1. Authentifizierung vs. Autorisierung & Das 2-Stufen-Modell
+### 1. Aufgaben der DCL & Das 2-Stufen-Sicherheitsmodell
 
-Microsoft SQL Server trennt den Sicherheitszugriff in zwei voneinander unabhängige Barrieren:
+Die **DCL (Data Control Language)** ist neben DQL, DML, DDL und TCL eine der fünf Untergruppen von SQL. Ihre Kernaufgabe ist die Berechtigungs- und Identitätsverwaltung:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. AUTHENTIFIZIERUNG (Server-Ebene): "Wer bist du?"                         │
 │    - Prüfung der Identität anhand von Anmeldeinformationen (Login).        │
-│    - Das Login entscheidet nur, ob eine Verbindung zur Instanz gelingt.     │
+│    - Ein Login gilt serverweit und ermöglicht den Zugriff auf die Instanz.  │
+│    - Im SSMS Objekt-Explorer unter: Sicherheit / Anmeldungen                │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │ Mappt auf (1:1 pro DB)
 ┌──────────────────────────────────────▼──────────────────────────────────────┐
 │ 2. AUTORISIERUNG (Datenbank-Ebene): "Was darfst du tun?"                    │
 │    - Ein Login wird in jeder Datenbank einem spezifischen USER zugeordnet. │
 │    - Der DB-User definiert über Rechte und Rollen den Zugriff auf Daten.   │
+│    - Im SSMS Objekt-Explorer unter: <Datenbank> / Sicherheit / Benutzer     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+> [!IMPORTANT]
+> **Die goldene Grundregel:**  
+> Es wird **immer sowohl ein Login als auch ein DB-User** benötigt! Ein Login ohne zugeordneten Datenbank-Benutzer hat keinerlei Zugriff auf Tabellen oder Daten (Ausnahme: `sysadmin`).  
+> Zudem gilt: **Jedes Login kann nur genau einen User in derselben Datenbank besitzen.**
 
 #### 1.1 Moderne Login-Typen & Authentifizierungsquellen
 
@@ -206,22 +220,22 @@ mindmap
       Benutzername & Passwort
       Gekapselt in master
     Windows Auth
-      Active Directory Domain User
-      Active Directory Security Group
-    Cloud Identity
-      Microsoft Entra ID User
-      Microsoft Entra ID Security Group
+      Active Directory Domain User [DOMAIN\User]
+      Active Directory Security Group [FIRMA\Finance-Dept]
+    Cloud Identity (Azure / Hybrid)
+      Microsoft Entra ID User [user@domain.com]
+      Microsoft Entra ID Security Group [sg-cloudtec-finance]
     Service Principals
-      Zertifikatsbasierte Logins
-      Asymmetrische Schlüssel
+      Zertifikatsbasierte Logins (FROM CERTIFICATE)
+      Asymmetrische Schlüssel (FROM ASYMMETRIC KEY)
     Contained Users
-      DB-User WITHOUT LOGIN
+      DB-User WITHOUT LOGIN (Sandbox & Testing)
       Contained DB User mit Kennwort
 ```
 
 | Login-Typ & Syntax | Identitäts-Quelle | Typischer Einsatzzweck & Best Practice |
 | :--- | :--- | :--- |
-| **SQL Server Login**<br/>`CREATE LOGIN [LoginA] WITH PASSWORD = '...';` | SQL Server interner Hash-Katalog (`master`) | Legacy-Applikationen, externe Dienstleister ohne Active Directory |
+| **SQL Server Login**<br/>`CREATE LOGIN [ProjektDBRW] WITH PASSWORD = 'PDBRW';` | SQL Server interner Hash-Katalog (`master`) | Legacy-Applikationen, externe Dienstleister ohne Active Directory |
 | **Windows Domain User**<br/>`CREATE LOGIN [FIRMA\TobiaBoyke] FROM WINDOWS;` | On-Premises Active Directory (Kerberos/NTLM) | Personengebundene Administrations- und Entwicklerzugänge |
 | **Windows Security Group**<br/>`CREATE LOGIN [FIRMA\Finance-Dept] FROM WINDOWS;` | Active Directory Abteilungs-Sicherheitsgruppe | **Best Practice für Großunternehmen:** Verwaltung der Zugänge im AD |
 | **Microsoft Entra ID Security Group**<br/>`CREATE LOGIN [sg-cloudtec-finance] FROM EXTERNAL PROVIDER;` | Azure Active Directory / Microsoft Entra ID | **Cloud- & Hybrid-Standard (Azure SQL / Managed Instance):** Rollen-Mapping |
@@ -230,40 +244,26 @@ mindmap
 | **User WITHOUT LOGIN**<br/>`CREATE USER Alice WITHOUT LOGIN;` | Reine Datenbank-Ebene (Kein Instanz-Login) | Sandboxing, isolierte Test-Suiten & Rechte-Simulation via `EXECUTE AS` |
 | **Contained Database User**<br/>`CREATE USER AppUser WITH PASSWORD = '...';` | Eigenständige Datenbank (*Contained DB*) | Hochverfügbarkeit (Always On), einfache Datenbank-Migrationen |
 
-#### 1.2 Die 3-Schritt-Verbindungskette
+#### 1.2 User anlegen: Gleicher Name vs. Abweichender Name (Alias)
 
-1. **Schritt 1: Server-Login erstellen** (Instanz-Ebene in `master`):
-   ```sql
-   USE master;
-   -- Klassisches SQL Server Login:
-   CREATE LOGIN LoginA 
-   WITH PASSWORD = 'SecureP@ssw0rd!2026', 
-        DEFAULT_DATABASE = ProjektDB,
-        CHECK_POLICY = ON;
+Beim Anlegen eines Datenbank-Benutzers existieren in T-SQL zwei Syntax-Varianten:
 
-   -- ODER: Windows AD Sicherheitsgruppe:
-   -- CREATE LOGIN [FIRMA\Finance-Dept] FROM WINDOWS;
+```sql
+USE ProjektDB;
+GO
 
-   -- ODER: Microsoft Entra ID Cloud Security Group:
-   -- CREATE LOGIN [sg-cloudtec-finance] FROM EXTERNAL PROVIDER;
-   ```
-2. **Schritt 2: Datenbank-User erstellen** (In der Zieldatenbank `ProjektDB`):
-   ```sql
-   USE ProjektDB;
-   CREATE USER UserA 
-   FOR LOGIN LoginA 
-   WITH DEFAULT_SCHEMA = dbo;
-   ```
-3. **Schritt 3: Berechtigungen vergeben (DCL)**:
-   ```sql
-   GRANT SELECT ON SCHEMA::dbo TO UserA;
-   ```
+-- Variante A: Gleicher Name wie das Login (automatische Verknüpfung)
+CREATE USER ProjektDBRW;
+
+-- Variante B: Abweichender Name (Alias-Name für das Login)
+CREATE USER ProDBRW FOR LOGIN ProjektDBRW;
+```
 
 ---
 
 ### 2. Die DCL-Triade: `GRANT`, `REVOKE` und `DENY`
 
-Die Data Control Language (DCL) steuert die Zugriffsberechtigungen auf allen Ebenen des SQL Servers.
+Die Data Control Language (DCL) steuert die Zugriffsberechtigungen auf allen Ebenen des SQL Servers:
 
 ```
                   ┌───────────────────────┐
@@ -292,23 +292,34 @@ Die Data Control Language (DCL) steuert die Zugriffsberechtigungen auf allen Ebe
 | `REVOKE` | **Entziehen / Neutralisieren:** Entfernt eine zuvor explizit vergebene Berechtigung (`GRANT` oder `DENY`). | Setzt die Berechtigung auf den neutralen Zustand zurück. Wenn der Benutzer über eine Rollenmitgliedschaft noch ein `GRANT` besitzt, darf er weiterhin zugreifen! |
 | `DENY` | **Verweigern / Verbieten:** Verbietet die Aktion explizit. | **Absolute Priorität:** Verhindert den Zugriff garantiert, selbst wenn der Benutzer über Rollen, Gruppen oder Schema-Vererbung ein `GRANT` besitzt. |
 
-#### 2.2 Der kritische Unterschied zwischen `REVOKE` und `DENY`
+#### 2.2 Die 4-Stufen-Matrix: Rechtevergabe im Konfliktfall (Slide 10)
 
-> [!CAUTION]
-> **Häufiger Praxis- und Prüfungsfehler:**  
-> Viele Entwickler glauben, `REVOKE` würde den Zugriff sicher verhindern. Das ist **falsch**!  
-> - `REVOKE` löscht lediglich den individuellen Eintrag aus der Rechtematrix. Ist der Benutzer zusätzlich Mitglied einer Rolle (z. B. `DataReader`), die `GRANT SELECT` hat, kann er die Tabelle **immer noch lesen**!
-> - Erst ein **`DENY`** errichtet eine unüberwindbare Barriere, die alle vererbten und rollenbasierten `GRANT`-Rechte überschreibt.
+Das folgende klassische Szenario aus den Vorlesungsunterlagen demonstriert die Priorisierung im Detail:
+
+| Ebene / Prinzipal | `SELECT` | `INSERT` | `UPDATE` | `DELETE` |
+| :--- | :---: | :---: | :---: | :---: |
+| **Benutzer** | `GRANT` | `REVOKE` | `REVOKE` | `REVOKE` |
+| **Rolle 1** | `REVOKE` | `REVOKE` | `GRANT` | `GRANT` |
+| **Rolle 2** | `REVOKE` | `REVOKE` | `REVOKE` | `DENY` |
+| **Endergebnis** | ✅ **Ja** | ❌ **Nein** | ✅ **Ja** | ❌ **Nein** |
+
+**Begründung:**
+1. **`SELECT` (Ja):** Der Benutzer besitzt ein direktes `GRANT`.
+2. **`INSERT` (Nein):** Weder auf Benutzerebene noch in den Rollen existiert ein `GRANT` (Standard: kein Zugriff).
+3. **`UPDATE` (Ja):** Über **Rolle 1** wird das `GRANT` vererbt; keine andere Regel widerspricht.
+4. **`DELETE` (Nein):** Rolle 1 erteilt zwar `GRANT`, doch **Rolle 2 verfügt über ein explizites `DENY`**. Da `DENY` jedes `GRANT` bedingungslos überstimmt, ist das Löschen strikt blockiert!
+
+#### 2.3 Lese-Abhängigkeit bei Schreiboperationen
+
+> [!IMPORTANT]
+> **Kritischer Dozenten-Hinweis (Slide 11):**  
+> *"Für die `UPDATE`- und `DELETE`-Rechte ist immer auch das `SELECT`-Recht erforderlich, da die Datensätze lesend ausgewählt bzw. über `WHERE`-Klauseln identifiziert werden müssen."*
+
+#### 2.4 DCL-Syntax mit mehreren Empfängern
 
 ```sql
--- Szenario: Alice ist in der Rolle DataReader (hat GRANT SELECT auf dbo.Gehalt)
--- 1. REVOKE auf Tabelle Gehalt:
-REVOKE SELECT ON dbo.Gehalt FROM Alice;
--- -> Alice KANN Gehalt IMMER NOCH LESEN (über die Rolle DataReader)!
-
--- 2. DENY auf Tabelle Gehalt:
-DENY SELECT ON dbo.Gehalt TO Alice;
--- -> Alice KANN Gehalt NICHT MEHR LESEN (DENY blockiert auch das Rollen-GRANT)!
+-- DCL-Zuweisung an mehrere Benutzer/Rollen gleichzeitig:
+DENY DELETE ON SCHEMA::dbo TO ProjektDBRW, AndererUser;
 ```
 
 ---
@@ -369,27 +380,46 @@ flowchart LR
         U1["Alice (DataReader)"]
         U2["Bob (DataEditor)"]
         U3["Charlie (Beide Rollen)"]
+        U4["ProjektDBRW (MitarbeiterCRUD)"]
     end
 
     subgraph Roles["🛡️ Datenbankrollen"]
         R1["📖 DataReader"]
         R2["✏️ DataEditor"]
+        R3["🛠️ MitarbeiterCRUD"]
     end
 
     subgraph Permissions["🔑 Berechtigungen"]
         P1["GRANT SELECT ON Mitarbeiter, Gehalt"]
         P2["GRANT SELECT, INSERT, UPDATE ON Mitarbeiter, Gehalt"]
-        P3["DENY ALL ON Gehalt (Spezifisch für Alice)"]
+        P3["GRANT SELECT, INSERT, UPDATE ON Mitarbeiter<br/>DENY DELETE ON Mitarbeiter"]
+        P4["DENY ALL ON Gehalt (Spezifisch für Alice)"]
     end
 
     U1 -->|Member of| R1
     U2 -->|Member of| R2
     U3 -->|Member of| R1
     U3 -->|Member of| R2
+    U4 -->|Member of| R3
 
     R1 --> P1
     R2 --> P2
-    U1 -.->|Explizites Verbot| P3
+    R3 --> P3
+    U1 -.->|Explizites Verbot| P4
+```
+
+#### 4.1 Die Beispielsrolle `MitarbeiterCRUD` (Slide 12 & 13)
+
+```sql
+-- 1. Rolle anlegen
+CREATE ROLE MitarbeiterCRUD;
+
+-- 2. User zur Rolle hinzufügen
+ALTER ROLE MitarbeiterCRUD ADD MEMBER ProjektDBRW;
+
+-- 3. Rechte an die Rolle vergeben
+GRANT SELECT, INSERT, UPDATE ON dbo.Mitarbeiter TO MitarbeiterCRUD;
+DENY DELETE ON dbo.Mitarbeiter TO MitarbeiterCRUD;
 ```
 
 ---
@@ -573,7 +603,7 @@ Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL
 | :--- | :--- | :--- |
 | [📄 `01_authentifizierung_logins_und_users.sql`](./src/01_authentifizierung_logins_und_users.sql) | **Authentifizierung & Prinzipale** | Schritt-für-Schritt-Erstellung von Server-Logins (`master`), Zuweisung von DB-Benutzern (`ProjektDB`), Katalogabfragen in `sys.server_principals` / `sys.database_principals` und erster Verbindungstest mit `EXECUTE AS`. |
 | [📄 `02_dcl_grant_revoke_deny_und_vererbung.sql`](./src/02_dcl_grant_revoke_deny_und_vererbung.sql) | **DCL & Berechtigungshierarchien** | Praxisdemonstration von `GRANT SELECT ON SCHEMA::dbo`, Kaskadierung, gezieltes `DENY` auf sensible Tabellen (`dbo.Gehalt`), der Unterschied zwischen `REVOKE` und `DENY` sowie Column-Level Permissions. |
-| [📄 `03_rollenbasierte_sicherheit_rbac_projektdb.sql`](./src/03_rollenbasierte_sicherheit_rbac_projektdb.sql) | **RBAC & Ownership Chaining** | Vollständige Implementierung von Unternehmensrollen (`ProjektRO`, `ProjektRW`, `ProjektHR`) für `ProjektDB`, sichere Aggregat-Sichten mit Ownership Chaining und strukturierte Testfälle. |
+| [📄 `03_rollenbasierte_sicherheit_rbac_projektdb.sql`](./src/03_rollenbasierte_sicherheit_rbac_projektdb.sql) | **RBAC & Ownership Chaining** | Vollständige Implementierung von Unternehmensrollen (`ProjektRO`, `ProjektRW`, `ProjektHR`, `MitarbeiterCRUD`) für `ProjektDB`, sichere Aggregat-Sichten mit Ownership Chaining und strukturierte Testfälle. |
 | [📄 `04_sicherheitsaudit_metadaten_und_troubleshooting.sql`](./src/04_sicherheitsaudit_metadaten_und_troubleshooting.sql) | **Security Audit & Troubleshooting** | Umfassende Audit-Queries über `sys.database_permissions`, Abfrage effektiver Berechtigungen (`sys.fn_my_permissions`, `HAS_PERMS_BY_NAME`), Erkennung verwaister Benutzer und automatisiertes Teardown-Skript. |
 | [📄 `05_projektdb_12_rollen_und_rechte_loesungen.sql`](./src/05_projektdb_12_rollen_und_rechte_loesungen.sql) | **Musterlösung ProjektDB 12** | Vollständige Ausarbeitung der Aufgaben 12.1 – 12.4 (Alice, Bob, Charlie, `DataReader`, `DataEditor`, `DENY` auf `Gehalt`) inkl. automatisierter Testsuite via `EXECUTE AS`. |
 
@@ -583,8 +613,8 @@ Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL
 
 > [!IMPORTANT]
 > **Die 5 goldenen Regeln der Datenbanksicherheit:**
-> 1. **Principle of Least Privilege (PoLP):** Jeder Benutzer und jede Anwendung erhält exakt nur die minimal notwendigen Rechte zur Erfüllung ihrer Aufgaben.
+> 1. **Principle of Least Privilege (PoLP):** *"So viele Rechte wie nötig, so wenig Rechte wie möglich."* Jeder Benutzer und jede Anwendung erhält exakt nur die minimal notwendigen Rechte.
 > 2. **Keine Direktberechtigung von Benutzern (RBAC):** Berechtigungen werden ausnahmslos an **Rollen** vergeben, Benutzer werden Rollen als Mitglieder zugewiesen.
 > 3. **`DENY` schlägt immer `GRANT`:** Ein Verbot hat absolute Priorität und überschreibt alle Rollen- und Gruppenberechtigungen.
-> 4. **Sicherheitskapselung über Views statt Spalten-Permissions:** Sensible Daten (wie Gehälter oder Umsätze) werden über Sichten gefiltert und per Ownership Chaining sicher bereitgestellt.
-> 5. **`sa`-Konto schützen:** Das integrierte Systemadministrator-Konto `sa` darf im Regelbetrieb niemals für Applikationen verwendet werden.
+> 4. **`SELECT`-Pflicht für Schreiboperationen:** Für `UPDATE` und `DELETE` ist immer auch das Leserecht (`SELECT`) zwingend erforderlich.
+> 5. **Sicherheitskapselung über Views statt Spalten-Permissions:** Sensible Daten (wie Gehälter oder Umsätze) werden über Sichten gefiltert und per Ownership Chaining sicher bereitgestellt.

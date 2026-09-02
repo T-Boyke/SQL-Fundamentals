@@ -23,8 +23,8 @@
 -- ├───────────────────┼────────────────────────────────────────────────────────┤
 -- │ ProjektRO         │ SELECT auf SCHEMA::dbo (Nur lesender Zugriff)          │
 -- │ ProjektRW         │ SELECT, INSERT, UPDATE, DELETE auf SCHEMA::dbo         │
+-- │ MitarbeiterCRUD   │ SELECT, INSERT, UPDATE auf Mitarbeiter (DENY DELETE)   │
 -- │ ProjektHR         │ Vollzugriff auf Gehalt, Mitarbeiter, Arbeit            │
--- │ ProjektControlling│ Lesezugriff auf Umsatz, Projekt, Gehalt, Auswertungen  │
 -- └───────────────────┴────────────────────────────────────────────────────────┘
 -- ============================================================================
 
@@ -53,6 +53,14 @@ BEGIN
         ALTER ROLE ProjektRW DROP MEMBER User_DataEntry;
     DROP ROLE ProjektRW;
     PRINT '    -> Alte Rolle ProjektRW entfernt.';
+END;
+
+IF DATABASE_PRINCIPAL_ID('MitarbeiterCRUD') IS NOT NULL
+BEGIN
+    IF DATABASE_PRINCIPAL_ID('User_DataEntry') IS NOT NULL
+        ALTER ROLE MitarbeiterCRUD DROP MEMBER User_DataEntry;
+    DROP ROLE MitarbeiterCRUD;
+    PRINT '    -> Alte Rolle MitarbeiterCRUD entfernt.';
 END;
 
 IF DATABASE_PRINCIPAL_ID('ProjektHR') IS NOT NULL
@@ -84,7 +92,7 @@ GO
 -- ============================================================================
 -- 2. Erstellung benutzerdefinierter Datenbankrollen (Custom Roles)
 -- ============================================================================
-PRINT '>>> 2. Erstellung der Fachrollen (ProjektRO, ProjektRW, ProjektHR)...';
+PRINT '>>> 2. Erstellung der Fachrollen (ProjektRO, ProjektRW, MitarbeiterCRUD, ProjektHR)...';
 
 -- 2.1 Read-Only Rolle (ProjektRO)
 CREATE ROLE ProjektRO;
@@ -100,7 +108,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::dbo TO ProjektRW;
 DENY SELECT, INSERT, UPDATE, DELETE ON dbo.Gehalt TO ProjektRW;
 PRINT '    -> Rolle ProjektRW erstellt (DML auf dbo, DENY Gehalt).';
 
--- 2.3 HR Spezialrolle (ProjektHR)
+-- 2.3 MitarbeiterCRUD Rolle (Vorlesungsbeispiel Slide 12 & 13)
+CREATE ROLE MitarbeiterCRUD;
+GRANT SELECT, INSERT, UPDATE ON dbo.Mitarbeiter TO MitarbeiterCRUD;
+DENY DELETE ON dbo.Mitarbeiter TO MitarbeiterCRUD;
+PRINT '    -> Rolle MitarbeiterCRUD erstellt (SELECT, INSERT, UPDATE - DENY DELETE).';
+
+-- 2.4 HR Spezialrolle (ProjektHR)
 CREATE ROLE ProjektHR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Mitarbeiter TO ProjektHR;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Gehalt TO ProjektHR;
@@ -116,6 +130,7 @@ PRINT '>>> 3. Benutzer den Rollen zuweisen (ALTER ROLE ... ADD MEMBER)...';
 
 ALTER ROLE ProjektRO ADD MEMBER User_ReadOnly;
 ALTER ROLE ProjektRW ADD MEMBER User_DataEntry;
+ALTER ROLE MitarbeiterCRUD ADD MEMBER User_DataEntry;
 ALTER ROLE ProjektHR ADD MEMBER User_HR;
 GO
 
@@ -189,7 +204,7 @@ GO
 -- noqa: enable=PRS
 
 -- ----------------------------------------------------------------------------
--- TEST 5.2: User_DataEntry (Mitglied von ProjektRW)
+-- TEST 5.2: User_DataEntry (Mitglied von ProjektRW & MitarbeiterCRUD)
 -- ----------------------------------------------------------------------------
 PRINT '--- Test 5.2: User_DataEntry ---';
 -- noqa: disable=PRS
@@ -207,6 +222,15 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
     PRINT '    [FEHLER] ' + ERROR_MESSAGE();
+END CATCH;
+
+PRINT '    [User_DataEntry] 2. DELETE auf Mitarbeiter (Erwartet: BLOCKIERT durch MitarbeiterCRUD DENY):';
+BEGIN TRY
+    DELETE FROM dbo.Mitarbeiter WHERE id = 99999;
+    PRINT '    [FEHLER] DELETE durfte nicht gelingen!';
+END TRY
+BEGIN CATCH
+    PRINT '    [OK - BLOCKIERT] ' + ERROR_MESSAGE();
 END CATCH;
 GO
 REVERT;
