@@ -46,7 +46,7 @@ erDiagram
     LEISTUNGART ||--o{ BEWERTUNG : "wird bewertet (leistungArtId)"
     MITGLIED ||--o{ ANGEBOT : "stellt ein (mitgliedlid)"
     MITGLIED ||--o{ BEWERTUNG : "erhaelt (mitgliedlid)"
-    MITGLIED ||..o| MITGLIEDARCHIV : "archiviert in"
+    MITGLIED ||--o| MITGLIEDARCHIV : "archiviert in"
 
     LEISTUNGART {
         int idleistungArt PK "Primärschlüssel"

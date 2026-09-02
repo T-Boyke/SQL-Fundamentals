@@ -114,7 +114,7 @@ Zur isolierten Demonstration spezieller Szenarien (ETL-Upsert, Fuhrpark-Zuordnun
 ```mermaid
 erDiagram
     PERSON ||--o{ FAHRZEUG : "besitzt (PersID)"
-    PRODUCTSDW ||..|| PRODUCTSLIVE : "synchronisiert_mit (ProductID)"
+    PRODUCTSDW ||--|| PRODUCTSLIVE : "synchronisiert_mit (ProductID)"
 
     PERSON {
         int PersID PK "Personen-ID"

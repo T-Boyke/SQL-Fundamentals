@@ -37,7 +37,7 @@
 erDiagram
     TIERKATEGORIE ||--o{ TIERBESTAND : "kategorisiert (TB_TKID)"
     TIERBESTAND ||--o{ TIERZUSATZINFO : "besitzt (TZI_TBID)"
-    TIERBESTAND ||..o| ARCHIV_TIERBESTAND : "archiviert in (A_TBID)"
+    TIERBESTAND ||--o| ARCHIV_TIERBESTAND : "archiviert in (A_TBID)"
 
     TIERKATEGORIE {
         int TK_ID PK "Kategorie-ID (1=Kühe, 2=Schweine, 3=Hühner)"
