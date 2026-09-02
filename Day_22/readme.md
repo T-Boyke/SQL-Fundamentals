@@ -18,7 +18,7 @@
     - `1.c` (7 P): Angebotsverfügbarkeit mit Zeitfenster-Filterung (`vonZeit <= '14:00' AND bisZeit >= '16:00'`).
     - `1.d` (8 P): ETL-Archivierung inaktiver Mitglieder (DDL `CREATE TABLE`, DML `INSERT INTO ... SELECT` und `DELETE` via `NOT EXISTS`).
   - **Prüfung 2: Winter 2022/2023 (GA1 HS5 – Rechnungserstellung & Rabatte):**
-    - `2.a` (3 P): Bruttopreisberechnung mit Mehrwertsteuerformel $\text{Art\_Preis} \cdot (1 + \text{MwSt}/100)$.
+    - `2.a` (3 P): Bruttopreisberechnung mit Mehrwertsteuerformel `Art_Preis * (1 + Art_MwStSatz / 100)` bzw. $\text{Bruttopreis} = \text{Nettopreis} \cdot (1 + \text{MwSt}/100)$.
     - `2.b` (10 P): Rechnungs-Umsatz aggregation (`SUM(Menge * Einzelpreis * (1 - Rabatt/100))`), Positionszählung (`COUNT`), Durchschnitt (`AVG`) und `LEFT JOIN` für Null-Umsätze.
     - `2.c` (8 P): Preisabweichungsanalyse zwischen Stammdaten und Rechnungspositionen (`rp.EinzelPreis <> a.Art_Preis`) mit Differenz.
     - `2.d` (4 P): Massendatenaktualisierung (`UPDATE ... FROM ... JOIN`) mit kombinierten Artikel- und Jahresfiltern (`YEAR(Rg_Datum) = 2022`).
@@ -422,7 +422,7 @@ Quelle: [`assets/AP 2022 W GA1 HS5 SQL Rechnungserstellung - Aufgabe.pdf`](file:
 
 * **Aufgabenstellung:** Erstellen Sie eine SQL-Anweisung, mit der Sie alle Artikel mit dem entsprechenden Bruttopreis erhalten.
 
-$$\text{BruttoPreis} = \text{Art\_Preis} \cdot \left(1 + \frac{\text{Art\_MwStSatz}}{100}\right)$$
+$$\text{Bruttopreis} = \text{Artikelpreis} \cdot \left(1 + \frac{\text{MwSt-Satz}}{100}\right)$$
 
 #### 🔹 IHK-Musterlösung (Aufgabe 2.a)
 
