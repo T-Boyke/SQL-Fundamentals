@@ -6,6 +6,7 @@
 * **Arbeitszeit:** 08:15 - 16:00 Uhr
 * **Dozent:** Tom S. (BITLC)
 * **Autor:** Tobias Boyke
+* **Kursunterlagen:** [`20260903-1.sql`](./assets/20260903-1.sql) & [`ProjektDB P1 - Programmierung 1 - Aufgaben.sql`](./assets/ProjektDB%20P1%20-%20Programmierung%201%20-%20Aufgaben.sql)
 * **Themenschwerpunkt:** `DECLARE`, `SET`, `PRINT`, `[test declare von select]`, `IF...ELSE`, `BEGIN...END`, `WHILE` (`BREAK`, `CONTINUE`), `CREATE PROCEDURE` (Input, `OUTPUT`, `RETURN`), `CREATE FUNCTION` (Skalar, iTVF, MSTVF) & Gegenüberstellung SP vs. UDF
 
 ---
@@ -344,10 +345,24 @@ DECLARE @vorname NVARCHAR(50) = 'Tobias',
         @erfassungsDatum DATE = GETDATE();
 ```
 
-#### 1.2 Der Batch-Scope (Gültigkeitsbereich) & `GO`
-* Eine lokale Variable ist nur innerhalb des Batches sichtbar, in dem sie deklariert wurde.
+#### 1.2 Der Batch-Scope: "Scope ist der Batch, nicht der Block!"
+* **Kein Block-Scope:** Im Gegensatz zu Programmiersprachen wie C#, Java oder C++ besitzt T-SQL **keinen Block-Scope** innerhalb von Kontrollstrukturen (`BEGIN...END`). Wird eine Variable innerhalb eines `IF...BEGIN...END` deklariert, ist sie auch **nach dem `END` bis zum Ende des Batches** im gesamten Skript sichtbar und lesbar!
+* **Batch-Grenze (`GO`):** Eine lokale Variable ist nur innerhalb des Batches sichtbar, in dem sie deklariert wurde.
 * Das Schlüsselwort `GO` ist **kein T-SQL-Befehl**, sondern ein Batch-Trennzeichen für Client-Tools (SSMS, DataGrip, sqlcmd).
 * Sobald ein `GO` erreicht wird, sendet das Client-Tool den vorangehenden Codeblock an den SQL Server. Danach wird der Batch beendet und der Arbeitsspeicher für alle darin deklarierten Variablen freigegeben.
+
+```sql
+-- Demonstration aus der Vorlesung (20260903-1.sql):
+IF (SELECT COUNT(*) FROM dbo.Arbeit WHERE pro_id = 1) >= 3
+BEGIN
+    DECLARE @testScope INT = 42; -- Deklaration innerhalb des BEGIN...END Blocks
+END;
+
+-- In C# wäre @testScope hier außerhalb des Scopes -> In T-SQL funktioniert es einwandfrei!
+PRINT @testScope; -- Gibt 42 aus!
+GO
+-- Erst HIER nach dem 'GO' ist @testScope aus dem Speicher gelöscht.
+```
 
 ---
 
@@ -589,6 +604,73 @@ Benutzerdefinierte Funktionen (*User-Defined Functions* - UDF) dienen der **Bere
 
 ---
 
+### 8. Praxis-Workshop: ProjektDB P1 – Programmierung 1 (Aufgaben P1.1 & P1.2)
+
+In den offiziellen Kursübungen ([`assets/ProjektDB P1 - Programmierung 1 - Aufgaben.sql`](./assets/ProjektDB%20P1%20-%20Programmierung%201%20-%20Aufgaben.sql)) wurden die gelernten Konzepte direkt auf die `ProjektDB` angewendet:
+
+#### Aufgabe P1.1: Gespeicherte Prozedur `sp_FilterMitarbeiter1`
+Erstellung einer Prozedur, die alle Mitarbeiter einer Abteilung anhand der Abteilungsbezeichnung selektiert:
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_FilterMitarbeiter1
+    @Abteilung NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT m.id,
+           m.vorname,
+           m.nachname,
+           m.abt_id,
+           a.bezeichnung
+    FROM dbo.Mitarbeiter AS m
+    INNER JOIN dbo.Abteilung AS a ON m.abt_id = a.id
+    WHERE a.bezeichnung = @Abteilung
+    ORDER BY m.id;
+END;
+GO
+```
+
+#### Aufgabe P1.2: Validierung & Fehlerbehandlung bei ungültiger Abteilung
+Erweiterung der Prozedur: Wenn keine Mitarbeiter zur angegebenen Abteilung gefunden werden, soll die Fehlermeldung `'Abteilung ungültig: <Bezeichnung>'` ausgegeben werden:
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_FilterMitarbeiter1
+    @Abteilung NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validierung mit IF NOT EXISTS
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.Mitarbeiter AS m
+        INNER JOIN dbo.Abteilung AS a ON m.abt_id = a.id
+        WHERE a.bezeichnung = @Abteilung
+    )
+    BEGIN
+        -- Ausgabe als Resultset im Data Grid
+        SELECT CONCAT('Abteilung ungültig: ', ISNULL(@Abteilung, '[NULL]')) AS Fehlermeldung;
+        
+        -- Zusätzliche Statusmeldung
+        PRINT CONCAT('Abteilung ungültig: ', ISNULL(@Abteilung, '[NULL]'));
+        RETURN;
+    END;
+
+    -- Reguläre Ausgabe
+    SELECT m.id,
+           m.vorname,
+           m.nachname,
+           m.abt_id,
+           a.bezeichnung
+    FROM dbo.Mitarbeiter AS m
+    INNER JOIN dbo.Abteilung AS a ON m.abt_id = a.id
+    WHERE a.bezeichnung = @Abteilung
+    ORDER BY m.id;
+END;
+GO
+```
+
+---
+
 ## 💻 Praktische Übungen im Verzeichnis `src/`
 
 Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL-Skripte im Ordner [`src/`](./src/) abgelegt:
@@ -603,6 +685,7 @@ Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL
 | [📄 `06_stored_procedures_grundlagen_und_parameter.sql`](./src/06_stored_procedures_grundlagen_und_parameter.sql) | **Stored Procedures Grundlagen** | `CREATE OR ALTER PROCEDURE`, Prozeduren ohne Parameter, optionale Parameter mit Defaultwerten (`= NULL`) & Such-Kaskade, `OUTPUT`-Parameter zur Werterückgabe, `RETURN`-Statuscodes, Aufruf via `EXEC` und Metadaten in `sys.procedures`. |
 | [📄 `07_stored_procedures_business_logik_projektdb.sql`](./src/07_stored_procedures_business_logik_projektdb.sql) | **Enterprise Stored Procedures** | 3 komplexe Prozeduren auf der `ProjektDB`: `usp_MitarbeiterProjektZuweisen` (validierte DML), `usp_GehaltsanpassungAbteilung` (transaktionsgesichert mit Grenzen) und `usp_IterativerProjektStatusAudit` (integrierte `WHILE`-Schleife). |
 | [📄 `08_tsql_functions_vs_stored_procedures.sql`](./src/08_tsql_functions_vs_stored_procedures.sql) | **UDFs vs. Stored Procedures** | Skalare Funktionen (`dbo.udf_BerechneNettoGehalt`), Inline-Tabellenwertfunktionen (`dbo.itvf_ProjektMitarbeiterListe` mit `CROSS APPLY`), Multi-Statement TVF und praktische Demonstration aller Restriktionen (DML- & Transaktionsverbot in UDFs). |
+| [📄 `09_projektdb_p1_programmierung_loesungen.sql`](./src/09_projektdb_p1_programmierung_loesungen.sql) | **Musterlösung Aufgaben P1** | Vollständige Ausarbeitung der Vorlesungsaufgaben P1.1 und P1.2 (`sp_FilterMitarbeiter1` mit Fehlerbehandlung) sowie Dokumentation der Vorlesungsexperimente aus `20260903-1.sql` (Scope-Beweis & WHILE-Budgeterhöhung). |
 
 ---
 
