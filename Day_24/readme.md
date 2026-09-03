@@ -1,4 +1,4 @@
-# 📅 Day_24: T-SQL Prozedurale Programmierung – Variablen, Kontrollstrukturen, WHILE-Schleifen & Stored Procedures
+# 📅 Day_24: T-SQL Prozedurale Programmierung – Variablen, Kontrollstrukturen, WHILE-Schleifen, Stored Procedures & Functions
 
 ## ℹ️ Kurs-Informationen
 
@@ -6,7 +6,7 @@
 * **Arbeitszeit:** 08:15 - 16:00 Uhr
 * **Dozent:** Tom S. (BITLC)
 * **Autor:** Tobias Boyke
-* **Themenschwerpunkt:** `DECLARE`, `SET`, `PRINT`, `[test declare von select]`, `IF...ELSE`, `BEGIN...END`, `WHILE` (`BREAK`, `CONTINUE`), `CREATE PROCEDURE` (Input, `OUTPUT`, `RETURN`)
+* **Themenschwerpunkt:** `DECLARE`, `SET`, `PRINT`, `[test declare von select]`, `IF...ELSE`, `BEGIN...END`, `WHILE` (`BREAK`, `CONTINUE`), `CREATE PROCEDURE` (Input, `OUTPUT`, `RETURN`), `CREATE FUNCTION` (Skalar, iTVF, MSTVF) & Gegenüberstellung SP vs. UDF
 
 ---
 
@@ -50,10 +50,19 @@
   - Definition mit `CREATE OR ALTER PROCEDURE dbo.usp_Name`.
   - **Die 4 Kernvorteile:** Plan-Caching & Performance, Sicherheit & Kapselung (Least Privilege / Ownership Chaining), SQL-Injection-Schutz und zentrale Wartbarkeit.
   - Parameter-Architektur: Eingabeparameter mit Standardwerten (Defaults), `OUTPUT`-Parameter für Ergebnisrückgaben an den Aufrufer, ganzzahlige Statuscodes mit `RETURN`.
+  - Suchkaskaden mit optionalen Parametern (`@param = NULL`) zur Vermeidung von Parameter Sniffing.
   - Aufruf mit `EXECUTE` / `EXEC` und Übergabe von Rückgabevariablen.
-  - Metadaten-Inspektion via `sys.procedures`, `sys.parameters` und `sp_helptext`.
+- [x] **Benutzerdefinierte Funktionen (User-Defined Functions - UDF):**
+  - **Skalare Funktionen:** Berechnung einzelner Werte (`RETURNS Datentyp`), zwingendes `dbo.`-Präfix beim Aufruf, Einbettung direkt in `SELECT`, `WHERE`, `ORDER BY`.
+  - **Inline Table-Valued Functions (iTVF):** Parametrisierte Sichten (`RETURNS TABLE` ohne `BEGIN...END`), hohe Performance durch Query Inlining, Einsatz mit `CROSS APPLY`.
+  - **Multi-Statement Table-Valued Functions (MSTVF):** Tabellenwertfunktionen mit `BEGIN...END` und expliziter Tabellenvariable.
+- [x] **Der fundamentale IHK-Vergleich: Stored Procedures vs. Functions:**
+  - Zweck (Aktion/Workflow vs. Berechnung/Transformation).
+  - DML- und Seiteneffekt-Verbot in Funktionen (Strikt Read-Only!).
+  - Transaktionsverbot in Funktionen (`BEGIN TRAN` verboten).
+  - Einbettbarkeit in Abfragen (Functions: JA | Procedures: NEIN).
 - [x] **Praxis-Workshop auf der `ProjektDB` (Single Source of Truth):**
-  - Implementierung realer Business-Logik: Budget-Ampelprüfung, HR-Gehaltsbenchmark, Mitarbeiter-Auslastungsmonitor, dynamische Provisionsberechnung, transaktionsgesicherte Gehaltserhöhung und geschäftslogische Prozeduren.
+  - Implementierung realer Business-Logik: Budget-Ampelprüfung, HR-Gehaltsbenchmark, Mitarbeiter-Auslastungsmonitor, dynamische Provisionsberechnung, Nettogehaltsberechnung via UDF und geschäftslogische Prozeduren.
 
 ---
 
@@ -276,6 +285,36 @@ flowchart LR
     style PlanCache fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#ffffff
     style ExecPlan fill:#15803d,stroke:#22c55e,stroke-width:2px,color:#ffffff
     style ProcBody fill:#4338ca,stroke:#6366f1,stroke-width:2px,color:#ffffff
+```
+
+---
+
+### 7. Entscheidungs-Kompass: Wann Stored Procedure, wann Function?
+
+Die Wahl zwischen Prozedur und Funktion richtet sich nach dem Einsatzzweck (Aktion/DML vs. Berechnung/Transformation):
+
+```mermaid
+flowchart TD
+    StartDecision(["🎯 Welche Aufgabe soll gelöst werden?"]) --> ModifiesData{"Soll die Datenbank modifiziert<br/>werden (INSERT, UPDATE, DELETE)<br/>oder Transaktionen gesteuert werden?"}
+    
+    ModifiesData -- "Ja (Daten ändern / TCL)" --> UseSP["⚡ <b>STORED PROCEDURE</b><br/>• Darf Daten manipulieren (DML)<br/>• Unterstützt Transaktionen (BEGIN TRAN)<br/>• Gibt Statuscodes via RETURN zurück<br/>• Aufruf via <code>EXEC dbo.usp_Name</code>"]
+    
+    ModifiesData -- "Nein (Reine Berechnung)" --> WhereUsed{"Wo soll das Objekt<br/>aufgerufen werden?"}
+    
+    WhereUsed -- "Direkt in SELECT, WHERE,<br/>JOIN oder HAVING" --> WhichReturn{"Welcher Rückgabetyp<br/>wird benötigt?"}
+    WhereUsed -- "Als eigenständiger Schritt /<br/>mit OUTPUT-Parametern" --> UseSP
+    
+    WhichReturn -- "Genau 1 Skalarwert<br/>(Zahl, Text, Datum)" --> UseScalar["🔢 <b>SKALARE FUNKTION (Scalar UDF)</b><br/>• <code>RETURNS DECIMAL / INT...</code><br/>• Zwingend <code>dbo.udf_Name()</code><br/>• Nutzt in SELECT / WHERE"]
+    
+    WhichReturn -- "Eine tabellarische<br/>Ergebnismenge" --> IsSimple{"Basiert die Tabelle auf<br/>einem einzelnen SELECT?"}
+    
+    IsSimple -- "Ja (Sehr schnell!)" --> UseITVF["📊 <b>INLINE TVF (iTVF)</b><br/>• <code>RETURNS TABLE</code> ohne BEGIN/END<br/>• Parametrisierte Sicht<br/>• Hervorragende Performance (Inlining)"]
+    IsSimple -- "Nein (Komplexe Logik)" --> UseMSTVF["📋 <b>MULTI-STATEMENT TVF (MSTVF)</b><br/>• <code>RETURNS @Tab TABLE</code> mit BEGIN/END<br/>• Schrittweise Tabellenbefüllung"]
+
+    style UseSP fill:#b91c1c,stroke:#ef4444,stroke-width:2px,color:#ffffff
+    style UseScalar fill:#0284c7,stroke:#38bdf8,stroke-width:2px,color:#ffffff
+    style UseITVF fill:#15803d,stroke:#22c55e,stroke-width:2px,color:#ffffff
+    style UseMSTVF fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#ffffff
 ```
 
 ---
@@ -516,6 +555,40 @@ GO
 
 ---
 
+### 7. T-SQL Funktionen (UDF) & Gegenüberstellung zu Stored Procedures
+
+Benutzerdefinierte Funktionen (*User-Defined Functions* - UDF) dienen der **Berechnung und Transformation von Werten** und sind strikt nebenwirkungsfrei (*Side-Effect Free*).
+
+#### 7.1 Die 3 Arten von Funktionen im Überblick
+
+1. **Skalare Funktionen (Scalar UDF):**
+   - Gibt genau **einen Skalarwert** zurück (`RETURNS INT`, `VARCHAR`, `DECIMAL`...).
+   - **Besonderheit:** Muss beim Aufruf zwingend mit zweigliedrigem Namen aufgerufen werden: `dbo.udf_BerechneNettoGehalt(gehalt, 30.00)`.
+   - Kann direkt in `SELECT`, `WHERE`, `ORDER BY` und `CHECK`-Constraints verwendet werden.
+2. **Inline-Tabellenwertfunktionen (Inline TVF - iTVF):**
+   - Gibt eine virtuelle Tabelle zurück (`RETURNS TABLE`).
+   - Besitzt **kein** `BEGIN...END`, sondern besteht aus einem einzigen `RETURN (SELECT ...)`.
+   - **Performance-König:** Der Optimizer bettet die Abfrage wie eine parametrisierte Sicht (*View*) direkt in den Abfrageplan ein (*Query Inlining*).
+   - Hervorragend kombinierbar mit `CROSS APPLY`.
+3. **Mehrfachanweisungs-Tabellenwertfunktionen (Multi-Statement TVF - MSTVF):**
+   - Besitzt einen `BEGIN...END`-Rumpf und deklariert eine Tabellenvariable (`RETURNS @Tab TABLE (...)`).
+   - Erlaubt prozedurale Befüllung, ist jedoch bei großen Datenmengen langsamer als eine iTVF.
+
+#### 7.2 Große IHK-Vergleichstabelle: Stored Procedure vs. User-Defined Function
+
+| Kriterium | Stored Procedure (SP) | User-Defined Function (UDF) |
+| :--- | :--- | :--- |
+| **Primäre Aufgabe** | **Aktionen ausführen & Workflows steuern** (DML, Datenpflege, ETL). | **Werte berechnen & transformieren** (Berechnungsformeln, Filter). |
+| **Rückgabewerte** | Beliebig viele Resultsets, optionale `OUTPUT`-Parameter und ganzzahliger `RETURN`-Code. | **Zwingend genau ein Rückgabewert** (entweder ein Skalarwert oder eine `TABLE`). |
+| **Aufrufbarkeit** | Nur als eigenständige Anweisung via **`EXECUTE / EXEC`**. | **Direkt eingebettet** in `SELECT`, `WHERE`, `HAVING`, `JOIN` oder `FROM`. |
+| **DML-Erlaubnis (Seiteneffekte)** | **JA:** Darf Tabellen manipulieren (`INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, TempTables). | ⛔ **NEIN (STRIKT READ-ONLY):** Darf den DB-Zustand nicht verändern! Keine DML auf Basistabellen. |
+| **Transaktionen (TCL)** | **JA:** Darf Transaktionen steuern (`BEGIN TRAN`, `COMMIT`, `ROLLBACK`). | ⛔ **NEIN:** Transaktionsbefehle sind in Funktionen strengstens verboten. |
+| **Parameter** | Unterstützt Eingabeparameter und **`OUTPUT`-Parameter**. | Unterstützt **nur Eingabeparameter** (keine `OUTPUT`-Parameter). |
+| **Verschachtelung** | Darf andere Prozeduren und Funktionen aufrufen. | Darf andere Funktionen aufrufen, aber **keine Stored Procedures**! |
+| **Client-Meldungen** | Darf `PRINT`-Meldungen ausgeben. | ⛔ **NEIN:** `PRINT` ist in Funktionen verboten. |
+
+---
+
 ## 💻 Praktische Übungen im Verzeichnis `src/`
 
 Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL-Skripte im Ordner [`src/`](./src/) abgelegt:
@@ -527,18 +600,20 @@ Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL
 | [📄 `03_kontrollstrukturen_if_else_begin_end.sql`](./src/03_kontrollstrukturen_if_else_begin_end.sql) | **Kontrollstrukturen & Verzweigungen** | Ablaufsteuerung mit `IF...ELSE`, Demonstration der Gefahrenzone ohne `BEGIN...END`, mehrstufige Einstufungen via `ELSE IF`, verschachtelte Bedingungen (*Nested IF*), komplexe Boolesche Logik und Existenzprüfungen mit `IF EXISTS`. |
 | [📄 `04_praxis_business_logik_projektdb.sql`](./src/04_praxis_business_logik_projektdb.sql) | **Praxis-Workshop ProjektDB** | 5 reale Unternehmensszenarien auf der `ProjektDB`: Projekt-Budget-Auditor mit Ampelbewertung, HR-Gehaltsbenchmark mit Abweichungsanalyse, Mitarbeiter-Auslastungsmonitor (`Arbeit`), dynamische Provisionsberechnung (`Umsatz`) und idempotente DML-Guards. |
 | [📄 `05_schleifen_while_break_continue.sql`](./src/05_schleifen_while_break_continue.sql) | **Iterative Schleifen (WHILE)** | Zählergesteuerte `WHILE`-Schleifen, Notbremse mit `BREAK`, Iterationsübersprung mit `CONTINUE`, zeilenweises Abarbeiten via temporärer Tabelle (Cursor-Alternative) und Best-Practice-Muster für industrielles Batching (Chunk-Deletes). |
-| [📄 `06_stored_procedures_grundlagen_und_parameter.sql`](./src/06_stored_procedures_grundlagen_und_parameter.sql) | **Stored Procedures Grundlagen** | `CREATE OR ALTER PROCEDURE`, Prozeduren ohne Parameter, Eingabeparameter mit Standardwerten (Defaults), `OUTPUT`-Parameter zur Werterückgabe, `RETURN`-Statuscodes, Aufruf via `EXEC` und Metadaten-Inspektion in `sys.procedures`. |
+| [📄 `06_stored_procedures_grundlagen_und_parameter.sql`](./src/06_stored_procedures_grundlagen_und_parameter.sql) | **Stored Procedures Grundlagen** | `CREATE OR ALTER PROCEDURE`, Prozeduren ohne Parameter, optionale Parameter mit Defaultwerten (`= NULL`) & Such-Kaskade, `OUTPUT`-Parameter zur Werterückgabe, `RETURN`-Statuscodes, Aufruf via `EXEC` und Metadaten in `sys.procedures`. |
 | [📄 `07_stored_procedures_business_logik_projektdb.sql`](./src/07_stored_procedures_business_logik_projektdb.sql) | **Enterprise Stored Procedures** | 3 komplexe Prozeduren auf der `ProjektDB`: `usp_MitarbeiterProjektZuweisen` (validierte DML), `usp_GehaltsanpassungAbteilung` (transaktionsgesichert mit Grenzen) und `usp_IterativerProjektStatusAudit` (integrierte `WHILE`-Schleife). |
+| [📄 `08_tsql_functions_vs_stored_procedures.sql`](./src/08_tsql_functions_vs_stored_procedures.sql) | **UDFs vs. Stored Procedures** | Skalare Funktionen (`dbo.udf_BerechneNettoGehalt`), Inline-Tabellenwertfunktionen (`dbo.itvf_ProjektMitarbeiterListe` mit `CROSS APPLY`), Multi-Statement TVF und praktische Demonstration aller Restriktionen (DML- & Transaktionsverbot in UDFs). |
 
 ---
 
 ## 💡 Wichtige Notizen & Best Practices
 
 > [!IMPORTANT]
-> **Die 6 goldenen Regeln für prozedurales T-SQL:**
+> **Die 7 goldenen Regeln für prozedurales T-SQL:**
 > 1. **IMMER `BEGIN...END` verwenden:** Auch wenn ein `IF`-, `ELSE`- oder `WHILE`-Zweig zunächst nur aus einer einzigen Zeile besteht. Das verhindert gefährliche Logikfehler bei späteren Code-Erweiterungen.
 > 2. **Variablen vor `SELECT`-Zuweisungen initialisieren:** Vor einer Wertzuweisung mit `SELECT @var = col` die Variable immer explizit auf `NULL` setzen, um Phantom-Altwerte bei 0 Treffern auszuschließen.
 > 3. **Set-Based vor Iteration (RBAR vermeiden):** Schleifen nur für administrative Aufgaben, Simulationen oder Batching von Großlöschungen verwenden. Abfragen und Datenmanipulationen immer mengenbasiert formulieren.
-> 4. **Stored Procedures mit `usp_` benennen:** Niemals das Präfix `sp_` verwenden, da der SQL Server sonst immer zuerst in der Systemdatenbank `master` sucht.
+> 4. **Stored Procedures mit `usp_`, Funktionen mit `udf_` / `itvf_` benennen:** Niemals das Präfix `sp_` verwenden, da der SQL Server sonst immer zuerst in der Systemdatenbank `master` sucht.
 > 5. **`SET NOCOUNT ON` am Anfang jeder Prozedur:** Unterdrückt die Übertragung von "X Zeilen betroffen"-Meldungen an den Client und verbessert Netzwerk-Performance sowie Latenz.
 > 6. **`OUTPUT` muss beim Aufruf wiederholt werden:** Wenn eine Prozedur einen Parameter als `OUTPUT` definiert, muss beim Aufruf via `EXEC` ebenfalls zwingend das Schlüsselwort `OUTPUT` angegeben werden, sonst wird der Wert nicht in die Aufruf-Variable geschrieben.
+> 7. **Wann SP, wann UDF?** Sollen Daten modifiziert oder Transaktionen gesteuert werden ➔ **Stored Procedure**. Soll eine wiederverwendbare Berechnungs- oder Filterformel direkt in Abfragen (`SELECT`, `WHERE`, `JOIN`) eingebettet werden ➔ **User-Defined Function (bevorzugt Inline TVF)**.
