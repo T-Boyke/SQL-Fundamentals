@@ -9,7 +9,7 @@ Willkommen im zentralen Hub für die SQL-Fundamentals-Serie. Dieses Repository d
 ## 👥 Kurs-Metadaten
 * **Autor/Bearbeiter:** Tobias Boyke
 * **Dozent:** Tom S.
-* **Modulzeitraum:** 03.08.2026 - 04.09.2026
+* **Modulzeitraum:** 03.08.2026 - 08.09.2026
 * **Arbeitszeiten:** Montag bis Freitag, 08:15 Uhr - 16:00 Uhr
 * **Lizenz:** [AGPL-3.0](./LICENSE)
 
@@ -172,13 +172,18 @@ flowchart TD
         D21["Tag 21: Design & Normalisierung"] --> D22["Tag 22: Projekt DDL"]
         D22 --> D23["Tag 23: Projekt Abfragen"]
         D23 --> D24["Tag 24: Variablen, Schleifen & Prozeduren"]
-        D24 --> D25["Tag 25: Abschluss"]
+        D24 --> D25["Tag 25: Modulprojekt Abschluss"]
+    end
+
+    subgraph W6["📅 Woche 6: Repetitorium & Abschlussklausur"]
+        D26["Tag 26: Intensiv-Repetitorium & Klausurvorbereitung II"] --> D27["Tag 27: 2. Klausur (Abschlussklausur)"]
     end
 
     D05 --> D06
     D10 --> D11
     D15 --> D16
     D20 --> D21
+    D25 --> D26
 
     %% Style classes
     classDef completed fill:#1e293b,stroke:#22c55e,stroke-width:2px,color:#f8fafc;
@@ -188,7 +193,8 @@ flowchart TD
 
     class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24 completed;
     class D25 current;
-    class D10 exam;
+    class D26 pending;
+    class D10,D27 exam;
 
     %% Subgraph Styles
     style W1 fill:#0f172a,stroke:#1e293b,stroke-width:2px,color:#e2e8f0
@@ -196,6 +202,7 @@ flowchart TD
     style W3 fill:#0f172a,stroke:#1e293b,stroke-width:2px,color:#e2e8f0
     style W4 fill:#0f172a,stroke:#1e293b,stroke-width:2px,color:#e2e8f0
     style W5 fill:#0f172a,stroke:#1e293b,stroke-width:2px,color:#e2e8f0
+    style W6 fill:#0f172a,stroke:#1e293b,stroke-width:2px,color:#e2e8f0
 ```
 
 ---
@@ -204,7 +211,7 @@ flowchart TD
 
 > [!IMPORTANT]
 > **Kanonische Datenbasis für das gesamte Repository:**
-> Die **`ProjektDB`** ist die verbindliche **Single Source of Truth (SoT)** für alle Kursmodule (`Day_01` bis `Day_25`). Alle praktischen Übungen, Skripte, Abfragen und Modul-Dokumentationen basieren konsistent auf diesem relationalen Schema.
+> Die **`ProjektDB`** ist die verbindliche **Single Source of Truth (SoT)** für alle Kursmodule (`Day_01` bis `Day_27`). Alle praktischen Übungen, Skripte, Abfragen und Modul-Dokumentationen basieren konsistent auf diesem relationalen Schema.
 
 Das folgende Entity-Relationship-Diagramm (ERD) visualisiert die zentrale Übungsdatenbank `ProjektDB`:
 
@@ -341,7 +348,17 @@ Die letzte Woche widmet sich der praktischen Anwendung. In einem kooperativen Ab
 | **Tag 22** | ✅ | IHK-Prüfungstraining: AP 2021 S GA1 HS5 | 25-Punkte IHK-Abschlussprüfung: Mitgliederbewertung, Durchschnittsnoten, Zeitfenster-Filter & ETL-Archivierung (`MitgliedArchiv`). | [📖 Day_22](./Day_22/readme.md) |
 | **Tag 23** | ✅ | DCL, Rollen & SQL Server Sicherheit | 2-Stufen-Sicherheitsmodell (Logins & Users), DCL (`GRANT`, `REVOKE`, `DENY`), RBAC-Rollen, Vererbung & `ProjektDB`-Absicherung. | [📖 Day_23](./Day_23/readme.md) |
 | **Tag 24** | ✅ | T-SQL Prozedurale Programmierung | Variablen (`DECLARE`, `SET`, `PRINT`), Abfragezuweisung (`SELECT`), Verzweigungen (`IF...ELSE`), `WHILE`-Schleifen & Stored Procedures. | [📖 Day_24](./Day_24/readme.md) |
-| **Tag 25** | ⏳ | Modul-Abschluss & Feedback | Modulnachbereitung, Feedbackrunde mit Tom S. und Ausblick auf NoSQL sowie Cloud-DBs. | [📖 Day_25](./Day_25/readme.md) |
+| **Tag 25** | ⏳ | Modul-Abschluss & Ausblick | Modulnachbereitung, Feedbackrunde mit Tom S. und Ausblick auf NoSQL sowie Cloud-DBs. | [📖 Day_25](./Day_25/readme.md) |
+
+---
+
+### 📅 Woche 6: Repetitorium & Abschlussprüfung
+Die finale Phase des Moduls dient der tiefgehenden Konsolidierung aller erlernten T-SQL-Konzepte, der Durchführung einer umfassenden Generalprobe (Probeklausur II) und dem Ablegen der 2. Modul-Abschlussklausur.
+
+| Modul | Status | Fokus-Themen | Ausführliche Details | Link |
+| :--- | :---: | :--- | :--- | :--- |
+| **Tag 26** | ⏳ | Intensiv-Repetitorium & Prüfungsvorbereitung II | Systematische Wiederholung aller Kernbereiche (Wochen 3–5), IHK-Prüfungsstrategien & Durchführung der Probeklausur II. | [📖 Day_26](./Day_26/readme.md) |
+| **Tag 27** | 🎓 | 2. Leistungsüberprüfung (Abschlussklausur) | Finale Modul-Abschlussprüfung über alle Kernkompetenzen (DQL, Joins, DCL, T-SQL Programmierung & Stored Procedures). | [📖 Day_27](./Day_27/readme.md) |
 
 ---
 

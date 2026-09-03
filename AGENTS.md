@@ -2,7 +2,7 @@
 
 ## 🗄️ Single Source of Truth (SoT): `ProjektDB`
 
-Für **alle** Module (`Day_01` bis `Day_25`) gilt die **`ProjektDB`** als verbindliche **Single Source of Truth (SoT)**.
+Für **alle** Module (`Day_01` bis `Day_27`) gilt die **`ProjektDB`** als verbindliche **Single Source of Truth (SoT)**.
 
 ### Kanonisches Schema & Entitäten
 

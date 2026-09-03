@@ -1,24 +1,31 @@
-# ðŸ“… Day_25: Modul-Abschluss, Feedback & Ausblick
+# 📅 Day_25: Modulprojekt-Abschluss & Vorbereitung auf die Finalwoche
 
-## â„¹ï¸ Kurs-Informationen
-*   **Datum:** 04.09.2026
-*   **Arbeitszeit:** Montag - Freitag, 08:15 - 16:00 Uhr
-*   **Dozent:** Tom S.
-*   **Autor:** Tobias Boyke
+## ℹ️ Kurs-Informationen
+* **Datum:** Freitag, 04.09.2026
+* **Arbeitszeit:** 08:15 - 16:00 Uhr
+* **Dozent:** Tom S. (BITLC)
+* **Autor:** Tobias Boyke
+* **Fokus:** Konsolidierung des Modulprojekts, Review der praktischen Datenbank-Implementierungen & Übergang in die Klausurwoche
 
 ---
 
-## ðŸŽ¯ Lernziele des Tages
-- [ ] VerstÃ¤ndnis des Hauptthemas: *Modul-Abschluss, Feedback & Ausblick*
-- [ ] DurchfÃ¼hrung praktischer Ãœbungen im Ordner src/
-- [ ] Dokumentation der wichtigsten Erkenntnisse
+## 🎯 Lernziele des Tages
+- [ ] Finalisierung des Abschlussprojekts (DDL, Abfragen & Optimierung)
+- [ ] Code-Review und Refactoring prozeduraler T-SQL-Objekte (Stored Procedures & Functions)
+- [ ] Zusammenfassung der Modulfortschritte und Vorbereitung auf das Repetitorium (Woche 6)
 
-## ðŸ“– Theorie & Konzepte
+---
+
+## 📖 Theorie & Konzepte
 *Hier werden die theoretischen Grundlagen des Tages dokumentiert.*
 
-## ðŸ’» Praktische Ãœbungen
-*Praktische Aufgaben und SQL-Skripte befinden sich im Verzeichnis [src](./src).*
+---
 
-## ðŸ’¡ Wichtige Notizen
+## 💻 Praktische Übungen
+*Praktische Aufgaben und SQL-Skripte befinden sich im Verzeichnis [`src`](./src).*
+
+---
+
+## 💡 Wichtige Notizen
 > [!NOTE]
-> EigenstÃ¤ndige Notizen und ErgÃ¤nzungen zu den Vorlesungsinhalten.
+> Eigenständige Notizen und Ergänzungen zu den Vorlesungsinhalten von Tom S.
