@@ -171,7 +171,7 @@ flowchart TD
     subgraph W5["📅 Woche 5: Datenbank-Design & Modulprojekt"]
         D21["Tag 21: Design & Normalisierung"] --> D22["Tag 22: Projekt DDL"]
         D22 --> D23["Tag 23: Projekt Abfragen"]
-        D23 --> D24["Tag 24: Präsentationen"]
+        D23 --> D24["Tag 24: Variablen, Schleifen & Prozeduren"]
         D24 --> D25["Tag 25: Abschluss"]
     end
 
@@ -186,9 +186,8 @@ flowchart TD
     classDef pending fill:#1e293b,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5,color:#94a3b8;
     classDef exam fill:#311010,stroke:#ef4444,stroke-width:2px,color:#fca5a5;
 
-    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23 completed;
-    class D24 current;
-    class D25 pending;
+    class D01,D02,D03,D04,D05,D06,D07,D08,D09,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24 completed;
+    class D25 current;
     class D10 exam;
 
     %% Subgraph Styles
@@ -341,7 +340,7 @@ Die letzte Woche widmet sich der praktischen Anwendung. In einem kooperativen Ab
 | **Tag 21** | ✅ | Advanced T-SQL: APPLY, MERGE & Window Functions | `CROSS`/`OUTER APPLY`, ETL-`MERGE` mit `OUTPUT`, `GROUPING SETS`/`CUBE`/`ROLLUP` und analytische Fensterfunktionen. | [📖 Day_21](./Day_21/readme.md) |
 | **Tag 22** | ✅ | IHK-Prüfungstraining: AP 2021 S GA1 HS5 | 25-Punkte IHK-Abschlussprüfung: Mitgliederbewertung, Durchschnittsnoten, Zeitfenster-Filter & ETL-Archivierung (`MitgliedArchiv`). | [📖 Day_22](./Day_22/readme.md) |
 | **Tag 23** | ✅ | DCL, Rollen & SQL Server Sicherheit | 2-Stufen-Sicherheitsmodell (Logins & Users), DCL (`GRANT`, `REVOKE`, `DENY`), RBAC-Rollen, Vererbung & `ProjektDB`-Absicherung. | [📖 Day_23](./Day_23/readme.md) |
-| **Tag 24** | ⏳ | Projektpräsentation & Review | Vorstellung der Projektdatenbanken, Begründung der Design-Entscheidungen, Peer Review. | [📖 Day_24](./Day_24/readme.md) |
+| **Tag 24** | ✅ | T-SQL Prozedurale Programmierung | Variablen (`DECLARE`, `SET`, `PRINT`), Abfragezuweisung (`SELECT`), Verzweigungen (`IF...ELSE`), `WHILE`-Schleifen & Stored Procedures. | [📖 Day_24](./Day_24/readme.md) |
 | **Tag 25** | ⏳ | Modul-Abschluss & Feedback | Modulnachbereitung, Feedbackrunde mit Tom S. und Ausblick auf NoSQL sowie Cloud-DBs. | [📖 Day_25](./Day_25/readme.md) |
 
 ---
