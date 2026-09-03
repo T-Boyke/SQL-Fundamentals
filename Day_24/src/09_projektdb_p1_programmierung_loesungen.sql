@@ -260,3 +260,63 @@ EXEC dbo.sp_FilterMitarbeiter1 @Abteilung = 'Produktion';
 PRINT '--- Testfall C: Fantasie-Abteilung (Raumfahrt) ---';
 EXEC dbo.sp_FilterMitarbeiter1 @Abteilung = 'Raumfahrt';
 GO
+
+
+-- ============================================================================
+-- TEIL 3: SCHLAUE FRAGEN AN MEINEN DOZENTEN (Tom S.)
+-- ============================================================================
+-- Diese Fragen demonstrieren tiefes Verständnis für SQL Server Internals,
+-- Architektur-Entscheidungen und Enterprise Best Practices rund um die
+-- heutigen Themen (Variablen, Ablaufsteuerung, Prozeduren & Funktionen).
+-- ============================================================================
+
+/*
+-------------------------------------------------------------------------------
+Frage 1 (Namenskonvention & Performance-Falle bei 'sp_'):
+-------------------------------------------------------------------------------
+"In Aufgabe P1.1 lautet der Name der Prozedur 'sp_FilterMitarbeiter1'.
+In Produktionsumgebungen und Microsoft-Guidelines wird dringend davor gewarnt,
+eigene Prozeduren mit dem Präfix 'sp_' zu benennen, da der SQL Server sonst
+immer zuerst in der Systemdatenbank 'master' nachsieht und einen Performance-
+Verlust (Cache Miss) erleidet. War das 'sp_' in der Aufgabenstellung historisch
+bedingt oder als gezielte Diskussionsgrundlage für Namenskonventionen gedacht?"
+
+-------------------------------------------------------------------------------
+Frage 2 (Fehlerbehandlung: Resultset vs. echte Exception via THROW):
+-------------------------------------------------------------------------------
+"In Aufgabe P1.2 geben wir bei ungültiger Abteilung einen Datensatz mit der
+Spalte 'Fehlermeldung' im Resultset (Grid) zurück. In einer echten Enterprise-
+Applikation (z. B. C# Backend mit Entity Framework oder Dapper) erwartet die
+aufrufende Schicht bei einem Validierungsfehler aber typischerweise keinen
+regulären Data-Reader, sondern eine echte SqlException (z. B. via THROW 50001,
+'Abteilung ungültig', 1;).
+Wann empfiehlt Tom S. in der Praxis Resultset-Fehler und wann echte THROW-Exceptions?"
+
+-------------------------------------------------------------------------------
+Frage 3 (Query Optimization & Parameter Sniffing in IF...ELSE Verzweigungen):
+-------------------------------------------------------------------------------
+"Wenn eine Stored Procedure wie in unserer Such-Kaskade eine IF...ELSE IF
+Verzweigung enthält: Kompiliert der Query Optimizer beim Erstaufruf sofort die
+Ausführungspläne für ALLE Zweige auf Basis des ersten Parameters (Parameter Sniffing),
+oder werden die Zweige erst zur Laufzeit kompiliert, wenn sie tatsächlich betreten
+werden (Deferred Compilation / Statement-Level Recompilation)?"
+
+-------------------------------------------------------------------------------
+Frage 4 (Batch-Scope vs. Block-Scope – Warum weicht T-SQL von ANSI ab?):
+-------------------------------------------------------------------------------
+"Wir haben heute gelernt: 'Scope ist der Batch, nicht der Block' – eine Variable,
+die in einem IF...BEGIN...END deklariert wird, überlebt das END und existiert bis
+zum 'GO'. Warum hat Microsoft in T-SQL diesen Weg gewählt, anstatt wie in fast
+allen modernen Programmiersprachen (C#, Java, Python) einen echten Block-Scope
+einzuführen? Ist das reine Abwärtskompatibilität zu Sybase SQL Server?"
+
+-------------------------------------------------------------------------------
+Frage 5 (Scalar UDF Inlining vs. Inline TVF):
+-------------------------------------------------------------------------------
+"Skalare Funktionen galten lange als Performance-Killer (RBAR / zeilenweiser
+Kontextwechsel). Seit SQL Server 2019 gibt es das Feature 'Scalar UDF Inlining'.
+Reicht dieses Feature in modernen Produktivumgebungen aus, oder gilt nach wie vor
+die Daumenregel: 'Im Zweifel IMMER eine Inline-Tabellenwertfunktion (iTVF)
+mit CROSS APPLY bevorzugen'?"
+*/
+

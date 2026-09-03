@@ -669,6 +669,25 @@ END;
 GO
 ```
 
+#### 8.3 🎓 Schlaue Fragen an meinen Dozenten (Tom S.)
+
+Diese Fragen vertiefen die Hintergründe der heutigen Lehrinhalte und eignen sich hervorragend für die Fachdiskussion im Unterricht:
+
+1. **Namenskonvention & Performance-Falle bei `sp_`:**
+   > *"In Aufgabe P1.1 lautet der vorgegebene Name `sp_FilterMitarbeiter1`. Laut Microsoft-Best-Practices sollte man eigene Prozeduren niemals mit `sp_` beginnen, weil der SQL Server sonst immer zuerst im `master` nachsieht und einen Cache-Miss riskiert. War das `sp_` in der Aufgabe historisch bedingt oder als gezielte Diskussionsgrundlage für Namenskonventionen gedacht?"*
+
+2. **Fehlerbehandlung: Resultset vs. echte Exception (`THROW`):**
+   > *"In Aufgabe P1.2 geben wir bei einer ungültigen Abteilung einen Datensatz mit der Spalte `Fehlermeldung` im Grid aus. In Enterprise-Backends (z. B. C# mit Entity Framework oder Dapper) erwartet die API bei einem Validierungsfehler typischerweise keinen regulären Data-Reader, sondern eine echte SqlException via `THROW 50001, 'Abteilung ungültig', 1;`. Wann empfiehlt Tom S. in der Praxis Resultset-Fehler und wann echte `THROW`-Exceptions?"*
+
+3. **Query Optimization & Parameter Sniffing bei `IF...ELSE`-Zweigen:**
+   > *"Wenn eine Stored Procedure mit `IF...ELSE IF` verzweigt: Erstellt der Query Optimizer beim Erstaufruf sofort Ausführungspläne für alle Zweige basierend auf den ersten Parametern (Parameter Sniffing), oder werden die Zweige erst zur Laufzeit kompiliert, wenn sie tatsächlich betreten werden (Deferred Compilation / Statement-Level Recompilation)?"*
+
+4. **Batch-Scope vs. Block-Scope – Warum weicht T-SQL von ANSI/C# ab?**
+   > *"Wir haben heute gelernt: 'Scope ist der Batch, nicht der Block' – Variablen in `BEGIN...END` überleben das Blockende bis zum nächsten `GO`. Warum hat Microsoft in T-SQL diesen Weg beibehalten, anstatt wie fast alle modernen Programmiersprachen (C#, Java, Python) einen echten Block-Scope einzuführen? Ist das reine Abwärtskompatibilität zur Sybase-Herkunft?"*
+
+5. **Scalar UDF Inlining in modernen SQL Servern:**
+   > *"Skalare UDFs galten historisch als Performance-Falle (RBAR / Kontextwechsel pro Zeile). Seit SQL Server 2019 gibt es das Feature `Scalar UDF Inlining`. Reicht das in modernen Produktionsumgebungen aus, oder gilt nach wie vor die Devise: 'Im Zweifel immer eine Inline-Tabellenwertfunktion (iTVF) mit `CROSS APPLY` bevorzugen'?"*
+
 ---
 
 ## 💻 Praktische Übungen im Verzeichnis `src/`
