@@ -114,6 +114,122 @@ GO
 
 
 -- ----------------------------------------------------------------------------
+-- 2b. Best Practice: Optionale Parameter mit Standardwerten (Such-Kaskade)
+-- ----------------------------------------------------------------------------
+PRINT '======================================================================';
+PRINT '>>> 2b. Optionale Parameter mit Standardwerten (= NULL) & Kaskadenlogik';
+PRINT '======================================================================';
+
+-- ARCHITEKTUR-HINWEIS (Vorlesung Tom S.):
+-- Wird ein Parameter mit '= NULL' deklariert, ist seine Übergabe optional.
+-- Über eine IF...ELSE IF...ELSE Kaskade werden die unterschiedlichen
+-- Suchszenarien getrennt voneinander ausgeführt:
+-- 1. Suche nach Primärschlüssel-ID (höchste Selektivität / Clustered Index Seek)
+-- 2. Suche nach Name/Muster (sekundäre Selektivität)
+-- 3. Fallback ohne Filter (mit defensiver TOP-Begrenzung zum Schutz des Servers)
+-- Vorteil gegenüber Catch-All 'WHERE (@id IS NULL OR id = @id)':
+-- Der Query Optimizer kann für JEDEN Zweig einen maßgeschneiderten Ausführungsplan
+-- erstellen, ohne in Parameter-Sniffing-Fallen zu tappen!
+
+CREATE OR ALTER PROCEDURE dbo.usp_SucheMitarbeiter
+    @mitarbeiterId INT = NULL,          -- Optionaler Parameter 1
+    @nachname NVARCHAR(50) = NULL,      -- Optionaler Parameter 2
+    @wohnort NVARCHAR(50) = NULL        -- Optionaler Parameter 3
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    PRINT '>>> Ausführung dbo.usp_SucheMitarbeiter';
+
+    -- Variante A: Suche nach ID, wenn sie übergeben wurde (höchste Priorität)
+    IF @mitarbeiterId IS NOT NULL
+    BEGIN
+        PRINT CONCAT('  [Zweig A] Gezielte Suche nach MitarbeiterID = ', @mitarbeiterId);
+        SELECT id, vorname, nachname, abt_id, ort, chef_id
+        FROM dbo.Mitarbeiter
+        WHERE id = @mitarbeiterId;
+    END
+    -- Variante B: Suche nach Nachname (Präfix-Suche via LIKE)
+    ELSE IF @nachname IS NOT NULL
+    BEGIN
+        PRINT CONCAT('  [Zweig B] Mustersuche nach Nachname LIKE "', @nachname, '%"');
+        SELECT id, vorname, nachname, abt_id, ort, chef_id
+        FROM dbo.Mitarbeiter
+        WHERE nachname LIKE @nachname + '%'
+        ORDER BY nachname, vorname;
+    END
+    -- Variante C: Suche nach Wohnort
+    ELSE IF @wohnort IS NOT NULL
+    BEGIN
+        PRINT CONCAT('  [Zweig C] Suche nach Wohnort = "', @wohnort, '"');
+        SELECT id, vorname, nachname, abt_id, ort, chef_id
+        FROM dbo.Mitarbeiter
+        WHERE ort = @wohnort
+        ORDER BY nachname;
+    END
+    -- Variante D: Keine Filterparameter übergeben (Fallback)
+    ELSE
+    BEGIN
+        PRINT '  [Zweig D] Keine Filter übergeben: Lade die ersten 10 Mitarbeiter (TOP 10)...';
+        SELECT TOP (10) id, vorname, nachname, abt_id, ort, chef_id
+        FROM dbo.Mitarbeiter
+        ORDER BY id;
+    END;
+END;
+GO
+
+-- Testlauf 1: Suche nach ID (Variante A)
+PRINT '--- Test 1: Aufruf mit @mitarbeiterId = 25348 ---';
+EXEC dbo.usp_SucheMitarbeiter @mitarbeiterId = 25348;
+
+-- Testlauf 2: Suche nach Name (Variante B - nutzt Default für ID)
+PRINT '--- Test 2: Aufruf mit @nachname = "K" ---';
+EXEC dbo.usp_SucheMitarbeiter @nachname = 'K';
+
+-- Testlauf 3: Aufruf ganz ohne Parameter (Variante D - Fallback TOP 10)
+PRINT '--- Test 3: Aufruf ohne Parameter (nutzt alle Defaults = NULL) ---';
+EXEC dbo.usp_SucheMitarbeiter;
+GO
+
+
+-- ----------------------------------------------------------------------------
+-- 2c. Vorlesungs-Original: SucheKunden mit optionalen Parametern
+-- ----------------------------------------------------------------------------
+PRINT '======================================================================';
+PRINT '>>> 2c. Vorlesungs-Original: dbo.usp_SucheKunden auf ProjektDB';
+PRINT '======================================================================';
+
+CREATE OR ALTER PROCEDURE dbo.usp_SucheKunden
+    @kundenId INT = NULL,          -- Optionaler Parameter 1
+    @firmenName NVARCHAR(100) = NULL -- Optionaler Parameter 2
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Variante A: Suche nach ID, wenn sie übergeben wurde
+    IF @kundenId IS NOT NULL
+    BEGIN
+        SELECT id, firma, ort FROM dbo.Kunde WHERE id = @kundenId;
+    END
+    -- Variante B: Suche nach Name, wenn ID fehlt aber Name da ist
+    ELSE IF @firmenName IS NOT NULL
+    BEGIN
+        SELECT id, firma, ort FROM dbo.Kunde WHERE firma LIKE @firmenName + '%';
+    END
+    -- Variante C: Keine Parameter übergeben
+    ELSE
+    BEGIN
+        SELECT TOP (100) id, firma, ort FROM dbo.Kunde ORDER BY id;
+    END;
+END;
+GO
+
+-- Aufruftest
+EXEC dbo.usp_SucheKunden @firmenName = 'A';
+GO
+
+
+-- ----------------------------------------------------------------------------
 -- 3. Prozedur mit OUTPUT-Parametern (Werte an den Aufrufer zurückliefern)
 -- ----------------------------------------------------------------------------
 PRINT '======================================================================';

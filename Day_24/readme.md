@@ -478,6 +478,42 @@ EXEC @retCode = dbo.usp_GehaltsCheck
 PRINT CONCAT('Returncode: ', @retCode, ' | Gehalt: ', @gehalt, ' EUR');
 ```
 
+#### 6.4 Best Practice: Optionale Parameter mit Standardwerten & Such-Kaskade
+
+Ein in der Praxis extrem häufiges und elegantes Entwurfsmuster ist die **Multi-Kriteriensuche mit optionalen Parametern**:
+
+```sql
+CREATE OR ALTER PROCEDURE dbo.usp_SucheKunden
+    @kundenId INT = NULL,          -- Optionaler Parameter 1 (Default: NULL)
+    @nachname NVARCHAR(100) = NULL -- Optionaler Parameter 2 (Default: NULL)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Variante A: Suche nach Primärschlüssel-ID, wenn übergeben (höchste Selektivität)
+    IF @kundenId IS NOT NULL
+    BEGIN
+        SELECT * FROM dbo.Kunde WHERE id = @kundenId;
+    END
+    -- Variante B: Suche nach Name/Muster, wenn ID fehlt aber Name vorhanden ist
+    ELSE IF @nachname IS NOT NULL
+    BEGIN
+        SELECT * FROM dbo.Kunde WHERE firma LIKE @nachname + '%';
+    END
+    -- Variante C: Keine Parameter übergeben -> Defensiver Fallback mit Schutzlimit
+    ELSE
+    BEGIN
+        SELECT TOP (100) * FROM dbo.Kunde ORDER BY id;
+    END;
+END;
+GO
+```
+
+> [!TIP]
+> **Warum `IF...ELSE IF` statt Catch-All `WHERE (@id IS NULL OR id = @id)`?**  
+> 1. **Index-Nutzung & Plan-Optimierung:** In einer monolithischen Catch-All-Abfrage muss der SQL Server Query Optimizer einen einzigen Ausführungsplan finden, der für alle Parameterkombinationen passt. Dies führt häufig zu ineffizienten *Table/Index Scans*. Bei der `IF...ELSE`-Verzweigung hingegen generiert die Engine für **jeden Zweig einen maßgeschneiderten Ausführungsplan** (z. B. blitzschneller *Clustered Index Seek* im ID-Zweig).  
+> 2. **Schutz vor Denial-of-Service:** Das defensive `TOP (100)` im Fallback-Zweig verhindert, dass ein unbedachter Aufruf ohne Parameter Millionen Datensätze über das Netzwerk schaufelt.
+
 ---
 
 ## 💻 Praktische Übungen im Verzeichnis `src/`
