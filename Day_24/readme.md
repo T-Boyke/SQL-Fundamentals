@@ -6,7 +6,7 @@
 * **Arbeitszeit:** 08:15 - 16:00 Uhr
 * **Dozent:** Tom S. (BITLC)
 * **Autor:** Tobias Boyke
-* **Kursunterlagen:** [`20260903-1.sql`](./assets/20260903-1.sql) & [`ProjektDB P1 - Programmierung 1 - Aufgaben.sql`](./assets/ProjektDB%20P1%20-%20Programmierung%201%20-%20Aufgaben.sql)
+* **Kursunterlagen:** [`20260903-1.sql`](./assets/20260903-1.sql), [`ProjektDB P1 - Programmierung 1 - Aufgaben.sql`](./assets/ProjektDB%20P1%20-%20Programmierung%201%20-%20Aufgaben.sql) & [`ProjektDB P1 - Programmierung 2 - Aufgaben.sql`](./assets/ProjektDB%20P1%20-%20Programmierung%202%20-%20Aufgaben.sql)
 * **Themenschwerpunkt:** `DECLARE`, `SET`, `PRINT`, `[test declare von select]`, `IF...ELSE`, `BEGIN...END`, `WHILE` (`BREAK`, `CONTINUE`), `CREATE PROCEDURE` (Input, `OUTPUT`, `RETURN`), `CREATE FUNCTION` (Skalar, iTVF, MSTVF) & Gegenüberstellung SP vs. UDF
 
 ---
@@ -669,6 +669,91 @@ END;
 GO
 ```
 
+#### Aufgabe P1.3: Gehalts-Range Filterung (`sp_FilterMitarbeiter2`)
+Prozedur zur Selektion aller Mitarbeiter innerhalb eines Gehaltskorridors (`@MinGehalt` bis `@MaxGehalt`) mit Vorprüfung:
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_FilterMitarbeiter2
+    @MinGehalt DECIMAL(10, 2),
+    @MaxGehalt DECIMAL(10, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validierung der Grenzen
+    IF @MinGehalt > @MaxGehalt
+    BEGIN
+        SELECT 'Fehler: MinGehalt darf nicht größer als MaxGehalt sein.' AS Fehlermeldung;
+        RETURN -1;
+    END;
+
+    -- Prüfung auf Treffer
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.Mitarbeiter AS m
+        INNER JOIN dbo.Gehalt AS g ON m.id = g.mit_id
+        WHERE g.gehalt BETWEEN @MinGehalt AND @MaxGehalt
+    )
+    BEGIN
+        SELECT CONCAT('Keine Mitarbeiter im Gehaltsbereich von ', 
+                      FORMAT(@MinGehalt, 'N2', 'de-DE'), ' EUR bis ', 
+                      FORMAT(@MaxGehalt, 'N2', 'de-DE'), ' EUR gefunden.') AS Meldung;
+        RETURN 0;
+    END;
+
+    -- Reguläre Ausgabe
+    SELECT m.id AS Personalnummer,
+           m.vorname,
+           m.nachname,
+           a.bezeichnung AS Abteilung,
+           g.gehalt
+    FROM dbo.Mitarbeiter AS m
+    INNER JOIN dbo.Gehalt AS g ON m.id = g.mit_id
+    LEFT JOIN dbo.Abteilung AS a ON m.abt_id = a.id
+    WHERE g.gehalt BETWEEN @MinGehalt AND @MaxGehalt
+    ORDER BY g.gehalt DESC;
+END;
+GO
+```
+
+#### Aufgabe P1.4: Konfliktfreie Projektanlage (`sp_NeuesProjektAnlegen`)
+Prozedur zur kontrollierten Neuanlage eines Projekts mit Konfliktprüfung auf die Bezeichnung:
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_NeuesProjektAnlegen
+    @Bezeichnung NVARCHAR(30),
+    @Mittel DECIMAL(12, 2),
+    @Kuerzel NCHAR(2) = NULL,
+    @KundeId INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Konfliktprüfung auf Bezeichnung
+    IF EXISTS (
+        SELECT 1 
+        FROM dbo.Projekt 
+        WHERE LOWER(bezeichnung) = LOWER(LTRIM(RTRIM(@Bezeichnung)))
+    )
+    BEGIN
+        SELECT CONCAT('Konflikt: Ein Projekt mit der Bezeichnung "', @Bezeichnung, '" existiert bereits!') AS Statusmeldung;
+        RETURN 1; -- Returncode 1 = Konflikt
+    END;
+
+    -- Automatisches Kürzel generieren, falls nicht übergeben
+    IF @Kuerzel IS NULL OR LTRIM(RTRIM(@Kuerzel)) = ''
+        SET @Kuerzel = UPPER(SUBSTRING(@Bezeichnung, 1, 2));
+
+    -- Einfügen des neuen Projekts
+    INSERT INTO dbo.Projekt (kuerzel, bezeichnung, mittel, kunde_id)
+    VALUES (@Kuerzel, @Bezeichnung, @Mittel, @KundeId);
+
+    DECLARE @neueId INT = SCOPE_IDENTITY();
+    SELECT CONCAT('Erfolg: Projekt "', @Bezeichnung, '" (ID: ', @neueId, ') angelegt.') AS Statusmeldung,
+           @neueId AS GenerierteProjektID;
+    RETURN 0;
+END;
+GO
+```
+
 #### 8.3 🎓 Schlaue Fragen an meinen Dozenten (Tom S.)
 
 Diese Fragen vertiefen die Hintergründe der heutigen Lehrinhalte und eignen sich hervorragend für die Fachdiskussion im Unterricht:
@@ -679,13 +764,16 @@ Diese Fragen vertiefen die Hintergründe der heutigen Lehrinhalte und eignen sic
 2. **Fehlerbehandlung: Resultset vs. echte Exception (`THROW`):**
    > *"In Aufgabe P1.2 geben wir bei einer ungültigen Abteilung einen Datensatz mit der Spalte `Fehlermeldung` im Grid aus. In Enterprise-Backends (z. B. C# mit Entity Framework oder Dapper) erwartet die API bei einem Validierungsfehler typischerweise keinen regulären Data-Reader, sondern eine echte SqlException via `THROW 50001, 'Abteilung ungültig', 1;`. Wann empfiehlt Tom S. in der Praxis Resultset-Fehler und wann echte `THROW`-Exceptions?"*
 
-3. **Query Optimization & Parameter Sniffing bei `IF...ELSE`-Zweigen:**
-   > *"Wenn eine Stored Procedure mit `IF...ELSE IF` verzweigt: Erstellt der Query Optimizer beim Erstaufruf sofort Ausführungspläne für alle Zweige basierend auf den ersten Parametern (Parameter Sniffing), oder werden die Zweige erst zur Laufzeit kompiliert, wenn sie tatsächlich betreten werden (Deferred Compilation / Statement-Level Recompilation)?"*
+3. **Concurrency & Race Conditions bei `IF NOT EXISTS` vor `INSERT` (Aufgabe P1.4):**
+   > *"Was passiert in einem hochparallelen System, wenn zwei Benutzer exakt gleichzeitig `sp_NeuesProjektAnlegen` mit demselben Namen aufrufen? Beide Durchläufe sehen `NOT EXISTS` und versuchen zeitgleich das INSERT. Sollte man sich in der Praxis auf die `IF NOT EXISTS`-Prüfung verlassen, oder gehört zwingend ein `UNIQUE`-Constraint auf die Spalte, den man per `TRY...CATCH` abfängt?"*
 
-4. **Batch-Scope vs. Block-Scope – Warum weicht T-SQL von ANSI/C# ab?**
+4. **Index-Strategie für Gehalts-Range Abfragen mit `BETWEEN` (Aufgabe P1.3):**
+   > *"In Aufgabe P1.3 filtern wir Mitarbeiter nach einem Gehaltskorridor. In der ProjektDB ist die Tabelle `Gehalt` über `mit_id` als Clustered Index organisiert. Welcher Index (z. B. Non-Clustered Index auf `gehalt` mit `INCLUDE(mit_id)`) wäre nötig, um bei Millionen Datensätzen einen Index Seek statt eines teuren Clustered Index Scans zu erzielen?"*
+
+5. **Batch-Scope vs. Block-Scope – Warum weicht T-SQL von ANSI/C# ab?**
    > *"Wir haben heute gelernt: 'Scope ist der Batch, nicht der Block' – Variablen in `BEGIN...END` überleben das Blockende bis zum nächsten `GO`. Warum hat Microsoft in T-SQL diesen Weg beibehalten, anstatt wie fast alle modernen Programmiersprachen (C#, Java, Python) einen echten Block-Scope einzuführen? Ist das reine Abwärtskompatibilität zur Sybase-Herkunft?"*
 
-5. **Scalar UDF Inlining in modernen SQL Servern:**
+6. **Scalar UDF Inlining in modernen SQL Servern:**
    > *"Skalare UDFs galten historisch als Performance-Falle (RBAR / Kontextwechsel pro Zeile). Seit SQL Server 2019 gibt es das Feature `Scalar UDF Inlining`. Reicht das in modernen Produktionsumgebungen aus, oder gilt nach wie vor die Devise: 'Im Zweifel immer eine Inline-Tabellenwertfunktion (iTVF) mit `CROSS APPLY` bevorzugen'?"*
 
 ---
@@ -704,7 +792,10 @@ Alle praktischen Übungen sind als eigenständige, idempotent ausführbare T-SQL
 | [📄 `06_stored_procedures_grundlagen_und_parameter.sql`](./src/06_stored_procedures_grundlagen_und_parameter.sql) | **Stored Procedures Grundlagen** | `CREATE OR ALTER PROCEDURE`, Prozeduren ohne Parameter, optionale Parameter mit Defaultwerten (`= NULL`) & Such-Kaskade, `OUTPUT`-Parameter zur Werterückgabe, `RETURN`-Statuscodes, Aufruf via `EXEC` und Metadaten in `sys.procedures`. |
 | [📄 `07_stored_procedures_business_logik_projektdb.sql`](./src/07_stored_procedures_business_logik_projektdb.sql) | **Enterprise Stored Procedures** | 3 komplexe Prozeduren auf der `ProjektDB`: `usp_MitarbeiterProjektZuweisen` (validierte DML), `usp_GehaltsanpassungAbteilung` (transaktionsgesichert mit Grenzen) und `usp_IterativerProjektStatusAudit` (integrierte `WHILE`-Schleife). |
 | [📄 `08_tsql_functions_vs_stored_procedures.sql`](./src/08_tsql_functions_vs_stored_procedures.sql) | **UDFs vs. Stored Procedures** | Skalare Funktionen (`dbo.udf_BerechneNettoGehalt`), Inline-Tabellenwertfunktionen (`dbo.itvf_ProjektMitarbeiterListe` mit `CROSS APPLY`), Multi-Statement TVF und praktische Demonstration aller Restriktionen (DML- & Transaktionsverbot in UDFs). |
-| [📄 `09_projektdb_p1_programmierung_loesungen.sql`](./src/09_projektdb_p1_programmierung_loesungen.sql) | **Musterlösung Aufgaben P1** | Vollständige Ausarbeitung der Vorlesungsaufgaben P1.1 und P1.2 (`sp_FilterMitarbeiter1` mit Fehlerbehandlung) sowie Dokumentation der Vorlesungsexperimente aus `20260903-1.sql` (Scope-Beweis & WHILE-Budgeterhöhung). |
+| [📄 `09_projektdb_p1_programmierung_loesungen.sql`](./src/09_projektdb_p1_programmierung_loesungen.sql) | **Musterlösung Aufgaben P1.1 & P1.2** | Vollständige Ausarbeitung der Vorlesungsaufgaben P1.1 und P1.2 (`sp_FilterMitarbeiter1` mit Fehlerbehandlung) sowie Dokumentation der Vorlesungsexperimente aus `20260903-1.sql` (Scope-Beweis & WHILE-Budgeterhöhung). |
+| [📄 `10_projektdb_p1_programmierung_2_loesungen.sql`](./src/10_projektdb_p1_programmierung_2_loesungen.sql) | **Musterlösung Aufgaben P1.3 & P1.4** | Vollständige Ausarbeitung der Aufgaben P1.3 (`sp_FilterMitarbeiter2` mit Gehalts-Range & Validierung) und P1.4 (`sp_NeuesProjektAnlegen` mit automatischer Kürzelgenerierung & Konfliktprüfung). |
+
+---
 
 ---
 
